@@ -1,4 +1,4 @@
-scampi
+SecureCloud Management SDK for python
 ======
 
-SDK for SecureCloud Management API
+python interface SDK for SecureCloud Management API
