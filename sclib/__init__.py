@@ -21,6 +21,7 @@
 #
 
 from sclib.pyami.config import Config, sclibConfigLocations
+from sclib.sc.connection import SCConnection
 
 import os
 import platform
@@ -96,7 +97,6 @@ def connect_sc(aws_access_key_id=None, aws_secret_access_key=None, **kwargs):
     :rtype: :class:`boto.ec2.connection.EC2Connection`
     :return: A connection to Amazon's EC2
     """
-    from sclib.sc.connection import SCConnection
     return SCConnection(aws_access_key_id, aws_secret_access_key, **kwargs)
 
 #sclib.plugin.load_plugins(__config__)

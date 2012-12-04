@@ -1,4 +1,2 @@
-SecureCloud Management SDK for python
+Python SDK for Trend Micro SecureCloud
 ======
-
-python interface SDK for SecureCloud Management API

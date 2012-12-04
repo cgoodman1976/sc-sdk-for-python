@@ -96,11 +96,14 @@ class broker_api:
         encrypted_password = pub.encrypt(password, None, "sha256", "oaep")
         encrypted_password = base64.b64encode(encrypted_password)
 
-        req_xml = """<?xml version="1.0" encoding="utf-8"?><authentication xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" id="" data="%s" accountId="" />""" % (encrypted_password)
+        req_xml = """<?xml version="1.0" encoding="utf-8"?>
+                    <authentication xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+                    xmlns:xsd="http://www.w3.org/2001/XMLSchema" id="" data="%s" accountId="" />""" % (encrypted_password)
         logging.debug(req_xml)
 
         auth_url = self.base_url+ '/userBasicAuth/' + self.user_name + "?tenant="
         logging.debug(auth_url)
+        
         pwd_mgr = urllib2.HTTPPasswordMgr()
         pwd_mgr.add_password(self.realm, auth_url, self.broker, self.broker_passphrase)
         opener = urllib2.build_opener()
@@ -136,7 +139,9 @@ class broker_api:
         
         auth_url = self.base_url + "/PublicCertificate/"
 
-        req_xml = """<?xml version="1.0" encoding="utf-8"?><certificateRequest xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" version="2" />""" 
+        req_xml = """<?xml version="1.0" encoding="utf-8"?>
+                    <certificateRequest xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+                    xmlns:xsd="http://www.w3.org/2001/XMLSchema" version="2" />""" 
 
 
         pwd_mgr = urllib2.HTTPPasswordMgr()
@@ -183,8 +188,6 @@ class broker_api:
 
         #if not self.session_token:
         #    self.session_token = self.basic_auth()
-
-
 
         pwd_mgr = urllib2.HTTPPasswordMgr()
         api_url = self.base_url+'/'+resource+'/'
@@ -397,9 +400,9 @@ if __name__ == '__main__':
             
         if not is_existing_device:
             new_device_node = retire_policy_list.createElement("device")
+
             new_device_node.setAttribute("id", retire_device_id)
             retire_device_list.appendChild(new_device_node)
-
 
 
     update_policy_data = retire_policy_list.toxml()
