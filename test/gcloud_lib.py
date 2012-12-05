@@ -19,7 +19,7 @@ REALM = "securecloud@trend.com"
 
 # you need to configure the following
 #BASE_URL = "https://ms.cloud9.identum.com:7443/broker/api.svc"
-BASE_URL = "https://ms.cloud9.identum.com:7443/broker/api.svc"
+BASE_URL = "https://ms.cloud9.identum.com:7443/broker/API.svc/v3.5/"
 BROKER_NAME = "bobby"
 BROKER_PASS = "v5RWh0Lj5j"
 USER_NAME = "bobby_chien@trendmicro.com"
@@ -44,6 +44,8 @@ class broker_api:
         self.opener = urllib2.build_opener()
         self.opener.add_handler(urllib2.HTTPDigestAuthHandler(self.pwd_mgr))
 
+        self.session_token = ""
+        self.cert = self.get_certificate()
         self.session_token = self.basic_auth()
 
     # ----- help function start -----
@@ -89,22 +91,31 @@ class broker_api:
 
     # ----- help function ends
 
-    def build_request(self, req_url, data=''):
+    def build_request(self, req_url, method="GET", data=''):
         req = urllib2.Request(req_url)
         req.add_header('Content-Type', 'application/xml; charset=utf-8')
         req.add_header('BrokerName', self.broker)
-        req.add_data(data)
+        
+        if self.session_token != "":
+            req.add_header('X-UserSession', self.session_token)
+        
+        if method == 'POST' and data != '':
+            logging.debug(data)
+            req.add_data(data)
+        elif method == 'DELETE':
+            req.get_method = lambda: 'DELETE'
+        else:
+            pass
+
         return req
         
     def basic_auth(self):
 
-        # get server's public key
-        cert = self.get_certificate()
-        if not cert:
+        if not self.cert:
             return False
 
         # encrypt user password
-        publickey = RSA.importKey(cert).publickey()
+        publickey = RSA.importKey(self.cert).publickey()
         cipher = PKCS1_OAEP.new(publickey, Hash.SHA256)
         encrypted_password = cipher.encrypt( bytes(self.user_pass) )
         encrypted_password = base64.b64encode(encrypted_password)
@@ -114,25 +125,8 @@ class broker_api:
                     xmlns:xsd="http://www.w3.org/2001/XMLSchema" id="" data="%s" accountId="" />""" % (encrypted_password)
         logging.debug(req_xml)
 
-        auth_url = self.base_url+ '/userBasicAuth/' + self.user_name + "?tenant="
-        #logging.debug(auth_url)
-        #pwd_mgr = urllib2.HTTPPasswordMgr()
-        #pwd_mgr.add_password(self.realm, auth_url, self.broker, self.broker_passphrase)
-        #opener = urllib2.build_opener()
-        #opener.add_handler(urllib2.HTTPDigestAuthHandler(pwd_mgr))
-        req = self.build_request(auth_url)
-
-        try:
-            sc_get_req = self.opener.open(req)
-        except urllib2.HTTPError, e:
-            logging.error(e)
-            return False
-        except urllib2.URLError, e:
-            logging.error(e)
-            return False
-
-        res = sc_get_req.read()
-        #logging.debug(res)
+        auth_url = 'userBasicAuth/' + self.user_name + "?tenant="
+        res = self.sc_request(auth_url, "POST", req_xml)
 
         xmldata = xml.dom.minidom.parseString(res)
         auth_result = xmldata.getElementsByTagName("authenticationResult")[0]
@@ -145,19 +139,7 @@ class broker_api:
     def get_certificate(self):
         logging.debug("start get_certificate")
         
-        auth_url = self.base_url + "/PublicCertificate/"
-        req = self.build_request(auth_url)
-
-        try:
-            sc_get_req = self.opener.open(req)
-        except urllib2.HTTPError, e:
-            logging.error(e)
-            return False
-        except urllib2.URLError, e:
-            logging.error(e)
-            return False
-
-        res = sc_get_req.read()
+        res = self.sc_request("PublicCertificate", "get")
         logging.debug(res)
 
         try:
@@ -177,52 +159,23 @@ class broker_api:
         return certificate
 
 
-    def sc_request(self, resource='', method='get', data=''):
+    def sc_request(self, resource='', method='GET', data=''):
 
         logging.debug("Start sc_request")
-
-        if not self.session_token:
-            self.session_token = self.basic_auth()
-
-        #pwd_mgr = urllib2.HTTPPasswordMgr()
-        api_url = self.base_url+'/'+resource+'/'
-        #pwd_mgr.add_password(self.realm, api_url, self.broker, self.broker_passphrase)
-        #opener = urllib2.build_opener()
-        #opener.add_handler(urllib2.HTTPDigestAuthHandler(pwd_mgr))
-
-        req = self.build_request(api_url)
+        api_url = self.base_url+ '/' + resource + '/'
+        req = self.build_request(api_url, method, data)
         logging.debug("url:%s" % (api_url))
 
-        if method == 'post' and data != '':
-            logging.debug(data)
-            req.add_data(data)
-        elif method == 'delete':
-            req.get_method = lambda: 'DELETE'
-        else:
-            pass
-
-        req.add_header('Content-Type', 'application/xml; charset=utf-8')
-        req.add_header('BrokerName', self.broker)
-        req.add_header('X-UserSession', self.session_token)
-
+        rawstr = ""
         try:
             sc_get_req = self.opener.open(req)
+            rawstr = sc_get_req.read()
         except urllib2.HTTPError, e:
             logging.error(e)
-            return False
-
-        rawstr = sc_get_req.read()
-
+            
+        logging.debug(rawstr)
         logging.debug("End sc_request")
-
-        if(method == "delete"):
-            if(rawstr == ""):
-                return True
-            else:
-                return False
-        else:
-            return rawstr
-
+        return rawstr
 
     # ---------------------------------------------------------------------
 
@@ -230,66 +183,38 @@ class broker_api:
     # image and device
     def listAllDevices(self):
         result = self.sc_request(resource='device')
-        if not result:
-            return False
-        logging.debug(result)
         xmldata = xml.dom.minidom.parseString(result)
-
         return xmldata
 
     def getDevice(self, device_id):
         result = self.sc_request(resource='device/'+device_id)
-        if not result:
-            return False
-        logging.debug(result)
         xmldata = xml.dom.minidom.parseString(result)
-
         return xmldata
 
     def listAllImages(self):
         result = self.sc_request(resource='image')
-        if not result:
-            return False
-        logging.debug(result)
         xmldata = xml.dom.minidom.parseString(result)
-
         return xmldata
 
     def getImage(self, image_id):
         result = self.sc_request(resource='image/'+image_id)
-        if not result:
-            return False
-        logging.debug(result)
         xmldata = xml.dom.minidom.parseString(result)
-
         return xmldata
 
     # policy
     def listAllSecurityGroups(self):
         result = self.sc_request(resource='securityGroup')
-        if not result:
-            return False
-        logging.debug(result)
         xmldata = xml.dom.minidom.parseString(result)
-
         return xmldata
 
     def getSecurityGroup(self, sg_id):
         result = self.sc_request(resource='securityGroup/'+sg_id)
-        if not result:
-            return False
-        logging.debug(result)
         xmldata = xml.dom.minidom.parseString(result)
-
         return xmldata
 
     def updateSecurityGroup(self, sg_id, sg_data):
-        result = self.sc_request(resource='securityGroup/'+sg_id, method="post", data=sg_data)
-        if not result:
-            return False
-        logging.debug(result)
+        result = self.sc_request(resource='securityGroup/'+sg_id, method="POST", data=sg_data)
         xmldata = xml.dom.minidom.parseString(result)
-
         return xmldata
 
 
