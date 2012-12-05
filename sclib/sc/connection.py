@@ -21,9 +21,25 @@
 #
 
 "Handle SecureCloud basic connection to SC Management API"
+import xml.sax
 
 from sclib.connection import SCQueryConnection
+from sclib.sc.device import Device
+from xml.dom.minidom import parse, parseString
 
 class SCConnection(SCQueryConnection):
-    def __init__(self):
-        pass
+
+    def __init__(self, host_base, broker_name=None, broker_passphase=None,
+                  auth_name=None, auth_password=None):
+        SCQueryConnection.__init__( self, host_base, broker_name, broker_passphase,
+                                    auth_name, auth_password)
+    
+    def listAllDevices(self):
+        response = self.make_request('GET', 'device')
+        device_xml = xml.dom.minidom.parseString(response.read())
+        deviceList = device_xml.getElementsByTagName("deviceList")[0]
+        devices = deviceList.getElementsByTagName("device")
+        device = Device()
+        for dev in devices:
+            device.parse(dev)
+        return device

@@ -69,6 +69,7 @@ import sclib
 import sclib.cacerts
 
 from sclib import __config__, UserAgent
+from sclib.sc.scobject import SCObject
 from sclib.exception import SCServerError, SCClientError
 from sclib.provider import Provider
 from sclib.resultset import ResultSet
@@ -366,6 +367,23 @@ class HTTPResponse(object):
         else:
             return httplib.HTTPResponse.read(self, amt)
 
+class SCAuthentication(SCObject):
+    def __init__(self, id=None, token=None, expires=None):
+        self.id = id
+        self.token = token
+        self.expires = expires
+        
+    def parse(self, xml_data):
+        xmldata = xml.dom.minidom.parseString(xml_data)
+        auth_result = xmldata.getElementsByTagName("authenticationResult")[0]
+        self.id = auth_result.attributes["id"].value.strip()
+        self.token = auth_result.attributes["token"].value.strip()
+        self.expires = auth_result.attributes["expires"].value.strip()
+        
+    def isAuthenticated(self):
+        return self.token != None
+
+
 class SCAuthConnection:
 
     def __init__( self, host_base, broker_name=None, broker_passphase=None,
@@ -387,9 +405,9 @@ class SCAuthConnection:
         self.opener = urllib2.build_opener()
         self.opener.add_handler(urllib2.HTTPDigestAuthHandler(self.pwd_mgr))
 
-        self.session_token = None
+        self.auth = None
         self.cert = self.get_certificate()
-        self.session_token = self.basic_auth()
+        self.auth = self.basic_auth()
 
     # ----- help function ends
 
@@ -439,8 +457,8 @@ class SCAuthConnection:
             for key, value in headers.iteritems():
                 req.add_header(key, value)
             
-        if self.session_token != None:
-            req.add_header('X-UserSession', self.session_token)
+        if self.auth != None:
+            req.add_header('X-UserSession', self.auth.token)
         
         if method == 'POST' and data != '':
             logging.debug(data)
@@ -471,14 +489,12 @@ class SCAuthConnection:
         auth_url = 'userBasicAuth/' + self.user_name + "?tenant="
         res = self.make_request( "POST", auth_url, data=req_xml)
         
-        session_token = None
         if res != None:
-            xmldata = xml.dom.minidom.parseString(res.read())
-            auth_result = xmldata.getElementsByTagName("authenticationResult")[0]
-            session_token = auth_result.attributes["token"].value.strip()
-            logging.debug("session token : %s" % session_token)
+            auth = SCAuthentication()
+            auth.parse(res.read())
+            logging.debug("session token : %s" % auth.token)
 
-        return session_token
+        return auth
 
 
     def get_certificate(self):
@@ -530,7 +546,7 @@ class SCAuthConnection:
 
     
     def isConnected(self):
-        return self.session_token != None    
+        return self.auth != None    
 
 
 class SCQueryConnection(SCAuthConnection):
