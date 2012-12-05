@@ -60,14 +60,6 @@ import urlparse
 import xml.sax
 import copy
 
-"""
-import auth
-import auth_handler
-import boto
-import boto.utils
-import boto.handler
-import boto.cacerts
-"""
 import sclib
 import sclib.cacerts
 
@@ -77,28 +69,13 @@ from sclib.provider import Provider
 from sclib.resultset import ResultSet
 
 HAVE_HTTPS_CONNECTION = False
-try:
-    import ssl
-    from sclib import https_connection
-    # Google App Engine runs on Python 2.5 so doesn't have ssl.SSLError.
-    if hasattr(ssl, 'SSLError'):
-        HAVE_HTTPS_CONNECTION = True
-except ImportError:
-    pass
 
 try:
     import threading
 except ImportError:
     import dummy_threading as threading
 
-ON_APP_ENGINE = all(key in os.environ for key in (
-    'USER_IS_ADMIN', 'CURRENT_VERSION_ID', 'APPLICATION_ID'))
-
-PORTS_BY_SECURITY = {True: 443,
-                     False: 80}
-
 DEFAULT_CA_CERTS_FILE = os.path.join(os.path.dirname(os.path.abspath(sclib.cacerts.__file__ )), "cacerts.txt")
-
 
 class HostConnectionPool(object):
 
@@ -177,15 +154,8 @@ class HostConnectionPool(object):
         This is ugly, reading a private instance variable, but the
         state we care about isn't available in any public methods.
         """
-        if ON_APP_ENGINE:
-            # Google AppEngine implementation of HTTPConnection doesn't contain
-            # _HTTPConnection__response attribute. Moreover, it's not possible
-            # to determine if given connection is ready. Reusing connections
-            # simply doesn't make sense with App Engine urlfetch service.
-            return False
-        else:
-            response = getattr(conn, '_HTTPConnection__response', None)
-            return (response is None) or response.isclosed()
+        response = getattr(conn, '_HTTPConnection__response', None)
+        return (response is None) or response.isclosed()
 
     def clean(self):
         """
@@ -309,15 +279,12 @@ class ConnectionPool(object):
 
 class HTTPRequest(object):
 
-    def __init__(self, method, protocol, host, port, path, auth_path,
+    def __init__(self, method, host, port, path,
                  params, headers, body):
         """Represents an HTTP request.
 
         :type method: string
         :param method: The HTTP method name, 'GET', 'POST', 'PUT' etc.
-
-        :type protocol: string
-        :param protocol: The http protocol used, 'http' or 'https'.
 
         :type host: string
         :param host: Host to which the request is addressed. eg. abc.com
@@ -328,10 +295,6 @@ class HTTPRequest(object):
 
         :type path: string
         :param path: URL path that is being accessed.
-
-        :type auth_path: string
-        :param path: The part of the URL path used when creating the
-            authentication string.
 
         :type params: dict
         :param params: HTTP url query parameters, with key as name of
@@ -346,13 +309,9 @@ class HTTPRequest(object):
             empty string ('').
         """
         self.method = method
-        self.protocol = protocol
         self.host = host
         self.port = port
         self.path = path
-        if auth_path is None:
-            auth_path = path
-        self.auth_path = auth_path
         self.params = params
         # chunked Transfer-Encoding should act only on PUT request.
         if headers and 'Transfer-Encoding' in headers and \
@@ -370,24 +329,7 @@ class HTTPRequest(object):
                  self.protocol, self.host, self.port, self.path, self.params,
                  self.headers, self.body))
 
-    def authorize(self, connection, **kwargs):
-        for key in self.headers:
-            val = self.headers[key]
-            if isinstance(val, unicode):
-                self.headers[key] = urllib.quote_plus(val.encode('utf-8'))
-
-        connection._auth_handler.add_auth(self, **kwargs)
-
-        self.headers['User-Agent'] = UserAgent
-        # I'm not sure if this is still needed, now that add_auth is
-        # setting the content-length for POST requests.
-        if 'Content-Length' not in self.headers:
-            if 'Transfer-Encoding' not in self.headers or \
-                    self.headers['Transfer-Encoding'] != 'chunked':
-                self.headers['Content-Length'] = str(len(self.body))
-
-
-class HTTPResponse(httplib.HTTPResponse):
+class HTTPResponse(object):
 
     def __init__(self, *args, **kwargs):
         httplib.HTTPResponse.__init__(self, *args, **kwargs)
@@ -417,14 +359,8 @@ class HTTPResponse(httplib.HTTPResponse):
 
 
 class SCAuthConnection(object):
-    def __init__(self, host, aws_access_key_id=None,
-                 aws_secret_access_key=None,
-                 is_secure=True, port=None, proxy=None, proxy_port=None,
-                 proxy_user=None, proxy_pass=None, debug=0,
-                 https_connection_factory=None, path='/',
-                 provider='aws', security_token=None,
-                 suppress_consec_slashes=True,
-                 validate_certs=True):
+    def __init__(self, host, port=None, path='/',
+                 broker=None, broker_passphase=None, auth_name='', auth_password=''):
         """
         :type host: str
         :param host: The host to make the connection to
@@ -444,110 +380,25 @@ class SCAuthConnection(object):
             factory and the exceptions to catch.  The factory should have
             a similar interface to L{httplib.HTTPSConnection}.
 
-        :param str proxy: Address/hostname for a proxy server
-
-        :type proxy_port: int
-        :param proxy_port: The port to use when connecting over a proxy
-
-        :type proxy_user: str
-        :param proxy_user: The username to connect with on the proxy
-
-        :type proxy_pass: str
-        :param proxy_pass: The password to use when connection over a proxy.
-
         :type port: int
         :param port: The port to use to connect
 
-        :type suppress_consec_slashes: bool
-        :param suppress_consec_slashes: If provided, controls whether
-            consecutive slashes will be suppressed in key paths.
-
-        :type validate_certs: bool
-        :param validate_certs: Controls whether SSL certificates
-            will be validated or not.  Defaults to True.
         """
-        self.suppress_consec_slashes = suppress_consec_slashes
         self.num_retries = 6
-        # Override passed-in is_secure setting if value was defined in __config__.
-        if __config__.has_option('sclib', 'is_secure'):
-            is_secure = __config__.getboolean('sclib', 'is_secure')
-        self.is_secure = is_secure
-        # Whether or not to validate server certificates.
-        # The default is now to validate certificates.  This can be
-        # overridden in the sclib config file are by passing an
-        # explicit validate_certs parameter to the class constructor.
-        self.https_validate_certificates = __config__.getbool(
-            'sclib', 'https_validate_certificates',
-            validate_certs)
-        if self.https_validate_certificates and not HAVE_HTTPS_CONNECTION:
-            raise SCClientError(
-                    "SSL server certificate validation is enabled in sclib "
-                    "configuration, but Python dependencies required to "
-                    "support this feature are not available. Certificate "
-                    "validation is only supported when running under Python "
-                    "2.6 or later.")
-        self.ca_certificates_file = __config__.get_value(
-                'sclib', 'ca_certificates_file', DEFAULT_CA_CERTS_FILE)
-        self.handle_proxy(proxy, proxy_port, proxy_user, proxy_pass)
-        # define exceptions from httplib that we want to catch and retry
         self.http_exceptions = (httplib.HTTPException, socket.error,
                                 socket.gaierror)
         # define subclasses of the above that are not retryable.
         self.http_unretryable_exceptions = []
-        if HAVE_HTTPS_CONNECTION:
-            self.http_unretryable_exceptions.append(
-                    https_connection.InvalidCertificateException)
 
-        # define values in socket exceptions we don't want to catch
-        self.socket_exception_values = (errno.EINTR,)
-        if https_connection_factory is not None:
-            self.https_connection_factory = https_connection_factory[0]
-            self.http_exceptions += https_connection_factory[1]
-        else:
-            self.https_connection_factory = None
-            
-        # secure connection or not
-        if (is_secure):
-            self.protocol = 'https'
-        else:
-            self.protocol = 'http'
-            
+         
         self.host = host
+        self.port = port
         self.path = path
-        # if the value passed in for debug
-        if not isinstance(debug, (int, long)):
-            debug = 0
-        self.debug = __config__.getint('sclib', 'debug', debug)
-        if port:
-            self.port = port
-        else:
-            self.port = PORTS_BY_SECURITY[is_secure]
-
-        # Timeout used to tell httplib how long to wait for socket timeouts.
-        # Default is to leave timeout unchanged, which will in turn result in
-        # the socket's default global timeout being used. To specify a
-        # timeout, set http_socket_timeout in Boto config. Regardless,
-        # timeouts will only be applied if Python is 2.6 or greater.
-        self.http_connection_kwargs = {}
-        if (sys.version_info[0], sys.version_info[1]) >= (2, 6):
-            if __config__.has_option('sclib', 'http_socket_timeout'):
-                timeout = __config__.getint('sclib', 'http_socket_timeout')
-                self.http_connection_kwargs['timeout'] = timeout
-
-        if isinstance(provider, Provider):
-            # Allow overriding Provider
-            self.provider = provider
-        else:
-            self._provider_type = provider
-            self.provider = Provider(self._provider_type,
-                                     aws_access_key_id,
-                                     aws_secret_access_key,
-                                     security_token)
-
-        # allow config file to override default host
-        if self.provider.host:
-            self.host = self.provider.host
-
+        self.broker = broker
+        self.broker_passphase = broker_passphase
+        self.auth_name = auth_name
+        self.auth_password = auth_password
+        
         self._pool = ConnectionPool()
         self._connection = (self.server_name(), self.is_secure)
         self._last_rs = None
@@ -560,7 +411,6 @@ class SCAuthConnection(object):
 
     def connection(self):
         return self.get_http_connection(*self._connection)
-    connection = property(connection)
 
     def get_path(self, path='/'):
         # The default behavior is to suppress consecutive slashes for reasons
@@ -608,40 +458,6 @@ class SCAuthConnection(object):
             else:
                 signature_host = '%s:%d' % (self.host, port)
         return signature_host
-
-    def handle_proxy(self, proxy, proxy_port, proxy_user, proxy_pass):
-        self.proxy = proxy
-        self.proxy_port = proxy_port
-        self.proxy_user = proxy_user
-        self.proxy_pass = proxy_pass
-        if 'http_proxy' in os.environ and not self.proxy:
-            pattern = re.compile(
-                '(?:http://)?' \
-                '(?:(?P<user>\w+):(?P<pass>.*)@)?' \
-                '(?P<host>[\w\-\.]+)' \
-                '(?::(?P<port>\d+))?'
-            )
-            match = pattern.match(os.environ['http_proxy'])
-            if match:
-                self.proxy = match.group('host')
-                self.proxy_port = match.group('port')
-                self.proxy_user = match.group('user')
-                self.proxy_pass = match.group('pass')
-        else:
-            if not self.proxy:
-                self.proxy = __config__.get_value('sclib', 'proxy', None)
-            if not self.proxy_port:
-                self.proxy_port = __config__.get_value('sclib', 'proxy_port', None)
-            if not self.proxy_user:
-                self.proxy_user = __config__.get_value('sclib', 'proxy_user', None)
-            if not self.proxy_pass:
-                self.proxy_pass = __config__.get_value('sclib', 'proxy_pass', None)
-
-        if not self.proxy_port and self.proxy:
-            print "http_proxy environment variable does not specify " \
-                "a port, using default"
-            self.proxy_port = self.port
-        self.use_proxy = (self.proxy != None)
 
     def get_http_connection(self, host, is_secure):
         conn = self._pool.get_http_connection(host, is_secure)
@@ -695,76 +511,6 @@ class SCAuthConnection(object):
 
     def put_http_connection(self, host, is_secure, connection):
         self._pool.put_http_connection(host, is_secure, connection)
-
-    def proxy_ssl(self):
-        host = '%s:%d' % (self.host, self.port)
-        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        try:
-            sock.connect((self.proxy, int(self.proxy_port)))
-        except:
-            raise
-        sclib.log.debug("Proxy connection: CONNECT %s HTTP/1.0\r\n", host)
-        sock.sendall("CONNECT %s HTTP/1.0\r\n" % host)
-        sock.sendall("User-Agent: %s\r\n" % UserAgent)
-        if self.proxy_user and self.proxy_pass:
-            for k, v in self.get_proxy_auth_header().items():
-                sock.sendall("%s: %s\r\n" % (k, v))
-            # See discussion about this config option at
-            # https://groups.google.com/forum/?fromgroups#!topic/sclib-dev/teenFvOq2Cc
-            if __config__.getbool('sclib', 'send_crlf_after_proxy_auth_headers', False):
-                sock.sendall("\r\n")
-        else:
-            sock.sendall("\r\n")
-        resp = httplib.HTTPResponse(sock, strict=True, debuglevel=self.debug)
-        resp.begin()
-
-        if resp.status != 200:
-            # Fake a socket error, use a code that make it obvious it hasn't
-            # been generated by the socket library
-            raise socket.error(-71,
-                               "Error talking to HTTP proxy %s:%s: %s (%s)" %
-                               (self.proxy, self.proxy_port,
-                                resp.status, resp.reason))
-
-        # We can safely close the response, it duped the original socket
-        resp.close()
-
-        h = httplib.HTTPConnection(host)
-
-        if self.https_validate_certificates and HAVE_HTTPS_CONNECTION:
-            sclib.log.debug("wrapping ssl socket for proxied connection; "
-                           "CA certificate file=%s",
-                           self.ca_certificates_file)
-            key_file = self.http_connection_kwargs.get('key_file', None)
-            cert_file = self.http_connection_kwargs.get('cert_file', None)
-            sslSock = ssl.wrap_socket(sock, keyfile=key_file,
-                                      certfile=cert_file,
-                                      cert_reqs=ssl.CERT_REQUIRED,
-                                      ca_certs=self.ca_certificates_file)
-            cert = sslSock.getpeercert()
-            hostname = self.host.split(':', 0)[0]
-            if not https_connection.ValidateCertificateHostname(cert, hostname):
-                raise https_connection.InvalidCertificateException(
-                        hostname, cert, 'hostname mismatch')
-        else:
-            # Fallback for old Python without ssl.wrap_socket
-            if hasattr(httplib, 'ssl'):
-                sslSock = httplib.ssl.SSLSocket(sock)
-            else:
-                sslSock = socket.ssl(sock, None, None)
-                sslSock = httplib.FakeSocket(sock, sslSock)
-
-        # This is a bit unclean
-        h.sock = sslSock
-        return h
-
-    def prefix_proxy_to_path(self, path, host=None):
-        path = self.protocol + '://' + (host or self.server_name()) + path
-        return path
-
-    def get_proxy_auth_header(self):
-        auth = base64.encodestring(self.proxy_user + ':' + self.proxy_pass)
-        return {'Proxy-Authorization': 'Basic %s' % auth}
 
     def _mexe(self, request, sender=None, override_num_retries=None,
               retry_handler=None):
@@ -867,13 +613,8 @@ class SCAuthConnection(object):
             msg = 'Please report this exception as a Boto Issue!'
             raise SCClientError(msg)
 
-    def build_base_http_request(self, method, path, auth_path,
-                                params=None, headers=None, data='', host=None):
+    def build_base_http_request(self, method, path, params=None, headers=None, data=''):
         path = self.get_path(path)
-        
-        # check auth path
-        if auth_path is not None:
-            auth_path = self.get_path(auth_path)
         
         # empty params?
         if params == None:
@@ -887,36 +628,21 @@ class SCAuthConnection(object):
         else:
             headers = headers.copy()
             
-        # where is host?
-        host = host or self.host
-        if self.use_proxy:
-            if not auth_path:
-                auth_path = path
-            path = self.prefix_proxy_to_path(path, host)
-            if self.proxy_user and self.proxy_pass and not self.is_secure:
-                # If is_secure, we don't have to set the proxy authentication
-                # header here, we did that in the CONNECT to the proxy.
-                headers.update(self.get_proxy_auth_header())
-                
-        return HTTPRequest(method, self.protocol, host, self.port,
-                           path, auth_path, params, headers, data)
+        return HTTPRequest(method, self.host, self.port, self.path, headers, data)
 
-    def make_request(self, method, path, headers=None, data='', host=None,
-                     auth_path=None, sender=None, override_num_retries=None,
-                     params=None):
+    def make_request(self, method, path, params=None, headers=None, data='', override_num_retries=None):
         """Makes a request to the server, with stock multiple-retry logic."""
         if params is None:
             params = {}
-        http_request = self.build_base_http_request(method, path, auth_path,
-                                                    params, headers, data, host)
-        return self._mexe(http_request, sender, override_num_retries)
+        http_request = self.build_base_http_request(method, path, params, headers, data)
+        return self._mexe(http_request, override_num_retries)
 
     def close(self):
         """(Optional) Close any open HTTP connections.  This is non-destructive,
         and making a new request will open a connection again."""
 
         sclib.log.debug('closing all HTTP connections')
-        self._connection = None  # compat field
+        self._connection = None  # compact field
 
 
 class SCQueryConnection(SCAuthConnection):

@@ -23,10 +23,9 @@ BASE_URL = "https://ms.cloud9.identum.com:7443/broker/API.svc/v3.5/"
 BROKER_NAME = "bobby"
 BROKER_PASS = "v5RWh0Lj5j"
 USER_NAME = "bobby_chien@trendmicro.com"
-USER_PASS = "#CHL6One"
+USER_PASS = "1qaz@WSX"
 
 logging.basicConfig(level=LOG_LEVEL)
-
 
 class broker_api:
 
