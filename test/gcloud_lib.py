@@ -7,20 +7,23 @@ import xml
 import ConfigParser
 import time
 import logging
-from tomcrypt import rsa
 from xml.dom.minidom import parse, parseString
+from Crypto.PublicKey import RSA
+from Crypto.Cipher import PKCS1_OAEP
+from Crypto import Hash
 
-from sclib.sc.connection import SCConnection
+#from sclib.sc.connection import SCConnection
 
 LOG_LEVEL = "DEBUG"
 REALM = "securecloud@trend.com"
 
 # you need to configure the following
-BASE_URL = "https://mapi_server.securecloud.com:8443/broker/api.svc"
-BROKER_NAME = "mapi_test"
-BROKER_PASS = "EWv6yqULCl"
-USER_NAME = "shaodanny@gmail.com"
-USER_PASS = "P@ssw0rd@123"
+#BASE_URL = "https://ms.cloud9.identum.com:7443/broker/api.svc"
+BASE_URL = "https://ms.cloud9.identum.com:7443/broker/api.svc"
+BROKER_NAME = "bobby"
+BROKER_PASS = "v5RWh0Lj5j"
+USER_NAME = "bobby_chien@trendmicro.com"
+USER_PASS = "#CHL6One"
 
 logging.basicConfig(level=LOG_LEVEL)
 
@@ -35,6 +38,12 @@ class broker_api:
         self.broker = BROKER_NAME
         self.broker_passphrase = BROKER_PASS
         self.realm = REALM
+        
+        self.pwd_mgr = urllib2.HTTPPasswordMgr()
+        self.pwd_mgr.add_password(self.realm, self.base_url, self.broker, self.broker_passphrase)
+        self.opener = urllib2.build_opener()
+        self.opener.add_handler(urllib2.HTTPDigestAuthHandler(self.pwd_mgr))
+
         self.session_token = self.basic_auth()
 
     # ----- help function start -----
@@ -80,42 +89,41 @@ class broker_api:
 
     # ----- help function ends
 
+    def build_request(self, req_url, data=''):
+        req = urllib2.Request(req_url)
+        req.add_header('Content-Type', 'application/xml; charset=utf-8')
+        req.add_header('BrokerName', self.broker)
+        req.add_data(data)
+        return req
+        
     def basic_auth(self):
 
         # get server's public key
-        pubkey = self.get_certificate()
-        if not pubkey:
+        cert = self.get_certificate()
+        if not cert:
             return False
 
         # encrypt user password
-        key = rsa.Key(pubkey)
-        pub = key.public
-        #print pub.as_string()
-
-        password = bytes(self.user_pass)
-        encrypted_password = pub.encrypt(password, None, "sha256", "oaep")
+        publickey = RSA.importKey(cert).publickey()
+        cipher = PKCS1_OAEP.new(publickey, Hash.SHA256)
+        encrypted_password = cipher.encrypt( bytes(self.user_pass) )
         encrypted_password = base64.b64encode(encrypted_password)
 
-        req_xml = """<?xml version="1.0" encoding="utf-8"?>
-                    <authentication xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+        req_xml = """<?xml version="1.0" encoding="utf-8"?><authentication 
+                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
                     xmlns:xsd="http://www.w3.org/2001/XMLSchema" id="" data="%s" accountId="" />""" % (encrypted_password)
         logging.debug(req_xml)
 
         auth_url = self.base_url+ '/userBasicAuth/' + self.user_name + "?tenant="
-        logging.debug(auth_url)
-        
-        pwd_mgr = urllib2.HTTPPasswordMgr()
-        pwd_mgr.add_password(self.realm, auth_url, self.broker, self.broker_passphrase)
-        opener = urllib2.build_opener()
-        opener.add_handler(urllib2.HTTPDigestAuthHandler(pwd_mgr))
-
-        req = urllib2.Request(auth_url)
-        req.add_header('Content-Type', 'application/xml; charset=utf-8')
-        req.add_header('BrokerName', self.broker)
-        req.add_data(req_xml)
+        #logging.debug(auth_url)
+        #pwd_mgr = urllib2.HTTPPasswordMgr()
+        #pwd_mgr.add_password(self.realm, auth_url, self.broker, self.broker_passphrase)
+        #opener = urllib2.build_opener()
+        #opener.add_handler(urllib2.HTTPDigestAuthHandler(pwd_mgr))
+        req = self.build_request(auth_url)
 
         try:
-            sc_get_req = opener.open(req)
+            sc_get_req = self.opener.open(req)
         except urllib2.HTTPError, e:
             logging.error(e)
             return False
@@ -138,23 +146,10 @@ class broker_api:
         logging.debug("start get_certificate")
         
         auth_url = self.base_url + "/PublicCertificate/"
-
-        req_xml = """<?xml version="1.0" encoding="utf-8"?>
-                    <certificateRequest xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-                    xmlns:xsd="http://www.w3.org/2001/XMLSchema" version="2" />""" 
-
-
-        pwd_mgr = urllib2.HTTPPasswordMgr()
-        pwd_mgr.add_password(self.realm, auth_url, self.broker, self.broker_passphrase)
-        opener = urllib2.build_opener()
-        opener.add_handler(urllib2.HTTPDigestAuthHandler(pwd_mgr))
-
-        req = urllib2.Request(auth_url)
-        req.add_header('Content-Type', 'application/xml; charset=utf-8')
-        req.add_header('BrokerName', self.broker)
+        req = self.build_request(auth_url)
 
         try:
-            sc_get_req = opener.open(req)
+            sc_get_req = self.opener.open(req)
         except urllib2.HTTPError, e:
             logging.error(e)
             return False
@@ -186,17 +181,16 @@ class broker_api:
 
         logging.debug("Start sc_request")
 
-        #if not self.session_token:
-        #    self.session_token = self.basic_auth()
+        if not self.session_token:
+            self.session_token = self.basic_auth()
 
-        pwd_mgr = urllib2.HTTPPasswordMgr()
+        #pwd_mgr = urllib2.HTTPPasswordMgr()
         api_url = self.base_url+'/'+resource+'/'
-        pwd_mgr.add_password(self.realm, api_url, self.broker, self.broker_passphrase)
-        opener = urllib2.build_opener()
-        opener.add_handler(urllib2.HTTPDigestAuthHandler(pwd_mgr))
+        #pwd_mgr.add_password(self.realm, api_url, self.broker, self.broker_passphrase)
+        #opener = urllib2.build_opener()
+        #opener.add_handler(urllib2.HTTPDigestAuthHandler(pwd_mgr))
 
-        req = urllib2.Request(api_url)
-
+        req = self.build_request(api_url)
         logging.debug("url:%s" % (api_url))
 
         if method == 'post' and data != '':
@@ -212,7 +206,7 @@ class broker_api:
         req.add_header('X-UserSession', self.session_token)
 
         try:
-            sc_get_req = opener.open(req)
+            sc_get_req = self.opener.open(req)
         except urllib2.HTTPError, e:
             logging.error(e)
             return False
@@ -301,7 +295,7 @@ class broker_api:
 
 if __name__ == '__main__':
 
-    connection = SCConnection()
+    connection = broker_api()
     logging.debug(connection.session_token)
 
 
@@ -400,9 +394,9 @@ if __name__ == '__main__':
             
         if not is_existing_device:
             new_device_node = retire_policy_list.createElement("device")
-
             new_device_node.setAttribute("id", retire_device_id)
             retire_device_list.appendChild(new_device_node)
+
 
 
     update_policy_data = retire_policy_list.toxml()

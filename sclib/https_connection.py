@@ -75,19 +75,20 @@ def ValidateCertificateHostname(cert, hostname):
       hostname, hosts)
   """
   
-    for host in hosts:
-        host_re = host.replace('.', '\.').replace('*', '[^.]*')
-        if re.search('^%s$' % (host_re,), hostname, re.I):
-            return True
-        return False
+  for host in hosts:
+    host_re = host.replace('.', '\.').replace('*', '[^.]*')
+    if re.search('^%s$' % (host_re,), hostname, re.I):
+      return True
+  return False
 
 
-class CertValidatingHTTPSConnection(httplib.HTTPConnection):    
-    """An HTTPConnection that connects over SSL and validates certificates."""
+class CertValidatingHTTPSConnection(httplib.HTTPConnection):
+  """An HTTPConnection that connects over SSL and validates certificates."""
 
-    default_port = httplib.HTTPS_PORT
+  default_port = httplib.HTTPS_PORT
 
-    def __init__(self, host, port=None, key_file=None, cert_file=None, ca_certs=None, strict=None, **kwargs):
+  def __init__(self, host, port=None, key_file=None, cert_file=None,
+               ca_certs=None, strict=None, **kwargs):
     """Constructor.
 
     Args:

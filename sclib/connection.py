@@ -505,10 +505,13 @@ class SCAuthConnection(object):
             self.http_exceptions += https_connection_factory[1]
         else:
             self.https_connection_factory = None
+            
+        # secure connection or not
         if (is_secure):
             self.protocol = 'https'
         else:
             self.protocol = 'http'
+            
         self.host = host
         self.path = path
         # if the value passed in for debug
@@ -558,18 +561,6 @@ class SCAuthConnection(object):
     def connection(self):
         return self.get_http_connection(*self._connection)
     connection = property(connection)
-
-    def aws_access_key_id(self):
-        return self.provider.access_key
-    aws_access_key_id = property(aws_access_key_id)
-    gs_access_key_id = aws_access_key_id
-    access_key = aws_access_key_id
-
-    def aws_secret_access_key(self):
-        return self.provider.secret_key
-    aws_secret_access_key = property(aws_secret_access_key)
-    gs_secret_access_key = aws_secret_access_key
-    secret_key = aws_secret_access_key
 
     def get_path(self, path='/'):
         # The default behavior is to suppress consecutive slashes for reasons
@@ -879,16 +870,24 @@ class SCAuthConnection(object):
     def build_base_http_request(self, method, path, auth_path,
                                 params=None, headers=None, data='', host=None):
         path = self.get_path(path)
+        
+        # check auth path
         if auth_path is not None:
             auth_path = self.get_path(auth_path)
+        
+        # empty params?
         if params == None:
             params = {}
         else:
             params = params.copy()
+            
+        # request header?
         if headers == None:
             headers = {}
         else:
             headers = headers.copy()
+            
+        # where is host?
         host = host or self.host
         if self.use_proxy:
             if not auth_path:
@@ -898,6 +897,7 @@ class SCAuthConnection(object):
                 # If is_secure, we don't have to set the proxy authentication
                 # header here, we did that in the CONNECT to the proxy.
                 headers.update(self.get_proxy_auth_header())
+                
         return HTTPRequest(method, self.protocol, host, self.port,
                            path, auth_path, params, headers, data)
 
