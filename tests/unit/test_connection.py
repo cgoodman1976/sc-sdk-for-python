@@ -1,6 +1,6 @@
 import unittest
 
-MS_HOST = "https://ms.cloud9.identum.com"
+MS_HOST = "https://ms.cloud9.identum.com:7443/broker/API.svc/v3.5/"
 MS_PORT = 7448
 MS_BROKER_PATH = "/broker/API.svc/v3.5/"
 
@@ -19,13 +19,19 @@ REQUEST_DATA = """<?xml version="1.0" encoding="utf-8"?><authentication
                     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
                     xmlns:xsd="http://www.w3.org/2001/XMLSchema" id="" data="%s" accountId="" />"""
 
-class HTTPRequestTest(unittest.TestCase):
-    def testRequest(self):
-        from sclib.connection import HTTPRequest
-        request = HTTPRequest("POST", MS_HOST, MS_PORT, MS_BROKER_PATH,
-                              REQUEST_PARAMS, REQUEST_HEADER, REQUEST_DATA)
-        self.assertEqual(request.method, "POST")
-        self.assertEqual(request.port, MS_PORT)
+class SCAuthConnectionTest(unittest.TestCase):
+    def setUp(self):
+        from sclib.connection import SCAuthConnection
+        self.connection = SCAuthConnection(MS_HOST,BROKER_NAME, BROKER_PASSPHASE, 
+                                      AUTH_NAME, AUTH_PASSWORD)
+
+    def testConnection(self):
+        self.assertEqual(self.connection.isConnected(), True)
+
+    def testGetRequest(self):
+        self.assertEqual(self.connection.isConnected(), True)
+        response = self.connection.make_request('GET', 'PublicCertificate')
+        self.assertNotEqual(response, None)
 
 class SCConnectionTestSuite(unittest.TestSuite):
     def __init__(self):

@@ -55,10 +55,15 @@ import re
 import socket
 import sys
 import time
-import urllib
 import urlparse
 import xml.sax
 import copy
+import logging
+import urllib2
+from xml.dom.minidom import parse, parseString
+from Crypto.PublicKey import RSA
+from Crypto.Cipher import PKCS1_OAEP
+from Crypto import Hash
 
 import sclib
 import sclib.cacerts
@@ -69,6 +74,9 @@ from sclib.provider import Provider
 from sclib.resultset import ResultSet
 
 HAVE_HTTPS_CONNECTION = False
+LOG_LEVEL = "DEBUG"
+logging.basicConfig(level=LOG_LEVEL)
+
 
 try:
     import threading
@@ -313,6 +321,7 @@ class HTTPRequest(object):
         self.port = port
         self.path = path
         self.params = params
+        self.req_path = ''
         # chunked Transfer-Encoding should act only on PUT request.
         if headers and 'Transfer-Encoding' in headers and \
                 headers['Transfer-Encoding'] == 'chunked' and \
@@ -325,9 +334,9 @@ class HTTPRequest(object):
 
     def __str__(self):
         return (('method:(%s) protocol:(%s) host(%s) port(%s) path(%s) '
-                 'params(%s) headers(%s) body(%s)') % (self.method,
-                 self.protocol, self.host, self.port, self.path, self.params,
-                 self.headers, self.body))
+                 'req_path(%s) params(%s) headers(%s) body(%s)') % (self.method,
+                 self.protocol, self.host, self.port, self.path, self.req_path,
+                 self.params, self.headers, self.body))
 
 class HTTPResponse(object):
 
@@ -357,285 +366,160 @@ class HTTPResponse(object):
         else:
             return httplib.HTTPResponse.read(self, amt)
 
+class SCAuthConnection:
 
-class SCAuthConnection(object):
-    def __init__(self, host, port=None, path='/',
-                 broker=None, broker_passphase=None, auth_name='', auth_password=''):
-        """
-        :type host: str
-        :param host: The host to make the connection to
+    def __init__( self, host_base, broker_name=None, broker_passphase=None,
+                  auth_name=None, auth_password=None):
 
-        :keyword str aws_access_key_id: Your AWS Access Key ID (provided by
-            Amazon). If none is specified, the value in your
-            ``AWS_ACCESS_KEY_ID`` environmental variable is used.
-        :keyword str aws_secret_access_key: Your AWS Secret Access Key
-            (provided by Amazon). If none is specified, the value in your
-            ``AWS_SECRET_ACCESS_KEY`` environmental variable is used.
-
-        :type is_secure: boolean
-        :param is_secure: Whether the connection is over SSL
-
-        :type https_connection_factory: list or tuple
-        :param https_connection_factory: A pair of an HTTP connection
-            factory and the exceptions to catch.  The factory should have
-            a similar interface to L{httplib.HTTPSConnection}.
-
-        :type port: int
-        :param port: The port to use to connect
-
-        """
-        self.num_retries = 6
-        self.http_exceptions = (httplib.HTTPException, socket.error,
-                                socket.gaierror)
-        # define subclasses of the above that are not retryable.
-        self.http_unretryable_exceptions = []
-
-         
-        self.host = host
-        self.port = port
-        self.path = path
-        self.broker = broker
-        self.broker_passphase = broker_passphase
-        self.auth_name = auth_name
-        self.auth_password = auth_password
+        self.base_url = host_base
+        self.user_name = auth_name
+        self.user_pass = auth_password
+        self.broker = broker_name
+        self.broker_passphrase = broker_passphase
+        self.realm = "securecloud@trend.com"
         
-        self._pool = ConnectionPool()
-        self._connection = (self.server_name(), self.is_secure)
-        self._last_rs = None
+        self.headers = {'Content-Type' : 'application/xml; charset=utf-8',
+                        'BrokerName' : self.broker
+                        }
+        
+        self.pwd_mgr = urllib2.HTTPPasswordMgr()
+        self.pwd_mgr.add_password(self.realm, self.base_url, self.broker, self.broker_passphrase)
+        self.opener = urllib2.build_opener()
+        self.opener.add_handler(urllib2.HTTPDigestAuthHandler(self.pwd_mgr))
 
-    def __repr__(self):
-        return '%s:%s' % (self.__class__.__name__, self.host)
+        self.session_token = None
+        self.cert = self.get_certificate()
+        self.session_token = self.basic_auth()
 
-    def _required_auth_capability(self):
-        return []
+    # ----- help function ends
 
-    def connection(self):
-        return self.get_http_connection(*self._connection)
+    def getText(self, node):
+        rc = ""
 
-    def get_path(self, path='/'):
-        # The default behavior is to suppress consecutive slashes for reasons
-        # discussed at
-        # https://groups.google.com/forum/#!topic/sclib-dev/-ft0XPUy0y8
-        # You can override that behavior with the suppress_consec_slashes param.
-        if not self.suppress_consec_slashes:
-            return self.path + re.sub('^/*', "", path)
-        pos = path.find('?')
-        if pos >= 0:
-            params = path[pos:]
-            path = path[:pos]
+        if node.nodeType == node.ELEMENT_NODE:
+            if node.hasChildNodes():
+                nodelist = node.childNodes
+                for node in nodelist:
+                    if node.nodeType == node.TEXT_NODE:
+                        rc = rc + node.data
+        elif node.hasChildNodes():
+            nodelist = node.childNodes
+            for node in nodelist:
+                if node.nodeType == node.TEXT_NODE:
+                    rc = rc + node.data
+
+        return rc
+
+    def nice_format(self, input):
+        xmlstr = parseString(input)
+        pretty_res = xmlstr.toprettyxml()
+
+        return pretty_res
+
+    def check_existing_node(self, nodes, id):
+
+        for node in nodes:
+            current_id = node.getAttribute("id")
+            if(current_id == id):
+                return True
+
+        return False
+
+    # ----- help function start -----
+    
+    def build_request(self, req_url, method="GET", params=None, headers=None, data=None):
+        req = urllib2.Request(req_url)
+
+        # add default headers
+        for key, value in self.headers.iteritems():
+            req.add_header(key, value)
+
+        # add additional headers
+        if headers != None:
+            for key, value in headers.iteritems():
+                req.add_header(key, value)
+            
+        if self.session_token != None:
+            req.add_header('X-UserSession', self.session_token)
+        
+        if method == 'POST' and data != '':
+            logging.debug(data)
+            req.add_data(data)
+        elif method == 'DELETE':
+            req.get_method = lambda: 'DELETE'
         else:
-            params = None
-        if path[-1] == '/':
-            need_trailing = True
-        else:
-            need_trailing = False
-        path_elements = self.path.split('/')
-        path_elements.extend(path.split('/'))
-        path_elements = [p for p in path_elements if p]
-        path = '/' + '/'.join(path_elements)
-        if path[-1] != '/' and need_trailing:
-            path += '/'
-        if params:
-            path = path + params
-        return path
+            pass
 
-    def server_name(self, port=None):
-        if not port:
-            port = self.port
-        if port == 80:
-            signature_host = self.host
-        else:
-            # This unfortunate little hack can be attributed to
-            # a difference in the 2.6 version of httplib.  In old
-            # versions, it would append ":443" to the hostname sent
-            # in the Host header and so we needed to make sure we
-            # did the same when calculating the V2 signature.  In 2.6
-            # (and higher!)
-            # it no longer does that.  Hence, this kludge.
-            if ((ON_APP_ENGINE and sys.version[:3] == '2.5') or
-                    sys.version[:3] in ('2.6', '2.7')) and port == 443:
-                signature_host = self.host
-            else:
-                signature_host = '%s:%d' % (self.host, port)
-        return signature_host
+        return req
+        
+    def basic_auth(self):
 
-    def get_http_connection(self, host, is_secure):
-        conn = self._pool.get_http_connection(host, is_secure)
-        if conn is not None:
-            return conn
-        else:
-            return self.new_http_connection(host, is_secure)
+        if not self.cert:
+            return False
 
-    def new_http_connection(self, host, is_secure):
-        if self.use_proxy:
-            host = '%s:%d' % (self.proxy, int(self.proxy_port))
-        if host is None:
-            host = self.server_name()
-        if is_secure:
-            sclib.log.debug(
-                    'establishing HTTPS connection: host=%s, kwargs=%s',
-                    host, self.http_connection_kwargs)
-            if self.use_proxy:
-                connection = self.proxy_ssl()
-            elif self.https_connection_factory:
-                connection = self.https_connection_factory(host)
-            elif self.https_validate_certificates and HAVE_HTTPS_CONNECTION:
-                connection = https_connection.CertValidatingHTTPSConnection(
-                        host, ca_certs=self.ca_certificates_file,
-                        **self.http_connection_kwargs)
-            else:
-                connection = httplib.HTTPSConnection(host,
-                        **self.http_connection_kwargs)
-        else:
-            sclib.log.debug('establishing HTTP connection: kwargs=%s' %
-                    self.http_connection_kwargs)
-            if self.https_connection_factory:
-                # even though the factory says https, this is too handy
-                # to not be able to allow overriding for http also.
-                connection = self.https_connection_factory(host,
-                    **self.http_connection_kwargs)
-            else:
-                connection = httplib.HTTPConnection(host,
-                    **self.http_connection_kwargs)
-        if self.debug > 1:
-            connection.set_debuglevel(self.debug)
-        # self.connection must be maintained for backwards-compatibility
-        # however, it must be dynamically pulled from the connection pool
-        # set a private variable which will enable that
-        if host.split(':')[0] == self.host and is_secure == self.is_secure:
-            self._connection = (host, is_secure)
-        # Set the response class of the http connection to use our custom
-        # class.
-        connection.response_class = HTTPResponse
-        return connection
+        # encrypt user password
+        publickey = RSA.importKey(self.cert).publickey()
+        cipher = PKCS1_OAEP.new(publickey, Hash.SHA256)
+        encrypted_password = cipher.encrypt( bytes(self.user_pass) )
+        encrypted_password = base64.b64encode(encrypted_password)
 
-    def put_http_connection(self, host, is_secure, connection):
-        self._pool.put_http_connection(host, is_secure, connection)
+        req_xml = """<?xml version="1.0" encoding="utf-8"?><authentication 
+                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+                    xmlns:xsd="http://www.w3.org/2001/XMLSchema" id="" data="%s" accountId="" />""" % (encrypted_password)
+        logging.debug(req_xml)
 
-    def _mexe(self, request, sender=None, override_num_retries=None,
-              retry_handler=None):
-        """
-        mexe - Multi-execute inside a loop, retrying multiple times to handle
-               transient Internet errors by simply trying again.
-               Also handles redirects.
+        auth_url = 'userBasicAuth/' + self.user_name + "?tenant="
+        res = self.make_request( "POST", auth_url, data=req_xml)
+        
+        session_token = None
+        if res != None:
+            xmldata = xml.dom.minidom.parseString(res.read())
+            auth_result = xmldata.getElementsByTagName("authenticationResult")[0]
+            session_token = auth_result.attributes["token"].value.strip()
+            logging.debug("session token : %s" % session_token)
 
-        This code was inspired by the S3Utils classes posted to the sclib-users
-        Google group by Larry Bates.  Thanks!
+        return session_token
 
-        """
-        sclib.log.debug('Method: %s' % request.method)
-        sclib.log.debug('Path: %s' % request.path)
-        sclib.log.debug('Data: %s' % request.body)
-        sclib.log.debug('Headers: %s' % request.headers)
-        sclib.log.debug('Host: %s' % request.host)
-        response = None
-        body = None
-        e = None
-        if override_num_retries is None:
-            num_retries = __config__.getint('sclib', 'num_retries', self.num_retries)
-        else:
-            num_retries = override_num_retries
-        i = 0
-        connection = self.get_http_connection(request.host, self.is_secure)
-        while i <= num_retries:
-            # Use binary exponential backoff to desynchronize client requests
-            next_sleep = random.random() * (2 ** i)
+
+    def get_certificate(self):
+        logging.debug("start get_certificate")
+        
+        res = self.make_request("GET", "PublicCertificate")
+        if res != None:
+            logging.debug(res)
             try:
-                # we now re-sign each request before it is retried
-                sclib.log.debug('Token: %s' % self.provider.security_token)
-                request.authorize(connection=self)
-                if callable(sender):
-                    response = sender(connection, request.method, request.path,
-                                      request.body, request.headers)
-                else:
-                    connection.request(request.method, request.path,
-                                       request.body, request.headers)
-                    response = connection.getresponse()
-                location = response.getheader('location')
-                # -- gross hack --
-                # httplib gets confused with chunked responses to HEAD requests
-                # so I have to fake it out
-                if request.method == 'HEAD' and getattr(response,
-                                                        'chunked', False):
-                    response.chunked = 0
-                if callable(retry_handler):
-                    status = retry_handler(response, i, next_sleep)
-                    if status:
-                        msg, i, next_sleep = status
-                        if msg:
-                            sclib.log.debug(msg)
-                        time.sleep(next_sleep)
-                        continue
-                if response.status == 500 or response.status == 503:
-                    msg = 'Received %d response.  ' % response.status
-                    msg += 'Retrying in %3.1f seconds' % next_sleep
-                    sclib.log.debug(msg)
-                    body = response.read()
-                elif response.status < 300 or response.status >= 400 or \
-                        not location:
-                    self.put_http_connection(request.host, self.is_secure,
-                                             connection)
-                    return response
-                else:
-                    scheme, request.host, request.path, \
-                        params, query, fragment = urlparse.urlparse(location)
-                    if query:
-                        request.path += '?' + query
-                    msg = 'Redirecting: %s' % scheme + '://'
-                    msg += request.host + request.path
-                    sclib.log.debug(msg)
-                    connection = self.get_http_connection(request.host,
-                                                          scheme == 'https')
-                    response = None
-                    continue
-            except self.http_exceptions, e:
-                for unretryable in self.http_unretryable_exceptions:
-                    if isinstance(e, unretryable):
-                        sclib.log.debug(
-                            'encountered unretryable %s exception, re-raising' %
-                            e.__class__.__name__)
-                        raise e
-                sclib.log.debug('encountered %s exception, reconnecting' % \
-                                  e.__class__.__name__)
-                connection = self.new_http_connection(request.host,
-                                                      self.is_secure)
-            time.sleep(next_sleep)
-            i += 1
-        # If we made it here, it's because we have exhausted our retries
-        # and stil haven't succeeded.  So, if we have a response object,
-        # use it to raise an exception.
-        # Otherwise, raise the exception that must have already h#appened.
-        if response:
-            raise SCServerError(response.status, response.reason, body)
-        elif e:
-            raise e
-        else:
-            msg = 'Please report this exception as a Boto Issue!'
-            raise SCClientError(msg)
+                xmldata = xml.dom.minidom.parseString(res.read())
+                certificate_response = xmldata.getElementsByTagName("certificateResponse")[0]
+                certificate_list = certificate_response.getElementsByTagName("certificateList")[0]
+                certificate_node = certificate_response.getElementsByTagName("certificate")[0]
+                certificate = self.getText(certificate_node)
+                certificate = """-----BEGIN RSA PUBLIC KEY-----\n%s\n-----END RSA PUBLIC KEY-----\n""" % (certificate)
+                certificate = str(certificate)
+                #print certificate
+            except Exception, e:
+                logging.error(e)
+                return None
 
-    def build_base_http_request(self, method, path, params=None, headers=None, data=''):
-        path = self.get_path(path)
-        
-        # empty params?
-        if params == None:
-            params = {}
-        else:
-            params = params.copy()
-            
-        # request header?
-        if headers == None:
-            headers = {}
-        else:
-            headers = headers.copy()
-            
-        return HTTPRequest(method, self.host, self.port, self.path, headers, data)
+        logging.debug("end get_certificate")        
+        return certificate
 
-    def make_request(self, method, path, params=None, headers=None, data='', override_num_retries=None):
-        """Makes a request to the server, with stock multiple-retry logic."""
-        if params is None:
-            params = {}
-        http_request = self.build_base_http_request(method, path, params, headers, data)
-        return self._mexe(http_request, override_num_retries)
+
+    def make_request(self, method='GET', resource='', params=None, headers=None, data=''):
+
+        logging.debug("Start sc_request")
+        api_url = self.base_url+ '/' + resource + '/'
+        req = self.build_request(api_url, method, params, headers, data)
+        logging.debug("url:%s" % (api_url))
+
+        try:
+            response = self.opener.open(req)
+            logging.debug(response)
+            return response
+        except urllib2.HTTPError, e:
+            logging.error(e)
+            
+        logging.debug("End sc_request")
+        return None
 
     def close(self):
         """(Optional) Close any open HTTP connections.  This is non-destructive,
@@ -644,40 +528,23 @@ class SCAuthConnection(object):
         sclib.log.debug('closing all HTTP connections')
         self._connection = None  # compact field
 
+    
+    def isConnected(self):
+        return self.session_token != None    
+
 
 class SCQueryConnection(SCAuthConnection):
 
     APIVersion = ''
     ResponseError = SCServerError
 
-    def __init__(self, aws_access_key_id=None, aws_secret_access_key=None,
-                 is_secure=True, port=None, proxy=None, proxy_port=None,
-                 proxy_user=None, proxy_pass=None, host=None, debug=0,
-                 https_connection_factory=None, path='/', security_token=None,
-                 validate_certs=True):
-        SCAuthConnection.__init__(self, host, aws_access_key_id,
-                                   aws_secret_access_key,
-                                   is_secure, port, proxy,
-                                   proxy_port, proxy_user, proxy_pass,
-                                   debug, https_connection_factory, path,
-                                   security_token=security_token,
-                                   validate_certs=validate_certs)
-
-    def _required_auth_capability(self):
-        return []
+    def __init__(self, host_base, broker_name=None, broker_passphase=None,
+                  auth_name=None, auth_password=None):
+        SCAuthConnection.__init__(self, host_base, broker_name, broker_passphase,
+                                  auth_name, auth_password)
 
     def get_utf8_value(self, value):
         return sclib.utils.get_utf8_value(value)
-
-    def make_request(self, action, params=None, path='/', verb='GET'):
-        http_request = self.build_base_http_request(verb, path, None,
-                                                    params, {}, '',
-                                                    self.server_name())
-        if action:
-            http_request.params['Action'] = action
-        if self.APIVersion:
-            http_request.params['Version'] = self.APIVersion
-        return self._mexe(http_request)
 
     def build_list_params(self, params, items, label):
         if isinstance(items, str):
@@ -727,10 +594,10 @@ class SCQueryConnection(SCAuthConnection):
             sclib.log.error('%s' % body)
             raise self.ResponseError(response.status, response.reason, body)
 
-    def get_status(self, action, params, path='/', parent=None, verb='GET'):
+    def get_status(self, action='GET', params=None, path='/', parent=None):
         if not parent:
             parent = self
-        response = self.make_request(action, params, path, verb)
+        response = self.make_request(action, params, path)
         body = response.read()
         sclib.log.debug(body)
         if not body:
