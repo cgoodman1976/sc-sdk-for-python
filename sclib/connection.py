@@ -71,7 +71,6 @@ import sclib.cacerts
 from sclib import __config__, UserAgent
 from sclib.sc.scobject import SCObject
 from sclib.exception import SCServerError, SCClientError
-from sclib.provider import Provider
 from sclib.resultset import ResultSet
 
 HAVE_HTTPS_CONNECTION = False
@@ -445,7 +444,7 @@ class SCAuthConnection:
 
     # ----- help function start -----
     
-    def build_request(self, req_url, method="GET", params=None, headers=None, data=None):
+    def build_request(self, req_url, params=None, headers=None, data=None, method='GET'):
         req = urllib2.Request(req_url)
 
         # add default headers
@@ -473,8 +472,8 @@ class SCAuthConnection:
     def basic_auth(self):
 
         if not self.cert:
-            return False
-
+            return None
+        
         # encrypt user password
         publickey = RSA.importKey(self.cert).publickey()
         cipher = PKCS1_OAEP.new(publickey, Hash.SHA256)
@@ -487,7 +486,7 @@ class SCAuthConnection:
         logging.debug(req_xml)
 
         auth_url = 'userBasicAuth/' + self.user_name + "?tenant="
-        res = self.make_request( "POST", auth_url, data=req_xml)
+        res = self.make_request( auth_url, data=req_xml, method='POST')
         
         if res != None:
             auth = SCAuthentication()
@@ -500,7 +499,8 @@ class SCAuthConnection:
     def get_certificate(self):
         logging.debug("start get_certificate")
         
-        res = self.make_request("GET", "PublicCertificate")
+        res = self.make_request("PublicCertificate")
+        certificate = None
         if res != None:
             logging.debug(res)
             try:
@@ -520,11 +520,11 @@ class SCAuthConnection:
         return certificate
 
 
-    def make_request(self, method='GET', resource='', params=None, headers=None, data=''):
+    def make_request(self, action='', params=None, headers=None, data='', method='GET'):
 
         logging.debug("Start sc_request")
-        api_url = self.base_url+ '/' + resource + '/'
-        req = self.build_request(api_url, method, params, headers, data)
+        api_url = self.base_url+ '/' + action + '/'
+        req = self.build_request(api_url, params, headers, data, method)
         logging.debug("url:%s" % (api_url))
 
         try:
@@ -571,16 +571,16 @@ class SCQueryConnection(SCAuthConnection):
     # generics
 
     def get_list(self, action, params, markers, path='/',
-                 parent=None, verb='GET'):
+                 parent=None, method='GET'):
         if not parent:
             parent = self
-        response = self.make_request(action, params, path, verb)
+        response = self.make_request(action, method=method)
         body = response.read()
         sclib.log.debug(body)
         if not body:
             sclib.log.error('Null body %s' % body)
             raise self.ResponseError(response.status, response.reason, body)
-        elif response.status == 200:
+        elif response.code == 200:
             rs = ResultSet(markers)
             h = sclib.handler.XmlHandler(rs, parent)
             xml.sax.parseString(body, h)
@@ -591,10 +591,10 @@ class SCQueryConnection(SCAuthConnection):
             raise self.ResponseError(response.status, response.reason, body)
 
     def get_object(self, action, params, cls, path='/',
-                   parent=None, verb='GET'):
+                   parent=None, method='GET'):
         if not parent:
             parent = self
-        response = self.make_request(action, params, path, verb)
+        response = self.make_request(action, method=method)
         body = response.read()
         sclib.log.debug(body)
         if not body:
@@ -613,7 +613,7 @@ class SCQueryConnection(SCAuthConnection):
     def get_status(self, action='GET', params=None, path='/', parent=None):
         if not parent:
             parent = self
-        response = self.make_request(action, params, path)
+        response = self.make_request(action)
         body = response.read()
         sclib.log.debug(body)
         if not body:

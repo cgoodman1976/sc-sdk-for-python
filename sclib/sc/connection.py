@@ -35,11 +35,14 @@ class SCConnection(SCQueryConnection):
                                     auth_name, auth_password)
     
     def listAllDevices(self):
-        response = self.make_request('GET', 'device')
-        device_xml = xml.dom.minidom.parseString(response.read())
-        deviceList = device_xml.getElementsByTagName("deviceList")[0]
-        devices = deviceList.getElementsByTagName("device")
-        device = Device()
-        for dev in devices:
-            device.parse(dev)
-        return device
+        params = {}
+        return self.get_list('device', params, 
+                             [('deviceList', Device)], method='GET')
+        
+        #device_xml = xml.dom.minidom.parseString(response.read())
+        #deviceList = device_xml.getElementsByTagName("deviceList")[0]
+        #devices = deviceList.getElementsByTagName("device")
+        #device = Device()
+        #for dev in devices:
+        #    device.parse(dev)
+        #return device

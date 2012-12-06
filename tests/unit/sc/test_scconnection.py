@@ -25,7 +25,7 @@
 import unittest
 from sclib.sc.device import Device
 
-MS_HOST = "https://ms.cloud9.identum.com:7443/broker/API.svc/v3.5/"
+MS_HOST = "https://ms.cloud9.identum.com:7443/broker/API.svc/v3.5"
 MS_PORT = 7448
 MS_BROKER_PATH = "/broker/API.svc/v3.5/"
 
@@ -50,7 +50,8 @@ class SCConnectionTest(unittest.TestCase):
         self.connection = SCConnection( MS_HOST,BROKER_NAME, BROKER_PASSPHASE, 
                                         AUTH_NAME, AUTH_PASSWORD)
     def testListAllDevice(self):
-        self.connection.listAllDevices()
+        devicelist = self.connection.listAllDevices()
+        #self.assertNonEqual(devicelist.count(), 0)
 
 
 if __name__ == '__main__':

@@ -32,6 +32,3 @@ class SCObject(object):
 
     def endElement(self, name, value, connection):
         setattr(self, name, value)
-
-    def parse(self, xml_data):
-        pass
