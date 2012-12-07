@@ -21,6 +21,7 @@
 #
 
 from sclib.sc.scobject import SCObject
+from xml.etree.ElementTree import Element, SubElement, Comment, tostring
 
 class Device(SCObject):
     def __init__(self, connection):
@@ -78,4 +79,26 @@ class Device(SCObject):
         #self.volumeSize = None #volume.attributes["size"].value.strip()
         #self.mountPoint = None #volume.getElementsByTagName("mountPoint").device.attributes["uid"].value.strip()
         #self.provider = None
+
+    def update(self):
+        req_data = self.build_request()
+        action = 'device/' + self.uid + '/'
+        response = self.connection.make_request(action, data=req_data, method='POST')
+        
+    def build_request(self):
+        
+        device = Element('device')
+        device.attrib['version'] = '3.5'
+        device.attrib['msUID'] = self.uid
+        device.attrib['id'] = self.id
+        device.attrib['name'] = self.name
+        #device.attrib['os'] = self.os
+        #device.attrib['fs'] = self.fs
+        #device.attrib['configured'] = self.configured
+        device.attrib['writeaccess'] = self.writeAccess
+        description = SubElement(device, "description");
+        description.text = self.description
+
+        return tostring(device)
+
 
