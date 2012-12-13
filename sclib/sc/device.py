@@ -65,10 +65,7 @@ class Device(SCObject):
         
         elif name == 'volume':
             self.volume = Volume(connection)
-<<<<<<< HEAD
             self.volume.startElement(name, attrs, connection)
-=======
->>>>>>> small change
             return self.volume
         else:
             return None
