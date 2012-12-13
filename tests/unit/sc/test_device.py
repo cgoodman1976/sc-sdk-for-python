@@ -39,7 +39,7 @@ class SCDeviceTest(unittest.TestCase):
     def testTostring(self):
         device = Device(None)
         xml = ElementTree.tostring(device.buildElements())
-        xml_pretty = minidom.parseString(device.buildElements()).toprettystring()
+        xml_pretty = minidom.parseString(xml).toprettyxml()
 
 if __name__ == '__main__':
     unittest.main()

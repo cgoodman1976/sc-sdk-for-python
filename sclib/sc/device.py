@@ -31,6 +31,7 @@ class Device(SCObject):
         self.name = None
         self.href = None
         self.deviceType = None
+        self.cspDeviceType = None
         self.info = None
         self.lastModified = None
         self.writeAccess = None
@@ -60,9 +61,11 @@ class Device(SCObject):
             self.provisionState = attrs["provisionState"]
             self.deviceState = attrs["deviceStatus"]
             self.detachable = attrs["detachable"]
-            #return self
+            return self
+        
         elif name == 'volume':
-            self.volume = Volume
+            self.volume = Volume(connection)
+            self.volume.startElement(name, attrs, connection)
             return self.volume
         else:
             return None
@@ -71,43 +74,44 @@ class Device(SCObject):
         
         if name == 'description':
             self.description = value
-        elif name == 'mountPoint':
-            self.mountPoint = value
         else:
             setattr(self, name, value)
-
-        #self.description = None#device.getElementsByTagName("description")
-        #volume = None# device.getElementsByTagName("volume")
-        #self.volumeSize = None #volume.attributes["size"].value.strip()
-        #self.mountPoint = None #volume.getElementsByTagName("mountPoint").device.attributes["uid"].value.strip()
-        #self.provider = None
 
     def buildElements(self):
         
         device = ElementTree.Element('device')
         device.attrib['version'] = '3.5'
-        device.attrib['msUID'] = self.uid
-        device.attrib['id'] = self.id
-        device.attrib['name'] = self.name
-        #device.attrib['os'] = self.os
-        #device.attrib['fs'] = self.fs
-        #device.attrib['configured'] = self.configured
-        device.attrib['writeaccess'] = self.writeAccess
-        description = ElementTree.SubElement(device, "description")
-        description.text = self.description
+        if self.uid:    device.attrib['msUID'] = self.uid
+        if self.id:     device.attrib['id'] = self.id
+        if self.name:   device.attrib['name'] = self.name
+        if self.href:   device.attrib['href'] = self.href
+        if self.cspDeviceType:   device.attrib['cspDeviceType'] = self.cspDeviceType
+        if self.info:   device.attrib['info'] = self.info
+        if self.lastModified:   device.attrib['lastModified'] = self.lastModified
+        if self.writeAccess: device.attrib['writeaccess'] = self.writeAccess
+        if self.provisionState:   device.attrib['provisionState'] = self.provisionState
+        if self.description:
+            description = ElementTree.SubElement(device, "description")
+            description.text = self.description
+        # inner objects
+        if self.volume: device.append(self.volume.buildElements())
+        if self.provider: device.append(self.provider.buildElements())
+            
         return device
 
     # ---------- function ----------
     
     def update(self):
-        req_element = self.buildElement()
+        # Build XML elements structures
+        req_element = self.buildElements()
         action = 'device/' + self.uid + '/'
-        response = self.connection.make_request(action, data=req_element.read(), method='POST')
+        data = ElementTree.tostring(req_element)
+        response = self.connection.make_request(action, data, method='POST')
         return response
         
 
 class Volume (SCObject):
-    def __init__(self):
+    def __init__(self, connection):
         self.size = None
         self.mountPoint = None
 
@@ -130,8 +134,9 @@ class Volume (SCObject):
             
     def buildElements(self):
         volume = ElementTree.Element('volume')
-        volume.attrib['size'] = self.size
-        mount_point = ElementTree.SubElement(volume, 'mountPoint')
-        mount_point.text = self.mountPoint
+        if self.size: volume.attrib['size'] = self.size
+        if self.mountPoint:
+            mount_point = ElementTree.SubElement(volume, 'mountPoint')
+            mount_point.text = self.mountPoint
         return volume
 

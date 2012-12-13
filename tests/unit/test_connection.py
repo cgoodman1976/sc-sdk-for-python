@@ -1,19 +1,11 @@
 import unittest
-
-MS_HOST = "https://ms.cloud9.identum.com:7443/broker/API.svc/v3.5/"
-MS_PORT = 7448
-MS_BROKER_PATH = "/broker/API.svc/v3.5/"
-
-BROKER_NAME = 'bobby'
-BROKER_PASSPHASE = 'v5RWh0Lj5j'
-AUTH_NAME = 'bobby_chien@trendmicro.com'
-AUTH_PASSWORD = '1qaz@WSX'
+from tests.unit import config
 
 REQUEST_PARAMS = { "tenant" : 'x23123',
                    }
 
 REQUEST_HEADER = { 'Content-Type' :'application/xml; charset=utf-8',
-                   'BrokerName' : BROKER_NAME
+                   'BrokerName' : config.get('connection', 'MS_BROKER_NAME')
                    }
 REQUEST_DATA = """<?xml version="1.0" encoding="utf-8"?><authentication 
                     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
@@ -22,8 +14,11 @@ REQUEST_DATA = """<?xml version="1.0" encoding="utf-8"?><authentication
 class SCAuthConnectionTest(unittest.TestCase):
     def setUp(self):
         from sclib.connection import SCAuthConnection
-        self.connection = SCAuthConnection(MS_HOST,BROKER_NAME, BROKER_PASSPHASE, 
-                                      AUTH_NAME, AUTH_PASSWORD)
+        self.connection = SCAuthConnection( config.get('connection', 'MS_HOST'),
+                                            config.get('connection', 'MS_BROKER_NAME'), 
+                                            config.get('connection', 'MS_BROKER_PASSPHASE'), 
+                                            config.get('authentication', 'AUTH_NAME'), 
+                                            config.get('authentication', 'AUTH_PASSWORD') )
 
     def testConnection(self):
         self.assertEqual(self.connection.isConnected(), True)

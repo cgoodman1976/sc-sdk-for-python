@@ -466,7 +466,12 @@ class SCAuthConnection:
             req.get_method = lambda: 'DELETE'
         else:
             pass
-
+        
+        logging.debug("===== Request ===== ")
+        logging.debug('method: %s' % (method))
+        logging.debug('url = %s' %(req_url))
+        if data: logging.debug('data = %s' % (data))
+        logging.debug("=================== ")
         return req
         
     def basic_auth(self):
@@ -522,10 +527,9 @@ class SCAuthConnection:
 
     def make_request(self, action='', params=None, headers=None, data='', method='GET'):
 
-        logging.debug("Start sc_request")
+        logging.debug(">>>>> make_request")
         api_url = self.base_url+ '/' + action + '/'
         req = self.build_request(api_url, params, headers, data, method)
-        logging.debug("url:%s" % (api_url))
 
         try:
             response = self.opener.open(req)
@@ -534,7 +538,7 @@ class SCAuthConnection:
         except urllib2.HTTPError, e:
             logging.error(e)
             
-        logging.debug("End sc_request")
+        logging.debug("<<<<< make_request")
         return None
 
     def close(self):

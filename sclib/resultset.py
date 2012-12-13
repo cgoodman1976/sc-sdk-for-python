@@ -63,6 +63,7 @@ class ResultSet(list):
         for t in self.markers:
             if name == t[0]:
                 obj = t[1](connection)
+                obj.startElement(name, attrs, connection)
                 self.append(obj)
                 return obj
         return None
