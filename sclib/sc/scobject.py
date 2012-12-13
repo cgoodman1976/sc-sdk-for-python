@@ -27,8 +27,14 @@ class SCObject(object):
     def __init__(self, connection=None):
         self.connection = connection
         
+    # for XML parse
     def startElement(self, name, attrs, connection):
         return None
 
+    # for XML parse
     def endElement(self, name, value, connection):
         setattr(self, name, value)
+
+    # build xml elements structure
+    def buildElements(self):
+        return None

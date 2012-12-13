@@ -24,13 +24,22 @@
 "Test basic device"
 import unittest
 from sclib.sc.device import Device
-from test.sc.sample import *
-
+#from sclib.sc.connection import SCConnection
+#from test.sc.sample import *
+from xml.etree import ElementTree
+from xml.dom import minidom
 
 class SCDeviceTest(unittest.TestCase):
     def setUp(self):
+        pass
 
     def testUpdateDevice(self):
+        pass
+    
+    def testTostring(self):
+        device = Device(None)
+        xml = ElementTree.tostring(device.buildElements())
+        xml_pretty = minidom.parseString(device.buildElements()).toprettystring()
 
 if __name__ == '__main__':
     unittest.main()

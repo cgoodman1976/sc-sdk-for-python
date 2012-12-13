@@ -21,7 +21,7 @@
 #
 
 from sclib.sc.scobject import SCObject
-from xml.etree.ElementTree import Element, SubElement, Comment, tostring
+from xml.etree import ElementTree
 
 class Device(SCObject):
     def __init__(self, connection):
@@ -38,8 +38,9 @@ class Device(SCObject):
         self.deviceState = None
         self.detachable = None
         self.description = None
-        self.volumeSize = None
-        self.mountPoint = None
+        # volume object
+        self.volume = None
+        # provider object
         self.provider = None
         
     def startElement(self, name, attrs, connection):
@@ -59,9 +60,10 @@ class Device(SCObject):
             self.provisionState = attrs["provisionState"]
             self.deviceState = attrs["deviceStatus"]
             self.detachable = attrs["detachable"]
-            return self
+            #return self
         elif name == 'volume':
-            self.size = attrs['size']
+            self.volume = Volume
+            return self.volume
         else:
             return None
 
@@ -80,14 +82,9 @@ class Device(SCObject):
         #self.mountPoint = None #volume.getElementsByTagName("mountPoint").device.attributes["uid"].value.strip()
         #self.provider = None
 
-    def update(self):
-        req_data = self.build_request()
-        action = 'device/' + self.uid + '/'
-        response = self.connection.make_request(action, data=req_data, method='POST')
+    def buildElements(self):
         
-    def build_request(self):
-        
-        device = Element('device')
+        device = ElementTree.Element('device')
         device.attrib['version'] = '3.5'
         device.attrib['msUID'] = self.uid
         device.attrib['id'] = self.id
@@ -96,9 +93,45 @@ class Device(SCObject):
         #device.attrib['fs'] = self.fs
         #device.attrib['configured'] = self.configured
         device.attrib['writeaccess'] = self.writeAccess
-        description = SubElement(device, "description");
+        description = ElementTree.SubElement(device, "description")
         description.text = self.description
+        return device
 
-        return tostring(device)
+    # ---------- function ----------
+    
+    def update(self):
+        req_element = self.buildElement()
+        action = 'device/' + self.uid + '/'
+        response = self.connection.make_request(action, data=req_element.read(), method='POST')
+        return response
+        
 
+class Volume (SCObject):
+    def __init__(self):
+        self.size = None
+        self.mountPoint = None
+
+    def startElement(self, name, attrs, connection):
+        ret = SCObject.startElement(self, name, attrs, connection)
+        if ret is not None:
+            return ret
+        
+        if name == 'volume':
+            self.size = attrs['size']
+        else:
+            return None
+
+    def endElement(self, name, value, connection):
+        
+        if name == 'mountPoint':
+            self.mountPoint = value
+        else:
+            setattr(self, name, value)
+            
+    def buildElements(self):
+        volume = ElementTree.Element('volume')
+        volume.attrib['size'] = self.size
+        mount_point = ElementTree.SubElement(volume, 'mountPoint')
+        mount_point.text = self.mountPoint
+        return volume
 
