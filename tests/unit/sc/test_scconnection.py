@@ -14,23 +14,23 @@ class SCConnectionTest(unittest.TestCase):
     def setUp(self):
         from sclib.sc.connection import SCConnection
         self.connection = SCConnection( config.get('connection', 'MS_HOST'),
-                                            config.get('connection', 'MS_BROKER_NAME'), 
-                                            config.get('connection', 'MS_BROKER_PASSPHASE'), 
-                                            config.get('authentication', 'AUTH_NAME'), 
-                                            config.get('authentication', 'AUTH_PASSWORD') )
+                                        config.get('connection', 'MS_BROKER_NAME'), 
+                                        config.get('connection', 'MS_BROKER_PASSPHASE'))
+
+        auth = self.connection.basicAuth( config.get('authentication', 'AUTH_NAME'), 
+                                          config.get('authentication', 'AUTH_PASSWORD'))
+        self.assertNotEqual( auth, None)
 
     def testListAllDevice(self):
         devicelist = self.connection.listAllDevices()
         for dev in devicelist:
-            xml = ElementTree.tostring(dev.buildElements())
-            xml_pretty = minidom.parseString(xml).toprettyxml()
+            xml_pretty = dev.niceFormat()
             logging.debug(xml_pretty)
             
-    def testUpdateDevice(self):
+    def testListAllUser(self):
         userlist = self.connection.listUsers()
         for user in userlist:
-            xml = user.buildXML()
-            xml_pretty = minidom.parseString(xml).toprettyxml()
+            xml_pretty = user.niceFormat()
             logging.debug(xml_pretty)
 
 if __name__ == '__main__':

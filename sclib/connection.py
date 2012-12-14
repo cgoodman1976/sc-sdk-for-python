@@ -385,12 +385,9 @@ class SCAuthentication(SCObject):
 
 class SCAuthConnection:
 
-    def __init__( self, host_base, broker_name=None, broker_passphase=None,
-                  auth_name=None, auth_password=None):
+    def __init__( self, host_base, broker_name=None, broker_passphase=None):
 
         self.base_url = host_base
-        self.user_name = auth_name
-        self.user_pass = auth_password
         self.broker = broker_name
         self.broker_passphrase = broker_passphase
         self.realm = "securecloud@trend.com"
@@ -404,43 +401,13 @@ class SCAuthConnection:
         self.opener = urllib2.build_opener()
         self.opener.add_handler(urllib2.HTTPDigestAuthHandler(self.pwd_mgr))
 
-        self.auth = None
-        self.cert = self.get_certificate()
-        self.auth = self.basic_auth()
-
     # ----- help function ends
-
-    def getText(self, node):
-        rc = ""
-
-        if node.nodeType == node.ELEMENT_NODE:
-            if node.hasChildNodes():
-                nodelist = node.childNodes
-                for node in nodelist:
-                    if node.nodeType == node.TEXT_NODE:
-                        rc = rc + node.data
-        elif node.hasChildNodes():
-            nodelist = node.childNodes
-            for node in nodelist:
-                if node.nodeType == node.TEXT_NODE:
-                    rc = rc + node.data
-
-        return rc
 
     def nice_format(self, input):
         xmlstr = parseString(input)
         pretty_res = xmlstr.toprettyxml()
 
         return pretty_res
-
-    def check_existing_node(self, nodes, id):
-
-        for node in nodes:
-            current_id = node.getAttribute("id")
-            if(current_id == id):
-                return True
-
-        return False
 
     # ----- help function start -----
     
@@ -456,9 +423,6 @@ class SCAuthConnection:
             for key, value in headers.iteritems():
                 req.add_header(key, value)
             
-        if self.auth != None:
-            req.add_header('X-UserSession', self.auth.token)
-        
         if method == 'POST' and data != '':
             logging.debug(data)
             req.add_data(data)
@@ -474,61 +438,10 @@ class SCAuthConnection:
         logging.debug("=================== ")
         return req
         
-    def basic_auth(self):
-
-        if not self.cert:
-            return None
-        
-        # encrypt user password
-        publickey = RSA.importKey(self.cert).publickey()
-        cipher = PKCS1_OAEP.new(publickey, Hash.SHA256)
-        encrypted_password = cipher.encrypt( bytes(self.user_pass) )
-        encrypted_password = base64.b64encode(encrypted_password)
-
-        req_xml = """<?xml version="1.0" encoding="utf-8"?><authentication 
-                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
-                    xmlns:xsd="http://www.w3.org/2001/XMLSchema" id="" data="%s" accountId="" />""" % (encrypted_password)
-        logging.debug(req_xml)
-
-        auth_url = 'userBasicAuth/' + self.user_name + "?tenant="
-        res = self.make_request( auth_url, data=req_xml, method='POST')
-        
-        if res != None:
-            auth = SCAuthentication()
-            auth.parse(res.read())
-            logging.debug("session token : %s" % auth.token)
-
-        return auth
-
-
-    def get_certificate(self):
-        logging.debug("start get_certificate")
-        
-        res = self.make_request("PublicCertificate")
-        certificate = None
-        if res != None:
-            logging.debug(res)
-            try:
-                xmldata = xml.dom.minidom.parseString(res.read())
-                certificate_response = xmldata.getElementsByTagName("certificateResponse")[0]
-                certificate_list = certificate_response.getElementsByTagName("certificateList")[0]
-                certificate_node = certificate_response.getElementsByTagName("certificate")[0]
-                certificate = self.getText(certificate_node)
-                certificate = """-----BEGIN RSA PUBLIC KEY-----\n%s\n-----END RSA PUBLIC KEY-----\n""" % (certificate)
-                certificate = str(certificate)
-                #print certificate
-            except Exception, e:
-                logging.error(e)
-                return None
-
-        logging.debug("end get_certificate")        
-        return certificate
-
-
     def make_request(self, action='', params=None, headers=None, data='', method='GET'):
 
         logging.debug(">>>>> make_request")
-        api_url = self.base_url+ '/' + action + '/'
+        api_url = self.base_url+ '/' + action
         req = self.build_request(api_url, params, headers, data, method)
 
         try:
@@ -558,10 +471,8 @@ class SCQueryConnection(SCAuthConnection):
     APIVersion = ''
     ResponseError = SCServerError
 
-    def __init__(self, host_base, broker_name=None, broker_passphase=None,
-                  auth_name=None, auth_password=None):
-        SCAuthConnection.__init__(self, host_base, broker_name, broker_passphase,
-                                  auth_name, auth_password)
+    def __init__(self, host_base, broker_name=None, broker_passphase=None):
+        SCAuthConnection.__init__(self, host_base, broker_name, broker_passphase)
 
     def get_utf8_value(self, value):
         return sclib.utils.get_utf8_value(value)
@@ -574,11 +485,10 @@ class SCQueryConnection(SCAuthConnection):
 
     # generics
 
-    def get_list(self, action, params, markers, path='/',
-                 parent=None, method='GET'):
+    def get_list(self, action, params, markers, headers=None, data='', path='/', parent=None, method='GET'):
         if not parent:
             parent = self
-        response = self.make_request(action, method=method)
+        response = self.make_request(action, headers=headers, data=data, method=method)
         body = response.read()
         sclib.log.debug(body)
         if not body:
@@ -594,17 +504,16 @@ class SCQueryConnection(SCAuthConnection):
             sclib.log.error('%s' % body)
             raise self.ResponseError(response.status, response.reason, body)
 
-    def get_object(self, action, params, cls, path='/',
-                   parent=None, method='GET'):
+    def get_object(self, action, params, cls, headers=None, data='',path='/', parent=None, method='GET'):
         if not parent:
             parent = self
-        response = self.make_request(action, method=method)
+        response = self.make_request(action, headers=headers, data=data, method=method)
         body = response.read()
-        sclib.log.debug(body)
+        sclib.log.debug(self.nice_format(body))
         if not body:
             sclib.log.error('Null body %s' % body)
             raise self.ResponseError(response.status, response.reason, body)
-        elif response.status == 200:
+        elif response.code == 200:
             obj = cls(parent)
             h = sclib.handler.XmlHandler(obj, parent)
             xml.sax.parseString(body, h)
@@ -614,7 +523,7 @@ class SCQueryConnection(SCAuthConnection):
             sclib.log.error('%s' % body)
             raise self.ResponseError(response.status, response.reason, body)
 
-    def get_status(self, action='GET', params=None, path='/', parent=None):
+    def get_status(self, action='GET', headers=None, data='', params=None, path='/', parent=None):
         if not parent:
             parent = self
         response = self.make_request(action)
@@ -623,7 +532,7 @@ class SCQueryConnection(SCAuthConnection):
         if not body:
             sclib.log.error('Null body %s' % body)
             raise self.ResponseError(response.status, response.reason, body)
-        elif response.status == 200:
+        elif response.code == 200:
             rs = ResultSet()
             h = sclib.handler.XmlHandler(rs, parent)
             xml.sax.parseString(body, h)

@@ -31,15 +31,17 @@ from xml.dom import minidom
 
 class SCDeviceTest(unittest.TestCase):
     def setUp(self):
-        pass
+        from sclib.sc.connection import SCConnection
+        self.connection = SCConnection( config.get('connection', 'MS_HOST'),
+                                        config.get('connection', 'MS_BROKER_NAME'), 
+                                        config.get('connection', 'MS_BROKER_PASSPHASE'))
+
+        auth = self.connection.basicAuth( config.get('authentication', 'AUTH_NAME'), 
+                                          config.get('authentication', 'AUTH_PASSWORD'))
 
     def testUpdateDevice(self):
         pass
     
-    def testTostring(self):
-        device = Device(None)
-        xml = ElementTree.tostring(device.buildElements())
-        xml_pretty = minidom.parseString(xml).toprettyxml()
 
 if __name__ == '__main__':
     unittest.main()

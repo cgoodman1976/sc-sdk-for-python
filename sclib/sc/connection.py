@@ -22,25 +22,119 @@
 
 "Handle SecureCloud basic connection to SC Management API"
 import xml.sax
+import base64
 
 from sclib.connection import SCQueryConnection
 from sclib.sc.device import Device
 from sclib.sc.user import User
+from sclib.sc.scobject import SCObject
 from xml.dom.minidom import parse, parseString
+from xml.etree import ElementTree
+from Crypto.PublicKey import RSA
+from Crypto.Cipher import PKCS1_OAEP
+from Crypto import Hash
+
+class Certificate(SCObject):
+    def __init__(self, connection):
+        SCObject.__init__(self, connection)
+        self.level = None
+        self.encoding = None
+        self.certificate = None
+        self.publickey = None
+        
+    def startElement(self, name, attrs, connection):
+        ret = SCObject.startElement(self, name, attrs, connection)
+        if ret is not None:
+            return ret
+        
+        if name == 'certificate':
+            self.id = attrs['level']
+            self.encoding = attrs['encoding']
+        else:
+            return None
+
+    def endElement(self, name, value, connection):
+        if name == 'certificate':
+            self.certificate = value
+            self.publickey = """-----BEGIN RSA PUBLIC KEY-----\n%s\n-----END RSA PUBLIC KEY-----\n""" % (self.certificate)
+        else:
+            setattr(self, name, value)
+
+class Authentication(SCObject):
+    def __init__(self, connection):
+        SCObject.__init__(self, connection)
+        self.id = None
+        self.token = None
+        self.expires = None
+        self.data = None
+        self.accountId = None
+
+    def startElement(self, name, attrs, connection):
+        ret = SCObject.startElement(self, name, attrs, connection)
+        if ret is not None:
+            return ret
+        
+        if name == 'authenticationResult':
+            self.id = attrs['id']
+            self.token = attrs['token']
+            self.expires = attrs['expires']
+        else:
+            return None
+
+    def endElement(self, name, value, connection):
+        setattr(self, name, value)
+        
+    def buildElement(self):
+        authentication = ElementTree.Element('authentication')
+        if self.id: authentication.attrib['id'] = self.id
+        if self.token: authentication.attrib['token'] = self.token
+        if self.expires: authentication.attrib['expires'] = self.expires
+        if self.data: authentication.attrib['data'] = self.data
+        if self.accountId: authentication.attrib['accountId'] = self.accountId
+        return authentication
+
+        
+    def isAuthenticated(self):
+        return self.token is not None
+
 
 class SCConnection(SCQueryConnection):
 
-    def __init__(self, host_base, broker_name=None, broker_passphase=None,
-                  auth_name=None, auth_password=None):
-        SCQueryConnection.__init__( self, host_base, broker_name, broker_passphase,
-                                    auth_name, auth_password)
+    def __init__(self, host_base, broker_name=None, broker_passphase=None):
+        SCQueryConnection.__init__( self, host_base, broker_name, broker_passphase)
+
+        # members
+        self.certificate = self.getCertificate()
+        
+        
+    def getCertificate(self):
+        params = {}
+        return self.get_object('PublicCertificate', params, Certificate)
+    
+    def basicAuth(self, name, password):
+        params = {}
+        # build authentication request
+        auth_req = Authentication(self)
+        publickey = RSA.importKey(self.certificate.publickey).publickey()
+        cipher = PKCS1_OAEP.new(publickey, Hash.SHA256)
+        encrypted_password = cipher.encrypt( bytes(password) )
+        auth_req.data = base64.b64encode(encrypted_password)
+        req_data = ElementTree.tostring(auth_req.buildElement())
+
+        auth = self.get_object( 'userBasicAuth/%s' % (name), params, Authentication, data=req_data, method='POST')
+        if auth:
+            self.authentication = auth
+            self.headers['X-UserSession'] = self.authentication.token
+        return self.authentication
+  
+    # functions start
     
     def listAllDevices(self):
         params = {}
         return self.get_list('device', params, 
-                             [('device', Device)])
+                             [('device', Device)], params)
         
     def listUsers(self):
         params = {}
         return self.get_list('user', params, 
-                             [('user', User)])
+                             [('user', User)], params)

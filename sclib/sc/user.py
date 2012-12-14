@@ -34,6 +34,7 @@ class User(SCObject):
         self.account = None
         self.role = None
         #user information
+        self.id = None
         self.loginname = None
         self.logintext = None
         self.usertype = None
@@ -52,7 +53,7 @@ class User(SCObject):
             return ret
         
         if name == 'user':
-            for key, value in attrs.items():
+            for key, value in attrs.iteritems():
                 setattr(self, key, value)
 
             #self.id = attrs['id']
@@ -70,6 +71,7 @@ class User(SCObject):
         elif name == 'account':
             self.account = Account(connection)
             self.account.startElement(name, attrs, connection)
+            return self.account
         elif name == 'role':
             self.role = Role(connection)
             self.role.startElement(name, attrs, connection)
@@ -91,10 +93,18 @@ class User(SCObject):
         user = ElementTree.Element('user')
         user.attrib['version'] = '3.5'
         
-        #login info
+        #user info
+        if self.id: user.attrib['id'] = self.id
         if self.loginname: user.attrib['loginname'] = self.loginname
         if self.logintext: user.attrib['logintext'] = self.logintext
-        if self.usertype: user.attrib['usertype'] = self.usertype
+        if self.email: user.attrib['email'] = self.email
+        if self.href: user.attrib['href'] = self.href
+        if self.isPending: user.attrib['isPending'] = self.isPending
+        if self.isCurrent: user.attrib['isCurrent'] = self.isCurrent
+        if self.authType: user.attrib['authType'] = self.authType
+        if self.ssoIdPName: user.attrib['ssoIdPName'] = self.ssoIdPName
+        if self.isLicensedUser: user.attrib['isLicensedUser'] = self.isLicensedUser
+        if self.MFAStatus: user.attrib['MFAStauts'] = self.MFAStatus
         
         #contact info
         contact = ElementTree.SubElement(user, 'contact')
@@ -110,7 +120,47 @@ class User(SCObject):
         
         #role
         if self.role: user.append(self.role.buildElements())
+        if self.account: user.append(self.account.buildElements())
         return user
+    
+    # ----- functions -----
+    def create(self):
+        req_element = self.buildElements()
+        data = ElementTree.tostring(req_element)
+
+        action = 'user/'
+        response = self.connection.make_request(action, data, method='POST')
+        return response
+    
+    def delete(self):
+        if self.id is None:
+            return None
+
+        data = ElementTree.tostring(self.buildElements())
+        action = 'user/' + self.id
+        response = self.connection.make_request(action, data, method='POST')
+        return response
+    
+    def get(self):
+        if self.id is None:
+            return None
+
+        data = ElementTree.tostring(self.buildElements())
+        action = 'user/' + self.id
+        response = self.connection.make_request(action, data)
+        return response
+        
+    def update(self):
+        #TODO - check more fields
+        if self.id is None:
+            return None
+
+        data = ElementTree.tostring(self.buildElements())
+        action = 'user/' + self.id
+        response = self.connection.make_request(action, data, method='POST')
+        return response
+
+
 
 class Account(SCObject):
     def __init__(self, connection):
@@ -134,8 +184,8 @@ class Account(SCObject):
             
     def buildElements(self):
         account = ElementTree.Element('account')
-        if self.id: role.attrib['id'] = self.id
-        if self.name: role.attrib['name'] = self.name
+        if self.id: account.attrib['id'] = self.id
+        if self.name: account.attrib['name'] = self.name
         return account
         
 class Role(SCObject):

@@ -16,12 +16,7 @@ class SCAuthConnectionTest(unittest.TestCase):
         from sclib.connection import SCAuthConnection
         self.connection = SCAuthConnection( config.get('connection', 'MS_HOST'),
                                             config.get('connection', 'MS_BROKER_NAME'), 
-                                            config.get('connection', 'MS_BROKER_PASSPHASE'), 
-                                            config.get('authentication', 'AUTH_NAME'), 
-                                            config.get('authentication', 'AUTH_PASSWORD') )
-
-    def testConnection(self):
-        self.assertEqual(self.connection.isConnected(), True)
+                                            config.get('connection', 'MS_BROKER_PASSPHASE') )
 
     def testGetRequest(self):
         self.assertEqual(self.connection.isConnected(), True)
