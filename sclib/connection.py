@@ -534,11 +534,11 @@ class SCAuthConnection:
         try:
             response = self.opener.open(req)
             logging.debug(response)
+            logging.debug("<<<<< make_request")
             return response
         except urllib2.HTTPError, e:
             logging.error(e)
             
-        logging.debug("<<<<< make_request")
         return None
 
     def close(self):

@@ -6,6 +6,7 @@ import logging
 
 from tests.unit import config, logging
 from sclib.sc.device import Device
+from sclib.sc.user import User
 from xml.etree import ElementTree
 from xml.dom import minidom
 
@@ -25,9 +26,12 @@ class SCConnectionTest(unittest.TestCase):
             xml_pretty = minidom.parseString(xml).toprettyxml()
             logging.debug(xml_pretty)
             
-    #def testUpdateDevice(self):
+    def testUpdateDevice(self):
+        userlist = self.connection.listUsers()
+        for user in userlist:
+            xml = user.buildXML()
+            xml_pretty = minidom.parseString(xml).toprettyxml()
+            logging.debug(xml_pretty)
 
 if __name__ == '__main__':
-
-
     unittest.main()

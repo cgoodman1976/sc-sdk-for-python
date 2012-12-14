@@ -25,6 +25,7 @@ import xml.sax
 
 from sclib.connection import SCQueryConnection
 from sclib.sc.device import Device
+from sclib.sc.user import User
 from xml.dom.minidom import parse, parseString
 
 class SCConnection(SCQueryConnection):
@@ -37,12 +38,9 @@ class SCConnection(SCQueryConnection):
     def listAllDevices(self):
         params = {}
         return self.get_list('device', params, 
-                             [('device', Device)], method='GET')
+                             [('device', Device)])
         
-        #device_xml = xml.dom.minidom.parseString(response.read())
-        #deviceList = device_xml.getElementsByTagName("deviceList")[0]
-        #devices = deviceList.getElementsByTagName("device")
-        #device = Device()
-        #for dev in devices:
-        #    device.parse(dev)
-        #return device
+    def listUsers(self):
+        params = {}
+        return self.get_list('user', params, 
+                             [('user', User)])

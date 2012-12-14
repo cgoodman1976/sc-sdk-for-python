@@ -22,6 +22,8 @@
 
 "Handle SecureCloud basic connection to SC Management API"
 
+from xml.etree import ElementTree
+
 class SCObject(object):
 
     def __init__(self, connection=None):
@@ -37,4 +39,16 @@ class SCObject(object):
 
     # build xml elements structure
     def buildElements(self):
-        return None
+        pass
+    
+    def buildXML(self, element=None):
+        if element: 
+            # build xml from element input
+            element_data = ElementTree.tostring(element)
+            return element_data
+
+        # build from self's elements
+        self_element = self.buildElements()
+        if self_element is not None:
+            data = ElementTree.tostring(self_element)
+            return data
