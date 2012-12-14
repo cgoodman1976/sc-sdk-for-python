@@ -53,7 +53,7 @@ class User(SCObject):
             return ret
         
         if name == 'user':
-            for key, value in attrs.iteritems():
+            for key, value in attrs.items():
                 setattr(self, key, value)
 
             #self.id = attrs['id']
