@@ -20,6 +20,7 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
 
+from xml.etree import ElementTree
 
 class ResultSet(list):
     """
@@ -52,10 +53,15 @@ class ResultSet(list):
     def startElement(self, name, attrs, connection):
         for t in self.markers:
             if name == t[0]:
-                obj = t[1](connection)
-                obj.startElement(name, attrs, connection)
-                self.append(obj)
-                return obj
+                if t[1] is None:
+                    #This is ResultSet name marker
+                    self.marker = name 
+                else:
+                    # This is Object marker
+                    obj = t[1](connection)
+                    obj.startElement(name, attrs, connection)
+                    self.append(obj)
+                    return obj
         return None
 
     def to_boolean(self, value, true_value='true'):
@@ -73,6 +79,20 @@ class ResultSet(list):
             self.status = self.to_boolean(value, 'True')
         else:
             setattr(self, name, value)
+
+    def buildElement(self):
+
+        # enumerate all objects in list
+        root = None
+        if self.marker:
+            root = ElementTree.Element(self.marker)
+            for obj in self:
+                element = obj.buildElement()
+                root.append(element)
+                return root
+        
+        return root
+
 
 class BooleanResult(object):
 

@@ -15,11 +15,12 @@ class SCSecurityGroupTest(unittest.TestCase):
         self.connection.basicAuth(  config.get('authentication', 'AUTH_NAME'), 
                                     config.get('authentication', 'AUTH_PASSWORD'))
 
-        self.policys = self.connection.listAllSecurityGroup()
-
-    def testPolicyCreate(self):
-        for policy in self.policys:
-            xml_pretty = policy.niceFormat()
+    def testListAllPolicy(self):
+        policys = self.connection.listAllSecurityGroup()
+        for policy in policys:
+            sec = self.connection.getSecurityGroup(policy.id)
+            self.assertEqual(policy.id, sec.id)
+            xml_pretty = sec.niceFormat()
             logging.debug(xml_pretty)
             
     def testListAllRuleTypes(self):

@@ -70,8 +70,8 @@ class SecurityGroup(SCObject):
             for key, value in attrs.items():
                 setattr(self, key, value)
             return self
-        elif name == 'securityRuleTypeList':
-            self.rules = ResultSet([('securityRuleType', SecurityRuleType)])
+        elif name == 'securityRuleList':
+            self.rules = ResultSet([('securityRule', SecurityRule)])
             return self.rules
         else:
             return None
@@ -102,10 +102,83 @@ class SecurityGroup(SCObject):
         if self.RevokeIntervalType: group.attrib['RevokeIntervalType'] = self.RevokeIntervalType
         if self.RevokeIntervalNumber: group.attrib['RevokeIntervalNumber'] = self.RevokeIntervalNumber
         if self.description: group.attrib['description'] = self.description
+        #rules
+        if self.rules: group.append(self.rules.buildElement())
                 
         #actions
-
         return group
+
+class SecurityRule(SCObject):
+    def __init__(self, connection):
+        SCObject.__init__(self, connection)
+
+        #member initialization
+        self.id = None
+        self.description = None
+        self.matchType = None
+        self.dataMissing = None
+        self.ruletype = None
+        self.conditions = None
+
+    def startElement(self, name, attrs, connection):
+        ret = SCObject.startElement(self, name, attrs, connection)
+        if ret is not None:
+            return ret
+        
+        if name == 'securityRule':
+            for key, value in attrs.items():
+                setattr(self, key, value)
+        elif name == 'securityRuleType':
+            self.ruletype = SecurityRuleType(connection)
+            self.ruletype.startElement(name, attrs, connection)
+            return self.ruletype
+        elif name == 'securityRuleConditionList':
+            self.conditions = ResultSet([('securityRuleCondition', SecurityRuleCondition)])
+            return self.conditions
+        else:
+            return None
+
+    def endElement(self, name, value, connection):
+        setattr(self, name, value)
+    
+    def buildElement(self):
+        group = ElementTree.Element('securityRule')
+        group.attrib['version'] = '3.5'
+        
+        #user info
+        if self.id: group.attrib['id'] = self.id
+        if self.description: group.attrib['description'] = self.description
+        #actions
+        return group
+        
+    # ----- operation -----
+    def update(self):
+        pass
+        
+class SecurityRuleCondition(SCObject):
+    def __init__(self, connection):
+        SCObject.__init__(self, connection)
+
+        #member initialization
+        self.evaluator = None
+        self.expectedValue = None
+
+    def startElement(self, name, attrs, connection):
+        ret = SCObject.startElement(self, name, attrs, connection)
+        if ret is not None:
+            return ret
+        
+        if name == 'securityRuleCondition':
+            for key, value in attrs.items():
+                setattr(self, key, value)
+            return self
+        else:
+            return None
+
+    def endElement(self, name, value, connection):
+        setattr(self, name, value)
+
+    
 
 class SecurityRuleType(SCObject):
     def __init__(self, connection):

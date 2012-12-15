@@ -28,7 +28,7 @@ from sclib.connection import SCQueryConnection
 from sclib.sc.device import Device
 from sclib.sc.user import User
 from sclib.sc.scobject import SCObject
-from sclib.sc.securitygroup import SecurityGroup, SecurityRuleType
+from sclib.sc.securitygroup import SecurityGroup, SecurityRule, SecurityRuleType
 
 from xml.dom.minidom import parse, parseString
 from xml.etree import ElementTree
@@ -142,10 +142,17 @@ class SCConnection(SCQueryConnection):
         return self.get_list('SecurityGroup', params, 
                              [('securityGroup', SecurityGroup)])
 
+    def getSecurityGroup(self, id):
+        params = {}
+        action = 'securityGroup/%s/' % (id) 
+        rule = self.get_object(action, params, SecurityGroup)
+        return rule
+
     def listAllRules(self):
         params = {}
         return self.get_list('SecurityRule', params, 
                              [('securityRuleType', SecurityRuleType)])
+
 
     # function - User
     def listAllUsers(self):
@@ -169,4 +176,4 @@ class SCConnection(SCQueryConnection):
     
     def getUser(self, id):
         params = {}
-        return self.get_object('user/%s' % (id), params, User, method='POST')
+        return self.get_object('user/%s/' % (id), params, User)
