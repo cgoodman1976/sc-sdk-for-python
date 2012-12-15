@@ -38,9 +38,6 @@ class ResultSet(list):
     specified element is found in the XML, a new instance of the class
     will be created and popped onto the stack.
 
-    :ivar str next_token: A hash used to assist in paging through very long
-        result sets. In most cases, passing this value to certain methods
-        will give you another 'page' of results.
     """
     def __init__(self, marker_elem=None):
         list.__init__(self)
@@ -50,13 +47,6 @@ class ResultSet(list):
             self.markers = []
         self.marker = None
         self.key_marker = None
-        self.next_marker = None  # avail when delimiter used
-        self.next_key_marker = None
-        self.next_upload_id_marker = None
-        self.next_version_id_marker = None
-        self.version_id_marker = None
-        self.is_truncated = False
-        self.next_token = None
         self.status = True
 
     def startElement(self, name, attrs, connection):
@@ -75,45 +65,10 @@ class ResultSet(list):
             return False
 
     def endElement(self, name, value, connection):
-        if name == 'IsTruncated':
-            self.is_truncated = self.to_boolean(value)
-        elif name == 'Marker':
-            self.marker = value
-        elif name == 'KeyMarker':
-            self.key_marker = value
-        elif name == 'NextMarker':
-            self.next_marker = value
-        elif name == 'NextKeyMarker':
-            self.next_key_marker = value
-        elif name == 'VersionIdMarker':
-            self.version_id_marker = value
-        elif name == 'NextVersionIdMarker':
-            self.next_version_id_marker = value
-        elif name == 'UploadIdMarker':
-            self.upload_id_marker = value
-        elif name == 'NextUploadIdMarker':
-            self.next_upload_id_marker = value
-        elif name == 'Bucket':
-            self.bucket = value
-        elif name == 'MaxUploads':
-            self.max_uploads = int(value)
-        elif name == 'MaxItems':
-            self.max_items = int(value)
-        elif name == 'Prefix':
-            self.prefix = value
-        elif name == 'return':
+        if name == 'return':
             self.status = self.to_boolean(value)
         elif name == 'StatusCode':
             self.status = self.to_boolean(value, 'Success')
-        elif name == 'ItemName':
-            self.append(value)
-        elif name == 'NextToken':
-            self.next_token = value
-        elif name == 'BoxUsage':
-            try:
-                connection.box_usage += float(value)
-            except:
-                pass
         elif name == 'IsValid':
             self.status = self.to_boolean(value, 'True')
         else:

@@ -25,19 +25,12 @@ import warnings
 import ConfigParser
 import sclib
 
-# If running in Google App Engine there is no "user" and
-# os.path.expanduser() will fail. Attempt to detect this case and use a
-# no-op expanduser function in this case.
-try:
-    os.path.expanduser('~')
-    expanduser = os.path.expanduser
-except (AttributeError, ImportError):
-    # This is probably running on App Engine.
-    expanduser = (lambda x: x)
+os.path.expanduser('~')
+expanduser = os.path.expanduser
 
-# By default we use two locations for the boto configurations,
-# /etc/boto.cfg and ~/.boto (which works on Windows and Unix).
-sclibConfigPath = '/etc/sclib.cfg'
+# By default we use two locations for the securecloud configurations,
+# /etc/sc.cfg and ~/.sc (which works on Windows and Unix).
+sclibConfigPath = '/etc/sc.cfg'
 sclibConfigLocations = [sclibConfigPath]
 UserConfigPath = os.path.join(expanduser('~'), '.sclib')
 sclibConfigLocations.append(UserConfigPath)
@@ -58,8 +51,7 @@ elif 'SCLIB_PATH' in os.environ:
 class Config(ConfigParser.SafeConfigParser):
 
     def __init__(self, path=None, fp=None, do_load=True):
-        ConfigParser.SafeConfigParser.__init__(self, {'working_dir' : '/mnt/pyami',
-                                                      'debug' : '0'})
+        ConfigParser.SafeConfigParser.__init__(self, {'working_dir' : '/mnt/sc', 'debug' : '0'})
         if do_load:
             if path:
                 self.load_from_path(path)
@@ -67,21 +59,6 @@ class Config(ConfigParser.SafeConfigParser):
                 self.readfp(fp)
             else:
                 self.read(sclibConfigLocations)
-            if "AWS_CREDENTIAL_FILE" in os.environ:
-                full_path = expanduser(os.environ['AWS_CREDENTIAL_FILE'])
-                try:
-                    self.load_credential_file(full_path)
-                except IOError:
-                    warnings.warn('Unable to load AWS_CREDENTIAL_FILE (%s)' % full_path)
-
-    def load_credential_file(self, path):
-        """Load a credential file as is setup like the Java utilities"""
-        c_data = StringIO.StringIO()
-        c_data.write("[Credentials]\n")
-        for line in open(path, "r").readlines():
-            c_data.write(line.replace("AWSAccessKeyId", "aws_access_key_id").replace("AWSSecretKey", "aws_secret_access_key"))
-        c_data.seek(0)
-        self.readfp(c_data)
 
     def load_from_path(self, path):
         file = open(path)
@@ -116,27 +93,6 @@ class Config(ConfigParser.SafeConfigParser):
 
     def save_system_option(self, section, option, value):
         self.save_option(sclibConfigPath, section, option, value)
-
-    def get_instance(self, name, default=None):
-        try:
-            val = self.get('Instance', name)
-        except:
-            val = default
-        return val
-
-    def get_user(self, name, default=None):
-        try:
-            val = self.get('User', name)
-        except:
-            val = default
-        return val
-
-    def getint_user(self, name, default=0):
-        try:
-            val = self.getint('User', name)
-        except:
-            val = default
-        return val
 
     def get_value(self, section, name, default=None):
         return self.get(section, name, default)

@@ -66,7 +66,6 @@ from Crypto.Cipher import PKCS1_OAEP
 from Crypto import Hash
 
 import sclib
-import sclib.cacerts
 
 from sclib import __config__, UserAgent
 from sclib.sc.scobject import SCObject
@@ -82,8 +81,6 @@ try:
     import threading
 except ImportError:
     import dummy_threading as threading
-
-DEFAULT_CA_CERTS_FILE = os.path.join(os.path.dirname(os.path.abspath(sclib.cacerts.__file__ )), "cacerts.txt")
 
 class HostConnectionPool(object):
 

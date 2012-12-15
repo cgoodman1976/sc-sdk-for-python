@@ -21,6 +21,7 @@
 #
 
 from sclib.sc.scobject import SCObject
+from sclib.resultset import ResultSet
 from xml.etree import ElementTree
 
 class SecurityGroupAction(SCObject):
@@ -52,6 +53,8 @@ class SecurityGroup(SCObject):
         self.RevokeIntervalType = None
         self.RevokeIntervalNumber = None
         self.description = None
+        #rules
+        self.rules = None
         #action
         self.successAction = None
         self.failedAction = None
@@ -67,6 +70,9 @@ class SecurityGroup(SCObject):
             for key, value in attrs.items():
                 setattr(self, key, value)
             return self
+        elif name == 'securityRuleTypeList':
+            self.rules = ResultSet([('securityRuleType', SecurityRuleType)])
+            return self.rules
         else:
             return None
 
@@ -99,5 +105,48 @@ class SecurityGroup(SCObject):
                 
         #actions
 
+        return group
+
+class SecurityRuleType(SCObject):
+    def __init__(self, connection):
+        SCObject.__init__(self, connection)
+
+        #member initialization
+        self.id = None
+        self.name = None
+        self.evaluator = None
+        self.context = None
+        self.dataType = None
+        self.description = None
         
+    def startElement(self, name, attrs, connection):
+        ret = SCObject.startElement(self, name, attrs, connection)
+        if ret is not None:
+            return ret
+        
+        if name == 'securityRuleType':
+            for key, value in attrs.items():
+                setattr(self, key, value)
+            return self
+        else:
+            return None
+
+    def endElement(self, name, value, connection):
+        if name == 'description':
+            self.description = value
+        else:
+            setattr(self, name, value)
+            
+    def buildElements(self):
+        group = ElementTree.Element('securityRuleType')
+        group.attrib['version'] = '3.5'
+        
+        #user info
+        if self.id: group.attrib['id'] = self.id
+        if self.name: group.attrib['name'] = self.name
+        if self.evaluator: group.attrib['evaluator'] = self.evaluator
+        if self.context: group.attrib['context'] = self.context
+        if self.dataType: group.attrib['dataType'] = self.dataType
+        if self.description: group.attrib['description'] = self.description
+        #actions
         return group

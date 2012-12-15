@@ -20,7 +20,7 @@
 # IN THE SOFTWARE.
 #
 
-from sclib.pyami.config import Config, sclibConfigLocations
+from sclib.config import Config, sclibConfigLocations
 
 import os
 import platform
@@ -85,18 +85,21 @@ def set_stream_logger(name, level=logging.DEBUG, format_string=None):
     logger.addHandler(fh)
     log = logger
 
-def connect_sc(aws_access_key_id=None, aws_secret_access_key=None, **kwargs):
+def connect_sc(sc_host_url, sc_broker, sc_broker_key):
     """
-    :type aws_access_key_id: string
-    :param aws_access_key_id: Your AWS Access Key ID
+    :type sc_host_url: string
+    :param sc_host_url: Your SecureCloud broker url. Ex. https://ms.securecloud.com:7443/broker/API.svc/v3.5
 
-    :type aws_secret_access_key: string
-    :param aws_secret_access_key: Your AWS Secret Access Key
+    :type sc_broker: string
+    :param sc_broker: Your broker name
+    
+    :type sc_broker_key: string
+    :param sc_broker_key: Your broker access key
 
-    :rtype: :class:`boto.ec2.connection.EC2Connection`
-    :return: A connection to Amazon's EC2
+    :rtype: :class:`sclib.sc.connection.SCConnection`
+    :return: A connection to SecureCloud
     """
     from sclib.sc.connection import SCConnection
-    return SCConnection(aws_access_key_id, aws_secret_access_key, **kwargs)
+    return SCConnection(sc_host_url, sc_broker, sc_broker_key)
 
 #sclib.plugin.load_plugins(__config__)

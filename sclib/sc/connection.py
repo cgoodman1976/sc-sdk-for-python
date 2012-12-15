@@ -28,7 +28,7 @@ from sclib.connection import SCQueryConnection
 from sclib.sc.device import Device
 from sclib.sc.user import User
 from sclib.sc.scobject import SCObject
-from sclib.sc.securitygroup import SecurityGroup
+from sclib.sc.securitygroup import SecurityGroup, SecurityRuleType
 
 from xml.dom.minidom import parse, parseString
 from xml.etree import ElementTree
@@ -134,19 +134,24 @@ class SCConnection(SCQueryConnection):
     def listAllDevices(self):
         params = {}
         return self.get_list('device', params, 
-                             [('device', Device)], params)
+                             [('device', Device)])
 
     # function - Policy/SecurityGroup
-    def listAllPolicy(self):
+    def listAllSecurityGroup(self):
         params = {}
         return self.get_list('SecurityGroup', params, 
-                             [('securityGroup', SecurityGroup)], params)
+                             [('securityGroup', SecurityGroup)])
+
+    def listAllRules(self):
+        params = {}
+        return self.get_list('SecurityRule', params, 
+                             [('securityRuleType', SecurityRuleType)])
 
     # function - User
     def listAllUsers(self):
         params = {}
         return self.get_list('user', params, 
-                             [('user', User)], params)
+                             [('user', User)])
         
     def createUser(self, login, text, usertype='localuser', firstname='', lastname='', email='', role='Administrator', MFA='false'):
         params = {}

@@ -33,22 +33,21 @@ import sys
 
 from sclib import __version__
 
-if sys.version_info <= (2, 4):
-    error = "ERROR: sclib requires Python Version 2.5 or above...exiting."
+if sys.version_info <= (2, 6):
+    error = "ERROR: sclib requires Python Version 2.6 or above...exiting."
     print >> sys.stderr, error
     sys.exit(1)
 
 setup(name = "sclib",
       version = __version__,
       description = "SecureCloud Service Library",
-      long_description = open("README.rst").read(),
+      long_description = open("README.md").read(),
       author = "SecureCloud",
       author_email = "securecloud@trend.com.tw",
-      scripts = ["bin/securecloud"],
+      scripts = [],
       url = "https://github.com/securecloud/sc-sdk-for-python/",
-      packages = ["sclib", "sclib.key", "sclib.sc", "sclib.pyami",
-                  "sc.cacerts"],
-      package_data = {"sc.cacerts": ["cacerts.txt"]},
+      packages = ["sclib", "sclib.sc"],
+      package_data = {},
       license = "MIT",
       platforms = "Posix; MacOS X; Windows",
       classifiers = ["Development Status :: 5 - Production/Stable",
@@ -57,7 +56,6 @@ setup(name = "sclib",
                      "Operating System :: OS Independent",
                      "Topic :: Internet",
                      "Programming Language :: Python :: 2",
-                     "Programming Language :: Python :: 2.5",
                      "Programming Language :: Python :: 2.6",
                      "Programming Language :: Python :: 2.7"],
       **extra

@@ -15,10 +15,19 @@ class SCSecurityGroupTest(unittest.TestCase):
         self.connection.basicAuth(  config.get('authentication', 'AUTH_NAME'), 
                                     config.get('authentication', 'AUTH_PASSWORD'))
 
-        self.policys = self.connection.listAllPolicy()
+        self.policys = self.connection.listAllSecurityGroup()
 
     def testPolicyCreate(self):
-        pass
+        for policy in self.policys:
+            xml_pretty = policy.niceFormat()
+            logging.debug(xml_pretty)
+            
+    def testListAllRuleTypes(self):
+        rulelist = self.connection.listAllRules()
+        for rule in rulelist:
+            xml_pretty = rule.niceFormat()
+            logging.debug(xml_pretty)
+
 
 if __name__ == '__main__':
     unittest.main()
