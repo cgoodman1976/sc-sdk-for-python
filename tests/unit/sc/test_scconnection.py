@@ -28,9 +28,15 @@ class SCConnectionTest(unittest.TestCase):
             logging.debug(xml_pretty)
             
     def testListAllUser(self):
-        userlist = self.connection.listUsers()
+        userlist = self.connection.listAllUsers()
         for user in userlist:
             xml_pretty = user.niceFormat()
+            logging.debug(xml_pretty)
+            
+    def testListAllPolicy(self):
+        policylist = self.connection.listAllPolicy()
+        for policy in policylist:
+            xml_pretty = policy.niceFormat()
             logging.debug(xml_pretty)
 
 if __name__ == '__main__':

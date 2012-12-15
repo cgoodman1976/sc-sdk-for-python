@@ -424,7 +424,6 @@ class SCAuthConnection:
                 req.add_header(key, value)
             
         if method == 'POST' and data != '':
-            logging.debug(data)
             req.add_data(data)
         elif method == 'DELETE':
             req.get_method = lambda: 'DELETE'
@@ -446,7 +445,6 @@ class SCAuthConnection:
 
         try:
             response = self.opener.open(req)
-            logging.debug(response)
             logging.debug("<<<<< make_request")
             return response
         except urllib2.HTTPError, e:

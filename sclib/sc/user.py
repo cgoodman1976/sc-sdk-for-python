@@ -55,18 +55,6 @@ class User(SCObject):
         if name == 'user':
             for key, value in attrs.items():
                 setattr(self, key, value)
-
-            #self.id = attrs['id']
-            #self.loginname = attrs['loginname']
-            #self.logintext = attrs['logintext']
-            #self.email = attrs['email']
-            #self.href = attrs['href']
-            #self.isPending = attrs['isPending']
-            #self.isCurrent = attrs['isCurrent']
-            #self.authType = attrs['authType']
-            #self.ssoIdPName = attrs['ssoIdPName']
-            #self.isLicensedUser = attrs['isLicensedUser']
-            #self.MFAStatus = attrs['MFAStauts']
             return self
         elif name == 'account':
             self.account = Account(connection)
@@ -124,43 +112,24 @@ class User(SCObject):
         return user
     
     # ----- functions -----
-    def create(self):
-        req_element = self.buildElements()
-        data = ElementTree.tostring(req_element)
-
-        action = 'user/'
-        response = self.connection.make_request(action, data, method='POST')
-        return response
     
     def delete(self):
         if self.id is None:
             return None
 
-        data = ElementTree.tostring(self.buildElements())
         action = 'user/' + self.id
-        response = self.connection.make_request(action, data, method='POST')
-        return response
-    
-    def get(self):
-        if self.id is None:
-            return None
-
-        data = ElementTree.tostring(self.buildElements())
-        action = 'user/' + self.id
-        response = self.connection.make_request(action, data)
-        return response
-        
+        response = self.connection.make_request(action, method='DELETE')
+        return response.code == 200
+            
     def update(self):
         #TODO - check more fields
         if self.id is None:
             return None
 
-        data = ElementTree.tostring(self.buildElements())
         action = 'user/' + self.id
+        data = ElementTree.tostring(self.buildElements())
         response = self.connection.make_request(action, data, method='POST')
-        return response
-
-
+        return response.code == 200
 
 class Account(SCObject):
     def __init__(self, connection):

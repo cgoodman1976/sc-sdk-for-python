@@ -103,8 +103,8 @@ class Device(SCObject):
     
     def update(self):
         # Build XML elements structures
-        req_element = self.buildElements()
         action = 'device/' + self.uid + '/'
+        req_element = self.buildElements()
         data = ElementTree.tostring(req_element)
         response = self.connection.make_request(action, data, method='POST')
         return response

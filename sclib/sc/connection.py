@@ -28,6 +28,8 @@ from sclib.connection import SCQueryConnection
 from sclib.sc.device import Device
 from sclib.sc.user import User
 from sclib.sc.scobject import SCObject
+from sclib.sc.securitygroup import SecurityGroup
+
 from xml.dom.minidom import parse, parseString
 from xml.etree import ElementTree
 from Crypto.PublicKey import RSA
@@ -133,8 +135,33 @@ class SCConnection(SCQueryConnection):
         params = {}
         return self.get_list('device', params, 
                              [('device', Device)], params)
-        
-    def listUsers(self):
+
+    # function - Policy/SecurityGroup
+    def listAllPolicy(self):
+        params = {}
+        return self.get_list('SecurityGroup', params, 
+                             [('securityGroup', SecurityGroup)], params)
+
+    # function - User
+    def listAllUsers(self):
         params = {}
         return self.get_list('user', params, 
                              [('user', User)], params)
+        
+    def createUser(self, login, text, usertype='localuser', firstname='', lastname='', email='', role='Administrator', MFA='false'):
+        params = {}
+        user = User(self)
+        user.loginname = login
+        user.logintext = text
+        user.usertype = usertype
+        user.firstName = firstname
+        user.lastName = lastname
+        user.email = email
+        user.name = role
+        user.MFAStatus = MFA
+        data = ElementTree.tostring(user.buildElements())
+        return self.get_object('user', params, User, data=data, method='POST')
+    
+    def getUser(self, id):
+        params = {}
+        return self.get_object('user/%s' % (id), params, User, method='POST')

@@ -4,8 +4,6 @@ import logging
 
 from tests.unit import config, logging
 from sclib.sc.user import User
-from xml.etree import ElementTree
-from xml.dom import minidom
 
 class SCUserTest(unittest.TestCase):
     def setUp(self):
@@ -14,32 +12,36 @@ class SCUserTest(unittest.TestCase):
                                         config.get('connection', 'MS_BROKER_NAME'), 
                                         config.get('connection', 'MS_BROKER_PASSPHASE'))
 
-        auth = self.connection.basicAuth( config.get('authentication', 'AUTH_NAME'), 
-                                          config.get('authentication', 'AUTH_PASSWORD'))
+        self.connection.basicAuth(  config.get('authentication', 'AUTH_NAME'), 
+                                    config.get('authentication', 'AUTH_PASSWORD'))
 
         self.users = self.connection.listAllUsers()
-        self.user = User(self.connection)
+        self.user = None
 
     def testUserCreate(self):
-        self.user.id = 'xxxxxxxxx'
-        response = self.user.create()
+        user = self.connection.createUser( 'unittest@securecloud.com',
+                                            'unittest_text',
+                                            'localuser',
+                                            'unit',
+                                            'test',
+                                            'unittest@securecloud.com',
+                                            'Administrator',
+                                            'false')
+        self.assertNotEqual(user, None)
+        if user is not None: 
+            self.user = user
         
     def testUserGet(self):
-        user = User(self.connection)
-        user.id = self.user.id
-        response = self.user.get()
+        self.assertNotEqual(self.user, None)
+        
+        user = self.connection.getUser(self.users[0].id)
+        self.assertNotEqual(user, None)
+        self.assertNotEqual(user.id, self.users[0].id)
         
     def testUserUpdate(self):
-        user = User(self.connection)
-        user.id = self.user.id
-        #TODO - update more field here
-        response = user.update()
-
-    def testUserDelete(self):
-        user = User(self.user)
-        user.id = self.user.id
-        #TODO - update more field here
-        response = user.update()
-
+        res = self.users[0].update()
+        self.assertEqual(res, True)
+        
+        
 if __name__ == '__main__':
     unittest.main()
