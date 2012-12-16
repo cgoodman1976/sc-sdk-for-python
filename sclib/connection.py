@@ -381,7 +381,6 @@ class SCAuthentication(SCObject):
 
 
 class SCAuthConnection:
-
     def __init__( self, host_base, broker_name=None, broker_passphase=None):
 
         self.base_url = host_base
@@ -400,8 +399,8 @@ class SCAuthConnection:
 
     # ----- help function ends
 
-    def nice_format(self, input):
-        xmlstr = parseString(input)
+    def nice_format(self, data):
+        xmlstr = parseString(data)
         pretty_res = xmlstr.toprettyxml()
 
         return pretty_res
@@ -442,11 +441,21 @@ class SCAuthConnection:
 
         try:
             response = self.opener.open(req)
-            logging.debug("<<<<< make_request")
-            return response
+            body = response.read()
+            if response.code == 200:
+                sclib.log.debug(self.nice_format(body))
+                logging.debug("<<<<< make_request")
+                return body
+            else:
+                if not body:
+                    sclib.log.error('Null body %s' % body)
+                else:
+                    sclib.log.error('%s %s' % (response.status, response.reason))
+                    sclib.log.error('%s' % body)
+                raise self.ResponseError(response.status, response.reason, body)
         except urllib2.HTTPError, e:
             logging.error(e)
-            
+
         return None
 
     def close(self):
@@ -455,10 +464,6 @@ class SCAuthConnection:
 
         sclib.log.debug('closing all HTTP connections')
         self._connection = None  # compact field
-
-    
-    def isConnected(self):
-        return self.auth != None    
 
 
 class SCQueryConnection(SCAuthConnection):
@@ -483,56 +488,38 @@ class SCQueryConnection(SCAuthConnection):
     def get_list(self, action, params, markers, headers=None, data='', path='/', parent=None, method='GET'):
         if not parent:
             parent = self
-        response = self.make_request(action, headers=headers, data=data, method=method)
-        body = response.read()
-        sclib.log.debug(body)
-        if not body:
-            sclib.log.error('Null body %s' % body)
-            raise self.ResponseError(response.status, response.reason, body)
-        elif response.code == 200:
+        body = self.make_request(action, headers=headers, data=data, method=method)
+        sclib.log.debug(self.nice_format(body))
+        if body:
             rs = ResultSet(markers)
             h = sclib.handler.XmlHandler(rs, parent)
             xml.sax.parseString(body, h)
             return rs
-        else:
-            sclib.log.error('%s %s' % (response.status, response.reason))
-            sclib.log.error('%s' % body)
-            raise self.ResponseError(response.status, response.reason, body)
+        return None
 
     def get_object(self, action, params, cls, headers=None, data='',path='/', parent=None, method='GET'):
         if not parent:
             parent = self
-        response = self.make_request(action, headers=headers, data=data, method=method)
-        body = response.read()
+        body = self.make_request(action, headers=headers, data=data, method=method)
         sclib.log.debug(self.nice_format(body))
-        if not body:
-            sclib.log.error('Null body %s' % body)
-            raise self.ResponseError(response.status, response.reason, body)
-        elif response.code == 200:
+        if body:
             obj = cls(parent)
             h = sclib.handler.XmlHandler(obj, parent)
             xml.sax.parseString(body, h)
             return obj
-        else:
-            sclib.log.error('%s %s' % (response.status, response.reason))
-            sclib.log.error('%s' % body)
-            raise self.ResponseError(response.status, response.reason, body)
+        return None
 
     def get_status(self, action='GET', headers=None, data='', params=None, path='/', parent=None):
         if not parent:
             parent = self
-        response = self.make_request(action)
-        body = response.read()
+        body = self.make_request(action)
         sclib.log.debug(body)
-        if not body:
-            sclib.log.error('Null body %s' % body)
-            raise self.ResponseError(response.status, response.reason, body)
-        elif response.code == 200:
+
+        if body:
             rs = ResultSet()
             h = sclib.handler.XmlHandler(rs, parent)
             xml.sax.parseString(body, h)
             return rs.status
-        else:
-            sclib.log.error('%s %s' % (response.status, response.reason))
-            sclib.log.error('%s' % body)
-            raise self.ResponseError(response.status, response.reason, body)
+
+        return None
+        

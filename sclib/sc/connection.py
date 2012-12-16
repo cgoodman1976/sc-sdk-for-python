@@ -104,16 +104,20 @@ class SCConnection(SCQueryConnection):
 
     def __init__(self, host_base, broker_name=None, broker_passphase=None):
         SCQueryConnection.__init__( self, host_base, broker_name, broker_passphase)
-
-        # members
-        self.certificate = self.getCertificate()
         
+        #members
+        self.authentication = None
+        self.certificate = None
         
     def getCertificate(self):
         params = {}
-        return self.get_object('PublicCertificate', params, Certificate)
+        self.certificate = self.get_object('PublicCertificate', params, Certificate)
     
     def basicAuth(self, name, password):
+        
+        if self.certificate is None:
+            self.getCertificate()
+        
         params = {}
         # build authentication request
         auth_req = Authentication(self)
@@ -129,26 +133,34 @@ class SCConnection(SCQueryConnection):
             self.headers['X-UserSession'] = self.authentication.token
         return self.authentication
   
-    # functions start
+    # functions - Device
     
     def listAllDevices(self):
+        if self.authentication is None: return None
+    
         params = {}
         return self.get_list('device', params, 
                              [('device', Device)])
 
     # function - Policy/SecurityGroup
     def listAllSecurityGroup(self):
+        if self.authentication is None: return None
+    
         params = {}
         return self.get_list('SecurityGroup', params, 
                              [('securityGroup', SecurityGroup)])
 
     def getSecurityGroup(self, id):
+        if self.authentication is None: return None
+    
         params = {}
         action = 'securityGroup/%s/' % (id) 
         rule = self.get_object(action, params, SecurityGroup)
         return rule
 
     def listAllRules(self):
+        if self.authentication is None: return None
+
         params = {}
         return self.get_list('SecurityRule', params, 
                              [('securityRuleType', SecurityRuleType)])
@@ -156,11 +168,14 @@ class SCConnection(SCQueryConnection):
 
     # function - User
     def listAllUsers(self):
+        if self.authentication is None: return None
+
         params = {}
-        return self.get_list('user', params, 
-                             [('user', User)])
+        return self.get_list('user', params, [('user', User)])
         
     def createUser(self, login, text, usertype='localuser', firstname='', lastname='', email='', role='Administrator', MFA='false'):
+        if self.authentication is None: return None
+
         params = {}
         user = User(self)
         user.loginname = login
@@ -175,5 +190,7 @@ class SCConnection(SCQueryConnection):
         return self.get_object('user', params, User, data=data, method='POST')
     
     def getUser(self, id):
+        if self.authentication is None: return None
+
         params = {}
         return self.get_object('user/%s/' % (id), params, User)

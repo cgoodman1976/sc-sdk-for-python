@@ -69,7 +69,7 @@ def set_file_logger(name, filepath, level=logging.INFO, format_string=None):
     formatter = logging.Formatter(format_string)
     fh.setFormatter(formatter)
     logger.addHandler(fh)
-    log = logger
+    return logger
 
 
 def set_stream_logger(name, level=logging.DEBUG, format_string=None):
