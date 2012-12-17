@@ -15,7 +15,7 @@ from tests.unit.sc.connectionfilter import SCConnectionFilter
 
 class SCConnectionTest(unittest.TestCase):
     def setUp(self):
-        self.connection = SCConnection( config.get('connection', 'MS_HOST'),
+        self.connection = SCConnectionFilter( config.get('connection', 'MS_HOST'),
                                         config.get('connection', 'MS_BROKER_NAME'), 
                                         config.get('connection', 'MS_BROKER_PASSPHASE'))
 

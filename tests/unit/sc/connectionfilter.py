@@ -4,6 +4,8 @@ import io
 import datetime
 import tests
 import copy
+import StringIO
+import urllib
 
 from sclib.sc.connection import SCConnection
 from time import gmtime, strftime
@@ -42,8 +44,14 @@ class SCConnectionFilter(SCConnection):
             rf.close()
 
             # make request to securecloud
-            body = SCConnection.make_request(self, action, params, headers, data, method)
+            response = SCConnection.make_request(self, action, params, headers, data, method)
     
+            body = response.read()
+            
+            #make fake response
+            resfp = StringIO.StringIO(body)
+            fake = urllib.addinfourl(resfp, response.info(), response.geturl(), response.getcode())
+            
             # serialize Response data
             resfile = action.replace('/', '-')
             resfile = os.path.join(self.serial_path, '%s[Response(%s)].xml' % (resfile, method) )
@@ -52,4 +60,4 @@ class SCConnectionFilter(SCConnection):
                 f.write(self.nice_format(body))
             f.close()
         
-        return body
+        return fake

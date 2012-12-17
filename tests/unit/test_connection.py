@@ -10,9 +10,9 @@ class SCAuthConnectionTest(unittest.TestCase):
                                             config.get('connection', 'MS_BROKER_PASSPHASE') )
 
     def testGetRequest(self):
-        self.assertEqual(self.connection.isConnected(), True)
-        response = self.connection.make_request('GET', 'PublicCertificate')
+        response = self.connection.make_request('PublicCertificate')
         self.assertNotEqual(response, None)
+  
         
 if __name__ == "__main__":
     unittest.main()
