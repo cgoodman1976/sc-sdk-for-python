@@ -398,6 +398,8 @@ class SCAuthConnection:
         self.opener.add_handler(urllib2.HTTPDigestAuthHandler(self.pwd_mgr))
 
     # ----- help function ends
+    def monitor_request_response(self, request, response):
+        pass
 
     def nice_format(self, data):
         xmlstr = parseString(data)
@@ -436,23 +438,23 @@ class SCAuthConnection:
     def make_request(self, action='', params=None, headers=None, data='', method='GET'):
 
         logging.debug(">>>>> make_request")
+        
+        #prepare request url
         api_url = self.base_url+ '/' + action
+        
+        #make request
         req = self.build_request(api_url, params, headers, data, method)
 
         try:
             response = self.opener.open(req)
-            body = response.read()
-            if response.code == 200:
-                sclib.log.debug(self.nice_format(body))
+            self.monitor_request_response(req, response)
+            
+            if response.code >= 200 and response.code <= 204:
                 logging.debug("<<<<< make_request")
-                return body
+                return response
             else:
-                if not body:
-                    sclib.log.error('Null body %s' % body)
-                else:
-                    sclib.log.error('%s %s' % (response.status, response.reason))
-                    sclib.log.error('%s' % body)
-                raise self.ResponseError(response.status, response.reason, body)
+                sclib.log.error('%s %s' % (response.status, response.reason))
+                raise self.ResponseError(response.status, response.reason)
         except urllib2.HTTPError, e:
             logging.error(e)
 
@@ -488,9 +490,11 @@ class SCQueryConnection(SCAuthConnection):
     def get_list(self, action, params, markers, headers=None, data='', path='/', parent=None, method='GET'):
         if not parent:
             parent = self
-        body = self.make_request(action, headers=headers, data=data, method=method)
-        sclib.log.debug(self.nice_format(body))
-        if body:
+
+        response = self.make_request(action, headers=headers, data=data, method=method)
+        if response:
+            body = response.read()
+            sclib.log.debug(self.nice_format(body))
             rs = ResultSet(markers)
             h = sclib.handler.XmlHandler(rs, parent)
             xml.sax.parseString(body, h)
@@ -500,9 +504,11 @@ class SCQueryConnection(SCAuthConnection):
     def get_object(self, action, params, cls, headers=None, data='',path='/', parent=None, method='GET'):
         if not parent:
             parent = self
-        body = self.make_request(action, headers=headers, data=data, method=method)
-        sclib.log.debug(self.nice_format(body))
-        if body:
+
+        response = self.make_request(action, headers=headers, data=data, method=method)
+        if response:
+            body = response.read()
+            sclib.log.debug(self.nice_format(body))
             obj = cls(parent)
             h = sclib.handler.XmlHandler(obj, parent)
             xml.sax.parseString(body, h)
@@ -512,14 +518,10 @@ class SCQueryConnection(SCAuthConnection):
     def get_status(self, action='GET', headers=None, data='', params=None, path='/', parent=None):
         if not parent:
             parent = self
-        body = self.make_request(action)
-        sclib.log.debug(body)
 
-        if body:
-            rs = ResultSet()
-            h = sclib.handler.XmlHandler(rs, parent)
-            xml.sax.parseString(body, h)
-            return rs.status
+        response = self.make_request(action)
+        if response:
+            return response.code
 
         return None
         

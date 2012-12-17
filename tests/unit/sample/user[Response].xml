@@ -1,0 +1,21 @@
+<?xml version="1.0" ?>
+<userList xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<user MFAStatus="0" authType="Local Authentication" href="http://ms.cloud9.identum.com:80/Broker/API.svc/v3.5/user/9ae879a6-0b95-40cc-a8a3-1ddc7f223536/" id="9ae879a6-0b95-40cc-a8a3-1ddc7f223536" isCurrent="true" isLicensedUser="false" isPending="false" loginname="bobby_chien@trendmicro.com" ssoIdPName="">
+		<contact>
+			<firstName>Bobby</firstName>
+			<lastName>Chien</lastName>
+			<email>Bobby_Chien@trendmicro.com</email>
+		</contact>
+		<account id="67F57BB2-EE51-40fc-87D5-AD7545D2BB3E" name="Bobby Chien (RD-US)"/>
+		<role MFAStatus="false" name="Administrator"/>
+	</user>
+	<user MFAStatus="0" authType="Local Authentication" href="http://ms.cloud9.identum.com:80/Broker/API.svc/v3.5/user/dbd60ece-8631-4093-ab1f-9e32d3715509/" id="dbd60ece-8631-4093-ab1f-9e32d3715509" isCurrent="false" isLicensedUser="false" isPending="false" loginname="bobby_chien@trend.com.tw" ssoIdPName="">
+		<contact>
+			<firstName>Bobby</firstName>
+			<lastName>Chien</lastName>
+			<email>bobby_chien@trend.com.tw</email>
+		</contact>
+		<account id="67F57BB2-EE51-40fc-87D5-AD7545D2BB3E" name="Bobby Chien (RD-US)"/>
+		<role MFAStatus="false" name="Administrator"/>
+	</user>
+</userList>

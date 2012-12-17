@@ -142,14 +142,14 @@ class SecurityRule(SCObject):
         setattr(self, name, value)
     
     def buildElement(self):
-        group = ElementTree.Element('securityRule')
-        group.attrib['version'] = '3.5'
+        rule = ElementTree.Element('securityRule')
+        rule.attrib['version'] = '3.5'
         
         #user info
-        if self.id: group.attrib['id'] = self.id
-        if self.description: group.attrib['description'] = self.description
+        if self.id: rule.attrib['id'] = self.id
+        if self.description: rule.attrib['description'] = self.description
         #actions
-        return group
+        return rule
         
     # ----- operation -----
     def update(self):
@@ -211,15 +211,15 @@ class SecurityRuleType(SCObject):
             setattr(self, name, value)
             
     def buildElements(self):
-        group = ElementTree.Element('securityRuleType')
-        group.attrib['version'] = '3.5'
+        type = ElementTree.Element('securityRuleType')
+        type.attrib['version'] = '3.5'
         
         #user info
-        if self.id: group.attrib['id'] = self.id
-        if self.name: group.attrib['name'] = self.name
-        if self.evaluator: group.attrib['evaluator'] = self.evaluator
-        if self.context: group.attrib['context'] = self.context
-        if self.dataType: group.attrib['dataType'] = self.dataType
-        if self.description: group.attrib['description'] = self.description
+        if self.id: type.attrib['id'] = self.id
+        if self.name: type.attrib['name'] = self.name
+        if self.evaluator: type.attrib['evaluator'] = self.evaluator
+        if self.context: type.attrib['context'] = self.context
+        if self.dataType: type.attrib['dataType'] = self.dataType
+        if self.description: type.attrib['description'] = self.description
         #actions
-        return group
+        return type

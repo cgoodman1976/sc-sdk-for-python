@@ -46,6 +46,7 @@ class User(SCObject):
         self.ssoIdPName = None
         self.isLicensedUser = None
         self.MFAStatus = None
+        #role information
         
     def startElement(self, name, attrs, connection):
         ret = SCObject.startElement(self, name, attrs, connection)
@@ -85,6 +86,7 @@ class User(SCObject):
         if self.id: user.attrib['id'] = self.id
         if self.loginname: user.attrib['loginname'] = self.loginname
         if self.logintext: user.attrib['logintext'] = self.logintext
+        if self.usertype: user.attrib['usertype'] = self.usertype
         if self.email: user.attrib['email'] = self.email
         if self.href: user.attrib['href'] = self.href
         if self.isPending: user.attrib['isPending'] = self.isPending
@@ -110,26 +112,32 @@ class User(SCObject):
         if self.role: user.append(self.role.buildElements())
         if self.account: user.append(self.account.buildElements())
         return user
-    
+
+    def setRole(self, role, MFA):
+        self.role = Role(self.connection)
+        self.role.name = role
+        self.role.MFAStatus = MFA
+
     # ----- functions -----
     
     def delete(self):
         if self.id is None:
             return None
 
-        action = 'user/' + self.id
-        response = self.connection.make_request(action, method='DELETE')
-        return response.code == 200
+        action = 'user/' + self.id +'/'
+        response = self.connection.get_status(action, method='DELETE')
+        return response == 204
             
     def update(self):
         #TODO - check more fields
         if self.id is None:
             return None
 
-        action = 'user/' + self.id
+        params = {}
+        action = 'user/' + self.id + '/'
         data = ElementTree.tostring(self.buildElements())
-        response = self.connection.make_request(action, data, method='POST')
-        return response.code == 200
+        response = self.connection.get_object(action, params, User, data=data, method='POST')
+        return response
 
 class Account(SCObject):
     def __init__(self, connection):
@@ -169,8 +177,8 @@ class Role(SCObject):
             return ret
         
         if name == 'role':
-            self.MFAStatus = attrs['MFAStatus']
             self.name = attrs['name']
+            self.MFAStatus = attrs['MFAStatus']
         else:
             return None
 

@@ -5,9 +5,11 @@ import logging
 from tests.unit import config, logging
 from sclib.sc.securitygroup import SecurityGroup
 
+from sclib.sc.connection import SCConnection
+from tests.unit.sc.connectionfilter import SCConnectionFilter
+
 class SCSecurityGroupTest(unittest.TestCase):
     def setUp(self):
-        from sclib.sc.connection import SCConnection
         self.connection = SCConnection( config.get('connection', 'MS_HOST'),
                                         config.get('connection', 'MS_BROKER_NAME'), 
                                         config.get('connection', 'MS_BROKER_PASSPHASE'))

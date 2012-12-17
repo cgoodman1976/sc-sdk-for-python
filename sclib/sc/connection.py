@@ -186,8 +186,9 @@ class SCConnection(SCQueryConnection):
         user.email = email
         user.name = role
         user.MFAStatus = MFA
+        user.setRole(role, MFA)
         data = ElementTree.tostring(user.buildElements())
-        return self.get_object('user', params, User, data=data, method='POST')
+        return self.get_object('user/', params, User, data=data, method='POST')
     
     def getUser(self, id):
         if self.authentication is None: return None

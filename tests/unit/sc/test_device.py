@@ -23,15 +23,17 @@
 
 "Test basic device"
 import unittest
+from tests.unit import config, logging
 from sclib.sc.device import Device
-#from sclib.sc.connection import SCConnection
-#from test.sc.sample import *
+from sclib.sc.user import User
 from xml.etree import ElementTree
 from xml.dom import minidom
 
+from sclib.sc.connection import SCConnection
+from tests.unit.sc.connectionfilter import SCConnectionFilter
+
 class SCDeviceTest(unittest.TestCase):
     def setUp(self):
-        from sclib.sc.connection import SCConnection
         self.connection = SCConnection( config.get('connection', 'MS_HOST'),
                                         config.get('connection', 'MS_BROKER_NAME'), 
                                         config.get('connection', 'MS_BROKER_PASSPHASE'))
