@@ -1,0 +1,25 @@
+<?xml version="1.0" ?>
+<SecurityRuleTypeList version="3.5" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<securityRuleType context="Device" dataType="Text" description="The requested access type. For example: read-only or read/write." evaluator="equal" id="5d14057d-3277-4ab9-9d3e-e808acbb9c65" name="Device Access Type"/>
+	<securityRuleType context="Device" dataType="Path" description="The mounting point for the device if keys are approved. For example: /mnt/secure or X." evaluator="equal" id="c91f0521-a6cc-4e78-bb37-4a41dc378d3c" name="Device Mount Point"/>
+	<securityRuleType context="Request" dataType="Date" description="Date and time the keyrequest was received." evaluator="equal" id="1338779b-2683-474b-a9a7-298176564a6f" name="Key Request Date"/>
+	<securityRuleType context="Request" dataType="IPAddress" description="The IP Address that requested the keys." evaluator="equal" id="cc0e1bfb-c670-44d1-8b83-f44d351d5285" name="Request Source IP Address"/>
+	<securityRuleType context="Request" dataType="IPv6Address" description="The IPv6 Address that requested the keys." evaluator="equal" id="d6f008eb-a11b-4cb6-8cb0-63c056d27009" name="Request Source IPv6 Address"/>
+	<securityRuleType context="Instance" dataType="Date" description="Date and time the instance was first seen by the system." evaluator="equal" id="4b4390c1-af4e-4c37-9ad0-24b26be2366d" name="Instance First Seen"/>
+	<securityRuleType context="Instance" dataType="Text" description="The data packet provided to the instance at start up.  For example DataKey=MySecretKey." evaluator="equal" id="e541d7c1-b681-4221-a2c0-68bfd87debaa" name="Instance User Data"/>
+	<securityRuleType context="Instance" dataType="Text" description="The location of the Server farm running the machine instance.  For example us-east-1c." evaluator="equal" id="b1ad7471-cb8b-4a78-bb56-efcb235ef1ba" name="Instance Location"/>
+	<securityRuleType context="Integrity Check" dataType="Version" description="The version of the ossec-init.conf security file.  For example 2.2 or 2.3." evaluator="equal" id="9c36a9d2-ff26-47c4-8cfa-180630c97efb" name="OSSEC Version"/>
+	<securityRuleType context="Integrity Check" dataType="Text" description="Trend Micro Softwares. For example DeepSecurity" evaluator="equal" id="6fbc0f33-d430-4a46-9b03-1dbb172c6509" name="Trend Micro softwares"/>
+	<securityRuleType context="Integrity Check" dataType="Version" description="Trend Micro scan engine version." evaluator="equal" id="297d4d3b-c269-43d9-ad9e-6fef86fdfe5c" name="Trend Micro Virus Scan Engine"/>
+	<securityRuleType context="Integrity Check" dataType="Version" description="Trend Micro virus scan conventional pattern version." evaluator="equal" id="ed30599c-13c3-4fb3-ac30-2a38c0b5e45c" name="Trend Micro Virus Scan Pattern"/>
+	<securityRuleType context="Instance" dataType="Text" description="The guest OS type.  For example Windows." evaluator="equal" id="e3e68188-b5b2-4e31-bcce-c4cb43d46a55" name="Guest OS Type"/>
+	<securityRuleType context="Instance" dataType="Text" description="The guest OS architecture.  For example 32 bits." evaluator="equal" id="b2ee4872-631b-4f57-aaff-e222cfadf588" name="Guest OS Architecture"/>
+	<securityRuleType context="Instance" dataType="Port" description="The network services." evaluator="equal" id="0f938a58-cd0a-4dc0-b0ec-034fff98ec1a" name="Network Services"/>
+	<securityRuleType context="Deep Security Management" dataType="Text" description="Deep Security Status" evaluator="equal" id="964ed53f-dd7c-43c6-aec5-b64df1474ff3" name="Deep Security Status"/>
+	<securityRuleType context="Deep Security Management" dataType="Text" description="Deep Security Anti-Malware Status" evaluator="equal" id="cfd65596-9071-4fd6-a7c5-da368d1bf3d8" name="Deep Security Anti-Malware Status"/>
+	<securityRuleType context="Deep Security Management" dataType="Text" description="Deep Security Web Reputation Status" evaluator="equal" id="9637d366-95e5-4dcf-ac0a-703439aec8e9" name="Deep Security Web Reputation Status"/>
+	<securityRuleType context="Deep Security Management" dataType="Text" description="Deep Security Firewall Status" evaluator="equal" id="eaeadd52-f0a9-4f16-a293-647ef2ccd10e" name="Deep Security Firewall Status"/>
+	<securityRuleType context="Deep Security Management" dataType="Text" description="Deep Security DPI Status" evaluator="equal" id="c63d23e3-d00f-4ea9-a932-00086c3cb5a1" name="Deep Security DPI Status"/>
+	<securityRuleType context="Deep Security Management" dataType="Text" description="Deep Security Integrity Monitoring Status" evaluator="equal" id="b64c389e-8cd9-401a-a149-28bf95154fd1" name="Deep Security Integrity Monitoring Status"/>
+	<securityRuleType context="Deep Security Management" dataType="Text" description="Deep Security Log Inspection Status" evaluator="equal" id="de6017a8-e3a1-4a42-93bd-6aa7e783a765" name="Deep Security Log Inspection Status"/>
+</SecurityRuleTypeList>

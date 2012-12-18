@@ -397,10 +397,6 @@ class SCAuthConnection:
         self.opener = urllib2.build_opener()
         self.opener.add_handler(urllib2.HTTPDigestAuthHandler(self.pwd_mgr))
 
-    # ----- help function ends
-    def monitor_request_response(self, request, response):
-        pass
-
     def nice_format(self, data):
         xmlstr = parseString(data)
         pretty_res = xmlstr.toprettyxml()
@@ -447,9 +443,8 @@ class SCAuthConnection:
 
         try:
             response = self.opener.open(req)
-            self.monitor_request_response(req, response)
             
-            if response.code >= 200 and response.code <= 204:
+            if response.code in (200, 201, 203, 204):
                 logging.debug("<<<<< make_request")
                 return response
             else:

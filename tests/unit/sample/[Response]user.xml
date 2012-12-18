@@ -18,4 +18,13 @@
 		<account id="67F57BB2-EE51-40fc-87D5-AD7545D2BB3E" name="Bobby Chien (RD-US)"/>
 		<role MFAStatus="false" name="Administrator"/>
 	</user>
+	<user MFAStatus="0" authType="Local Authentication" href="http://ms.cloud9.identum.com:80/Broker/API.svc/v3.5/user/f50ad722-2510-41b6-91c0-b842349795ec/" id="f50ad722-2510-41b6-91c0-b842349795ec" isCurrent="false" isLicensedUser="false" isPending="true" loginname="unittest2@securecloud.com" ssoIdPName="">
+		<contact>
+			<firstName>unit2</firstName>
+			<lastName>test2</lastName>
+			<email>unittest2@securecloud.com</email>
+		</contact>
+		<account id="67F57BB2-EE51-40fc-87D5-AD7545D2BB3E" name="Bobby Chien (RD-US)"/>
+		<role MFAStatus="false" name="Administrator"/>
+	</user>
 </userList>

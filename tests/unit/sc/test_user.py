@@ -11,7 +11,7 @@ from tests.unit.sc.connectionfilter import SCConnectionFilter
 
 class SCUserTest(unittest.TestCase):
     def setUp(self):
-        self.connection = SCConnection( config.get('connection', 'MS_HOST'),
+        self.connection = SCConnectionFilter( config.get('connection', 'MS_HOST'),
                                         config.get('connection', 'MS_BROKER_NAME'), 
                                         config.get('connection', 'MS_BROKER_PASSPHASE'))
 
@@ -30,7 +30,8 @@ class SCUserTest(unittest.TestCase):
                                             'Administrator',
                                             'false')
         self.assertNotEqual(user, None)
-        if user is not None:
+        if not user:
+            # new user needs activation
             res = user.update()
             self.assertNotEqual(res, None)
 

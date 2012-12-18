@@ -28,16 +28,19 @@ class SCConnectionFilter(SCConnection):
 
         if self.pseudo == True:
             sample_path = os.path.join(os.path.dirname(os.path.abspath(tests.__file__ )), 'unit', 'sample')
-            reqfile = action.replace('/', '-')
-            reqfile = os.path.join(sample_path, '%s[Response(%s)].xml' % (reqfile, method) )
+            reqfile = action.replace('/', '^')
+            reqfile = os.path.join(sample_path, '[Response]%s.xml' % (reqfile) )
             rf = io.open(reqfile, 'r')
             body = rf.read()
             return body
         
         else:
+            reqfile = action.replace('/', '^')
+            reqfile = os.path.join(self.serial_path, '[Request(%s)]%s.xml' % (method, reqfile ) )
+            resfile = action.replace('/', '^')
+            resfile = os.path.join(self.serial_path, '[Response]%s.xml' % (resfile) )
+
             # serialize Request data
-            reqfile = action.replace('/', '-')
-            reqfile = os.path.join(self.serial_path, '%s[Request(%s)].xml' % (reqfile, method) )
             rf = io.open(reqfile, 'w')
             if (data is not None) and (len(data) != 0):
                 rf.write(self.nice_format(data))
@@ -45,7 +48,6 @@ class SCConnectionFilter(SCConnection):
 
             # make request to securecloud
             response = SCConnection.make_request(self, action, params, headers, data, method)
-    
             body = response.read()
             
             #make fake response
@@ -53,8 +55,6 @@ class SCConnectionFilter(SCConnection):
             fake = urllib.addinfourl(resfp, response.info(), response.geturl(), response.getcode())
             
             # serialize Response data
-            resfile = action.replace('/', '-')
-            resfile = os.path.join(self.serial_path, '%s[Response(%s)].xml' % (resfile, method) )
             f = io.open(resfile, 'w')
             if (body is not None) and (len(body) != 0):
                 f.write(self.nice_format(body))
