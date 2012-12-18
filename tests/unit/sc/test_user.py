@@ -3,22 +3,17 @@ import unittest
 import logging
 
 from tests.unit import config, logging
+from tests.unit.sc import SCBaseTestCase
 from sclib.sc.device import Device
 from sclib.sc.user import User
 
-from sclib.sc.connection import SCConnection
-from tests.unit.sc.connectionfilter import SCConnectionFilter
-
-class SCUserTest(unittest.TestCase):
+class SCUserTest(SCBaseTestCase):
     def setUp(self):
-        self.connection = SCConnectionFilter( config.get('connection', 'MS_HOST'),
-                                        config.get('connection', 'MS_BROKER_NAME'), 
-                                        config.get('connection', 'MS_BROKER_PASSPHASE'))
-
-        self.connection.basicAuth(  config.get('authentication', 'AUTH_NAME'), 
-                                    config.get('authentication', 'AUTH_PASSWORD'))
-
+        SCBaseTestCase.setUp(self)
         self.users = self.connection.listAllUsers()
+
+        #===== implement initial code here for each test =====
+        pass
 
     def testUserCreate(self):
         user = self.connection.createUser( 'unittest2@securecloud.com',

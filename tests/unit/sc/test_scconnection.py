@@ -5,24 +5,19 @@ import unittest
 import logging
 
 from tests.unit import config, logging
+from tests.unit.sc import SCBaseTestCase
 from sclib.sc.device import Device
 from sclib.sc.user import User
 from xml.etree import ElementTree
 from xml.dom import minidom
 
-from sclib.sc.connection import SCConnection
-from tests.unit.sc.connectionfilter import SCConnectionFilter
-
-class SCConnectionTest(unittest.TestCase):
+class SCConnectionTest(SCBaseTestCase):
     def setUp(self):
-        self.connection = SCConnectionFilter( config.get('connection', 'MS_HOST'),
-                                        config.get('connection', 'MS_BROKER_NAME'), 
-                                        config.get('connection', 'MS_BROKER_PASSPHASE'))
+        SCBaseTestCase.setUp(self)
 
-        auth = self.connection.basicAuth( config.get('authentication', 'AUTH_NAME'), 
-                                          config.get('authentication', 'AUTH_PASSWORD'))
-        self.assertNotEqual( auth, None)
-
+        #===== implement initial code here for each test =====
+        pass
+ 
     def testListAllDevice(self):
         devicelist = self.connection.listAllDevices()
         for dev in devicelist:

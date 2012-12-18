@@ -23,25 +23,17 @@
 
 "Test basic device"
 import unittest
-from tests.unit import config, logging
 from sclib.sc.device import Device
 from sclib.sc.user import User
-from xml.etree import ElementTree
-from xml.dom import minidom
+from tests.unit.sc import SCBaseTestCase
 
-from sclib.sc.connection import SCConnection
-from tests.unit.sc.connectionfilter import SCConnectionFilter
-
-class SCDeviceTest(unittest.TestCase):
+class SCDeviceTest(SCBaseTestCase):
     def setUp(self):
-        self.connection = SCConnectionFilter( config.get('connection', 'MS_HOST'),
-                                        config.get('connection', 'MS_BROKER_NAME'), 
-                                        config.get('connection', 'MS_BROKER_PASSPHASE'))
-
-        auth = self.connection.basicAuth( config.get('authentication', 'AUTH_NAME'), 
-                                          config.get('authentication', 'AUTH_PASSWORD'))
-        
+        SCBaseTestCase.setUp(self)
         self.devices = self.connection.listAllDevices()
+
+        #===== implement initial code here for each test =====
+        pass
 
     def testUpdateDevice(self):
         device = self.connection.getDevice(self.devices[0].uid)
