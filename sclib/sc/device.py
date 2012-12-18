@@ -21,6 +21,7 @@
 #
 
 from sclib.sc.scobject import SCObject
+from sclib.sc.provider import Provider
 from xml.etree import ElementTree
 
 class Device(SCObject):
@@ -67,6 +68,10 @@ class Device(SCObject):
             self.volume = Volume(connection)
             self.volume.startElement(name, attrs, connection)
             return self.volume
+        elif name == 'provider':
+            self.provider = Provider(connection)
+            self.provider.startElement(name, attrs, connection)
+            return self.provider
         else:
             return None
 
@@ -81,6 +86,8 @@ class Device(SCObject):
         
         device = ElementTree.Element('device')
         device.attrib['version'] = '3.5'
+
+        # my attributes
         if self.uid:    device.attrib['msUID'] = self.uid
         if self.id:     device.attrib['id'] = self.id
         if self.name:   device.attrib['name'] = self.name

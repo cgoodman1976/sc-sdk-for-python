@@ -142,6 +142,12 @@ class SCConnection(SCQueryConnection):
         return self.get_list('device', params, 
                              [('device', Device)])
 
+    def getDevice(self, guid):
+        if self.authentication is None: return None
+    
+        params = {}
+        return self.get_object('device/%s/' % (guid), params, Device)
+
     # function - Policy/SecurityGroup
     def listAllSecurityGroup(self):
         if self.authentication is None: return None
@@ -173,7 +179,9 @@ class SCConnection(SCQueryConnection):
         params = {}
         return self.get_list('user', params, [('user', User)])
         
-    def createUser(self, login, text, usertype='localuser', firstname='', lastname='', email='', role='Administrator', MFA='false'):
+    def createUser(self, login, text, usertype='localuser', 
+                   firstname='', lastname='', email='', 
+                   role='Administrator', MFA='false'):
         if self.authentication is None: return None
 
         params = {}

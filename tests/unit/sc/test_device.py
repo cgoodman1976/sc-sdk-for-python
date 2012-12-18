@@ -40,9 +40,12 @@ class SCDeviceTest(unittest.TestCase):
 
         auth = self.connection.basicAuth( config.get('authentication', 'AUTH_NAME'), 
                                           config.get('authentication', 'AUTH_PASSWORD'))
+        
+        self.devices = self.connection.listAllDevices()
 
     def testUpdateDevice(self):
-        pass
+        device = self.connection.getDevice(self.devices[0].uid)
+        self.assertEqual(self.devices[0].uid, device.uid)
     
 
 if __name__ == '__main__':
