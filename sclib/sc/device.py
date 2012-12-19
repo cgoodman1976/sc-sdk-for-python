@@ -20,6 +20,7 @@
 # IN THE SOFTWARE.
 #
 
+from sclib.resultset import ResultSet
 from sclib.sc.scobject import SCObject
 from sclib.sc.provider import Provider
 from xml.etree import ElementTree
@@ -27,23 +28,35 @@ from xml.etree import ElementTree
 class Device(SCObject):
     def __init__(self, connection):
         SCObject.__init__(self, connection)
+        # Device attributes
         self.uid = None
         self.id = None
+        self.msUID = None
         self.name = None
         self.href = None
+        
         self.deviceType = None
         self.cspDeviceType = None
-        self.info = None
-        self.lastModified = None
-        self.writeAccess = None
-        self.provisionState = None
         self.deviceState = None
+        self.deviceStatus = None
+
+        self.info = None
         self.detachable = None
         self.description = None
+        self.lastModified = None
+        self.writeAccess = None
+
+        self.EncryptedName = None
+        self.partitionType = None
+        self.provisionProgress = None
+        self.provisionState = None
+        
         # volume object
         self.volume = None
         # provider object
         self.provider = None
+        # pritition list
+        self.partitions = None
         
     def startElement(self, name, attrs, connection):
         ret = SCObject.startElement(self, name, attrs, connection)
@@ -51,19 +64,9 @@ class Device(SCObject):
             return ret
         
         if name == 'device':
-            self.uid = attrs['msUID']
-            self.id = attrs["id"]
-            self.name = attrs["name"]
-            self.href = attrs["href"]
-            self.deviceType = attrs["cspDeviceType"]
-            self.info = attrs["info"]
-            self.lastModified = attrs["lastModified"]
-            self.writeAccess = attrs["writeaccess"]
-            self.provisionState = attrs["provisionState"]
-            self.deviceState = attrs["deviceStatus"]
-            self.detachable = attrs["detachable"]
-            return self
-        
+            for key, value in attrs.items():
+                setattr(self, key, value)
+         
         elif name == 'volume':
             self.volume = Volume(connection)
             self.volume.startElement(name, attrs, connection)
@@ -72,6 +75,11 @@ class Device(SCObject):
             self.provider = Provider(connection)
             self.provider.startElement(name, attrs, connection)
             return self.provider
+        elif name == 'partitionList':
+            self.partitions = ResultSet([('partition', Partition)])
+            self.partitions.name = name
+            return self.partitions
+
         else:
             return None
 
@@ -83,7 +91,6 @@ class Device(SCObject):
             setattr(self, name, value)
 
     def buildElements(self):
-        
         device = ElementTree.Element('device')
         device.attrib['version'] = '3.5'
 
@@ -146,4 +153,39 @@ class Volume (SCObject):
             mount_point = ElementTree.SubElement(volume, 'mountPoint')
             mount_point.text = self.mountPoint
         return volume
+
+class Partition(SCObject):
+    def __init__(self, connection):
+        self.PartitionNumber = None
+        self.size = None
+        self.fileSystem = None
+        self.mountPoint = None
+
+    def startElement(self, name, attrs, connection):
+        ret = SCObject.startElement(self, name, attrs, connection)
+        if ret is not None:
+            return ret
+        
+        if name == 'partition':
+            self.PartitionNumber = attrs['PartitionNumber']
+            self.size = attrs['size']
+        else:
+            return None
+
+    def endElement(self, name, value, connection):
+        
+        if name == 'mountPoint':
+            self.mountPoint = value
+        if name == 'fileSystem':
+            self.fileSystem = value
+        else:
+            setattr(self, name, value)
+            
+    def buildElements(self):
+        partition = ElementTree.Element('partition')
+        if self.PartitionNumber: volume.attrib['PartitionNumber'] = self.PartitionNumber
+        if self.size: volume.attrib['size'] = self.size
+        if self.fileSystem: volume.attrib['fileSystem'] = self.fileSystem
+        if self.mountPoint: volume.attrib['mountPoint'] = self.mountPoint
+        return partition
 

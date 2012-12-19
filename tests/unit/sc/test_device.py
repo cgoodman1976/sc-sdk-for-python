@@ -35,9 +35,10 @@ class SCDeviceTest(SCBaseTestCase):
         #===== implement initial code here for each test =====
         pass
 
-    def testUpdateDevice(self):
-        device = self.connection.getDevice(self.devices[0].uid)
-        self.assertEqual(self.devices[0].uid, device.uid)
+    def testGetDevice(self):
+        for device in self.devices:
+            dev = self.connection.getDevice(device.uid)
+            self.assertEqual(dev.uid, device.uid)
     
 
 if __name__ == '__main__':

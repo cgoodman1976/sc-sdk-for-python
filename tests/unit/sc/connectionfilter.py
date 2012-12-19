@@ -48,16 +48,18 @@ class SCConnectionFilter(SCConnection):
 
             # make request to securecloud
             response = SCConnection.make_request(self, action, params, headers, data, method)
-            body = response.read()
-            
-            #make fake response
-            resfp = StringIO.StringIO(body)
-            fake = urllib.addinfourl(resfp, response.info(), response.geturl(), response.getcode())
-            
-            # serialize Response data
-            f = io.open(resfile, 'w')
-            if (body is not None) and (len(body) != 0):
-                f.write(self.nice_format(body))
-            f.close()
-        
-        return fake
+            if response:
+                body = response.read()
+                
+                #make fake response
+                resfp = StringIO.StringIO(body)
+                fake = urllib.addinfourl(resfp, response.info(), response.geturl(), response.getcode())
+                
+                # serialize Response data
+                f = io.open(resfile, 'w')
+                if (body is not None) and (len(body) != 0):
+                    f.write(self.nice_format(body))
+                f.close()
+                return fake
+
+        return None

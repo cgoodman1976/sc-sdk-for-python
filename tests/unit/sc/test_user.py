@@ -33,10 +33,11 @@ class SCUserTest(SCBaseTestCase):
             res = user.delete()
             self.assertEqual(res, True)
   
-    def testUserGet(self):        
-        user = self.connection.getUser(self.users[0].id)
-        self.assertNotEqual(user, None)
-        self.assertEqual(user.id, self.users[0].id)
+    def testUserGet(self):      
+        for user in self.users:  
+            u = self.connection.getUser(user.id)
+            self.assertNotEqual(u, None)
+            self.assertEqual(user.id, u.id)
                
 if __name__ == '__main__':
     unittest.main()

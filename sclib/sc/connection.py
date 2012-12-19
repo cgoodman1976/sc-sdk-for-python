@@ -28,6 +28,7 @@ from sclib.connection import SCQueryConnection
 from sclib.sc.device import Device
 from sclib.sc.user import User
 from sclib.sc.scobject import SCObject
+from sclib.sc.instance import VirtualMachine, Instance
 from sclib.sc.securitygroup import SecurityGroup, SecurityRule, SecurityRuleType
 
 from xml.dom.minidom import parse, parseString
@@ -112,6 +113,7 @@ class SCConnection(SCQueryConnection):
     def getCertificate(self):
         params = {}
         self.certificate = self.get_object('PublicCertificate', params, Certificate)
+        return self.certificate
     
     def basicAuth(self, name, password):
         
@@ -133,7 +135,9 @@ class SCConnection(SCQueryConnection):
             self.headers['X-UserSession'] = self.authentication.token
         return self.authentication
   
-    # functions - Device
+    #===========================================================================
+    # # functions - Device
+    #===========================================================================
     
     def listAllDevices(self):
         if self.authentication is None: return None
@@ -148,7 +152,9 @@ class SCConnection(SCQueryConnection):
         params = {}
         return self.get_object('device/%s/' % (guid), params, Device)
 
-    # function - Policy/SecurityGroup
+    #===========================================================================
+    # # function - Policy/SecurityGroup
+    #===========================================================================
     def listAllSecurityGroup(self):
         if self.authentication is None: return None
     
@@ -172,7 +178,9 @@ class SCConnection(SCQueryConnection):
                              [('securityRuleType', SecurityRuleType)])
 
 
-    # function - User
+    #===========================================================================
+    # # function - User
+    #===========================================================================
     def listAllUsers(self):
         if self.authentication is None: return None
 
@@ -203,3 +211,19 @@ class SCConnection(SCQueryConnection):
 
         params = {}
         return self.get_object('user/%s/' % (id), params, User)
+    
+    #===========================================================================
+    # virtual machine function
+    #===========================================================================
+    def listAllVM(self):
+        if self.authentication is None: return None
+
+        params = {}
+        return self.get_list('vm/', params, [('vm', VirtualMachine)])
+
+    def getVM(self, id):
+        if self.authentication is None: return None
+
+        params = {}
+        return self.get_object('vm/%s/' % (id), params, VirtualMachine)
+    
