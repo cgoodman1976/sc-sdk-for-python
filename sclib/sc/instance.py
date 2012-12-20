@@ -24,7 +24,7 @@ from sclib.resultset import ResultSet
 from sclib.sc.scobject import SCObject
 from sclib.sc.device import Device
 from sclib.sc.provider import Provider
-
+from xml.etree import ElementTree
 
 class Instance(SCObject):
     def __init__(self, connection=None):
@@ -65,6 +65,7 @@ class VirtualMachine(SCObject):
             return ret
         
         if name == 'vm':
+            # keep all attributes
             for key, value in attrs.items():
                 setattr(self, key, value)
         elif name == 'provider':
@@ -74,6 +75,7 @@ class VirtualMachine(SCObject):
         elif name == 'securecloudAgent':
             self.agent = SCAgent(connection)
             self.agent.startElement(name, attrs, connection)
+            return self.agent
         elif name == 'devices':
             self.devices = ResultSet([('device', Device)])
             self.devices.name = name

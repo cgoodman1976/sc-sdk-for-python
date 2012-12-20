@@ -29,6 +29,7 @@ from sclib.sc.device import Device
 from sclib.sc.user import User
 from sclib.sc.scobject import SCObject
 from sclib.sc.instance import VirtualMachine, Instance
+from sclib.sc.provider import Provider
 from sclib.sc.securitygroup import SecurityGroup, SecurityRule, SecurityRuleType
 
 from xml.dom.minidom import parse, parseString
@@ -227,3 +228,11 @@ class SCConnection(SCQueryConnection):
         params = {}
         return self.get_object('vm/%s/' % (id), params, VirtualMachine)
     
+    #===========================================================================
+    # Provider function
+    #===========================================================================
+    def listAllProvider(self):
+        if self.authentication is None: return None
+
+        params = {}
+        return self.get_list('provider/', params, [('provider', Provider)])
