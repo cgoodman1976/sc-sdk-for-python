@@ -383,13 +383,15 @@ class SCAuthentication(SCObject):
 class SCAuthConnection:
     def __init__( self, host_base, broker_name=None, broker_passphase=None):
 
+        self.timeout = 10
         self.base_url = host_base
         self.broker = broker_name
         self.broker_passphrase = broker_passphase
         self.realm = "securecloud@trend.com"
         
         self.headers = {'Content-Type' : 'application/xml; charset=utf-8',
-                        'BrokerName' : self.broker
+                        'BrokerName' : self.broker,
+                        'Accept': 'application/xml'
                         }
         
         self.pwd_mgr = urllib2.HTTPPasswordMgr()

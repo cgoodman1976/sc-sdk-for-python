@@ -15,13 +15,13 @@ class SCBaseTestCase(unittest.TestCase):
     def setUp(self):
         if not self.connection:
             self.connection = SCConnectionFilter( config.get('connection', 'MS_HOST'),
-                                            config.get('connection', 'MS_BROKER_NAME'), 
-                                            config.get('connection', 'MS_BROKER_PASSPHASE'))
+                                                  config.get('connection', 'MS_BROKER_NAME'), 
+                                                  config.get('connection', 'MS_BROKER_PASSPHASE'))
             self.assertNotEqual(self.connection, None)
 
         if self.connection and (not self.auth):        
             self.auth = self.connection.basicAuth( config.get('authentication', 'AUTH_NAME'), 
-                                              config.get('authentication', 'AUTH_PASSWORD'))
+                                                   config.get('authentication', 'AUTH_PASSWORD'))
             self.assertNotEqual(self.auth, None)
 
 
