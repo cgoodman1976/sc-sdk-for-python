@@ -11,34 +11,36 @@ from sclib.sc.connection import SCConnection
 from time import gmtime, strftime
 
 class SCConnectionFilter(SCConnection):
-    def __init__(self, host_base, broker_name, broker_passphase, pseudo=False):
+    #===========================================================================
+    # A filter connection class to simulate request. 
+    # The class also capture Request and Response into specified result folder.
+    #===========================================================================
+    def __init__( self, host_base, broker_name, broker_passphase, 
+                  sample_path=None, result_path=None):
         SCConnection.__init__(self, host_base, broker_name, broker_passphase)
 
-        # pseudo connection
-        self.pseudo = pseudo
+        # pseudo sample path
+        self.sample_path = sample_path
+        self.result_path = result_path
         
-        #create datetime string
-        time = strftime("%Y-%m-%d", gmtime())
-        self.serial_path = os.path.join(os.path.dirname(os.path.abspath(tests.__file__ )), 'unit', 'result', time )
-        if os.path.isdir(self.serial_path) == False:
-            os.makedirs(self.serial_path)
+        if os.path.isdir(self.result_path) == False:
+            os.makedirs(self.result_path)
 
         
     def make_request(self, action='', params=None, headers=None, data='', method='GET'):
 
-        if self.pseudo == True:
-            sample_path = os.path.join(os.path.dirname(os.path.abspath(tests.__file__ )), 'unit', 'sample')
+        if self.sample_path:
             reqfile = action.replace('/', '^')
-            reqfile = os.path.join(sample_path, '[Response]%s.xml' % (reqfile) )
+            reqfile = os.path.join(self.sample_path, '[Response]%s.xml' % (reqfile) )
             rf = io.open(reqfile, 'r')
             body = rf.read()
             return body
         
         else:
             reqfile = action.replace('/', '^')
-            reqfile = os.path.join(self.serial_path, '[Request(%s)]%s.xml' % (method, reqfile ) )
+            reqfile = os.path.join(self.result_path, '[Request(%s)]%s.xml' % (method, reqfile ) )
             resfile = action.replace('/', '^')
-            resfile = os.path.join(self.serial_path, '[Response]%s.xml' % (resfile) )
+            resfile = os.path.join(self.result_path, '[Response]%s.xml' % (resfile) )
 
             # serialize Request data
             rf = io.open(reqfile, 'w')

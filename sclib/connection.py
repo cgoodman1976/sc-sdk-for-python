@@ -464,11 +464,17 @@ class SCAuthConnection:
         return None
 
     def close(self):
-        """(Optional) Close any open HTTP connections.  This is non-destructive,
-        and making a new request will open a connection again."""
+        #=======================================================================
+        # (Optional) Close any open HTTP connections.  This is non-destructive,
+        # and making a new request will open a connection again.
+        #=======================================================================
 
+        # close opener
+        self.opener.close()
+
+        # compact field
         sclib.log.debug('closing all HTTP connections')
-        self._connection = None  # compact field
+        self._connection = None
 
 
 class SCQueryConnection(SCAuthConnection):
