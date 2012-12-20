@@ -1,6 +1,0 @@
-<?xml version="1.0" ?>
-<certificateResponse xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-	<certificateList>
-		<certificate encoding="base64" level="0">MIGJAoGBAPinfSDP7a13TojOU2aDd91Q7YpG0veaMkSJPZCCISVPXTWmCgrLnWHCOzn7aHc3MtWkNfQOjWKC/PDCFMrhLCYnuW72pdsUYLfQNslXXGFGiVsdeon9JVouXoTdfmT1T4gjVg0Z27YadeJkctgZoKHKPV70NWKmIga+68JRrWRXAgMBAAE=</certificate>
-	</certificateList>
-</certificateResponse>
