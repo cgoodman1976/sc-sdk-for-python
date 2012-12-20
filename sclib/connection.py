@@ -45,9 +45,8 @@ Handles basic connections to Trend Micro SecureCloud
 """
 
 from __future__ import with_statement
-import base64
-import errno
 import httplib
+import ssl
 import os
 import Queue
 import random
@@ -55,20 +54,15 @@ import re
 import socket
 import sys
 import time
-import urlparse
 import xml.sax
 import copy
 import logging
 import urllib2
-from xml.dom.minidom import parse, parseString
-from Crypto.PublicKey import RSA
-from Crypto.Cipher import PKCS1_OAEP
-from Crypto import Hash
+from xml.dom.minidom import parseString
 
 import sclib
 
 from sclib import __config__, UserAgent
-from sclib.sc.scobject import SCObject
 from sclib.exception import SCServerError, SCClientError
 from sclib.resultset import ResultSet
 
@@ -363,23 +357,35 @@ class HTTPResponse(object):
         else:
             return httplib.HTTPResponse.read(self, amt)
 
-class SCAuthentication(SCObject):
-    def __init__(self, id=None, token=None, expires=None):
-        self.id = id
-        self.token = token
-        self.expires = expires
-        
-    def parse(self, xml_data):
-        xmldata = xml.dom.minidom.parseString(xml_data)
-        auth_result = xmldata.getElementsByTagName("authenticationResult")[0]
-        self.id = auth_result.attributes["id"].value.strip()
-        self.token = auth_result.attributes["token"].value.strip()
-        self.expires = auth_result.attributes["expires"].value.strip()
-        
-    def isAuthenticated(self):
-        return self.token != None
+class VerifiedHTTPSConnection(httplib.HTTPSConnection):
+    #=======================================================================
+    # overrides the version in httplib so that we do certificate verification
+    #=======================================================================
+    def connect(self):
+        sock = socket.create_connection((self.host, self.port), self.timeout)
+        if self._tunnel_host:
+            self.sock = sock
+            self._tunnel()
 
+        # wrap the socket using verification with the root certs in trusted_root_certs
+        cacert_path = os.path.join(os.path.dirname(os.path.abspath(sclib.__file__ )), 'cacerts', 'cacert.pem')
+        self.sock = ssl.wrap_socket(sock,
+                                    self.key_file,
+                                    self.cert_file,
+                                    cert_reqs=ssl.CERT_REQUIRED,
+                                    ca_certs=cacert_path)
 
+class VerifiedHTTPSHandler(urllib2.HTTPSHandler):
+    #===============================================================================
+    # wraps https connections with ssl certificate verification
+    #===============================================================================
+    def __init__(self, connection_class = VerifiedHTTPSConnection):
+        self.specialized_conn_class = connection_class
+        urllib2.HTTPSHandler.__init__(self)
+
+    def https_open(self, req):
+        return self.do_open(self.specialized_conn_class, req)
+    
 class SCAuthConnection:
     def __init__( self, host_base, broker_name=None, broker_passphase=None):
 
@@ -396,8 +402,8 @@ class SCAuthConnection:
         
         self.pwd_mgr = urllib2.HTTPPasswordMgr()
         self.pwd_mgr.add_password(self.realm, self.base_url, self.broker, self.broker_passphrase)
-        self.opener = urllib2.build_opener()
-        self.opener.add_handler(urllib2.HTTPDigestAuthHandler(self.pwd_mgr))
+        self.opener = urllib2.build_opener( VerifiedHTTPSHandler(), 
+                                            urllib2.HTTPDigestAuthHandler(self.pwd_mgr) )
 
     def nice_format(self, data):
         xmlstr = parseString(data)
