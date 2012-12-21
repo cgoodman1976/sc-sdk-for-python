@@ -22,9 +22,11 @@ class SCSecurityGroupTest(SCBaseTestCase):
             logging.debug(xml_pretty)
             
     def testListAllRuleTypes(self):
-        rulelist = self.connection.listAllRules()
+        rulelist = self.connection.listAllSecurityRuleTypes()
         for rule in rulelist:
-            xml_pretty = rule.niceFormat()
+            newrule = self.connection.getSecurityRuleType(rule.id)
+            self.assertEqual(rule.id, newrule.id)
+            xml_pretty = newrule.niceFormat()
             logging.debug(xml_pretty)
 
 

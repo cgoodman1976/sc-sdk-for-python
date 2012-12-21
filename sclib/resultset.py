@@ -80,14 +80,14 @@ class ResultSet(list):
         else:
             setattr(self, name, value)
 
-    def buildElement(self):
+    def buildElements(self, elements=None):
 
         # enumerate all objects in list
         root = None
         if self.marker:
             root = ElementTree.Element(self.marker)
             for obj in self:
-                element = obj.buildElement()
+                element = obj.buildElements()
                 root.append(element)
                 return root
         

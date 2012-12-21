@@ -178,13 +178,20 @@ class SCConnection(SCQueryConnection):
         rule = self.get_object(action, params, SecurityGroup)
         return rule
 
-    def listAllRules(self):
+    def listAllSecurityRuleTypes(self):
         if self.authentication is None: return None
 
         params = {}
         return self.get_list('SecurityRule', params, 
                              [('securityRuleType', SecurityRuleType)])
 
+    def getSecurityRuleType(self, id):
+        if self.authentication is None: return None
+    
+        params = {}
+        action = 'securityRule/%s/' % (id) 
+        rule = self.get_object(action, params, SecurityRuleType)
+        return rule
 
     #===========================================================================
     # # function - User

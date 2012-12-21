@@ -134,12 +134,13 @@ class VirtualMachine(SCObject):
             # build attributes
             for attr in self.ValidAttributes:
                 vm.attrib[attr] = getattr(self, attr)
-            description = ElementTree.SubElement(vm, "imageDescription")
-            description.text = self.imageDescription
+            if self.imageDescription:
+                description = ElementTree.SubElement(vm, "imageDescription")
+                description.text = self.imageDescription
             # append inner objects
-            vm.append( self.provider.buildElements() )
-            vm.append( self.devices.buildElements() )
-            vm.append( self.agents.buildElements() )
+            if self.provider: vm.append( self.provider.buildElements() )
+            if self.devices: vm.append( self.devices.buildElements() )
+            if self.agents: vm.append( self.agents.buildElements() )
             
         return vm
 

@@ -1,3 +1,6 @@
+v0.2.2:
+- fix parsing bugs in securityGroup class
+
 v0.2.1:
 - fix bugs vm class
 - enhance provider class
