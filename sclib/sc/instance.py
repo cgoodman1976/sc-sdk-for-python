@@ -31,8 +31,26 @@ class Instance(SCObject):
         pass
     
 class VirtualMachine(SCObject):
+    #===========================================================================
+    # present vm object
+    #===========================================================================
+    
+    # Required fields
+    Required = ['imageGUID', 'imageName', 'autoProvision', 'SecurityGroupGUID', 'imageDescription']
+    
+    # Present valid vm object attributes, not inner objects
+    ValidAttributes = [ 'SecurityGroupGUID', 'autoProvision',
+                        'detectedKeyCount', 'encryptedDeviceCount', 'encryptingDeviceCount', 'href',
+                        'imageGUID', 'imageID', 'imageName', 
+                        'instanceGUID','instanceID', 'lastModified', 
+                        'nonEncryptedDeviceCount', 'pendingDeviceCount']
+    
+    
     def __init__(self, connection):
-        # member information
+        SCObject.__init__(self, connection)
+        #=======================================================================
+        # Attributes
+        #=======================================================================
         self.SecurityGroupGUID = None
         self.autoProvision = None
         self.detectedKeyCount = None
@@ -47,14 +65,17 @@ class VirtualMachine(SCObject):
         self.lastModified = None
         self.nonEncryptedDeviceCount = None
         self.pendingDeviceCount = None
+        #=======================================================================
+        # elements
+        #=======================================================================
         self.imageDescription = None
-        # provider
+        # Provider object
         self.provider = None
-        # platform
+        # Platform object
         self.platform = None
-        # agent
+        # SCAgent object
         self.agent = None
-        # device
+        # Device object
         self.devices = None
         
         pass
@@ -91,10 +112,62 @@ class VirtualMachine(SCObject):
         else:
             setattr(self, name, value)
             
-    def buildElements(self):
-        return None
+    def buildElements(self, elements=None):
+
+        vm = ElementTree.Element('vm')
+        
+        if elements:
+            # build attributes
+            for e in elements:
+                if e in self.ValidAttributes:
+                    vm.attrib[e] = getattr(self, e)
+                elif e == 'imageDescription':
+                    description = ElementTree.SubElement(vm, "imageDescription")
+                    description.text = self.imageDescription
+                elif e == 'provider':
+                    vm.append( self.provider.buildElements() )
+                elif e == 'devices':
+                    vm.append( self.devices.buildElements() )
+                elif e == 'securecloudAgent':
+                    vm.append( self.agents.buildElements() )
+        else:
+            # build attributes
+            for attr in self.ValidAttributes:
+                vm.attrib[attr] = getattr(self, attr)
+            description = ElementTree.SubElement(vm, "imageDescription")
+            description.text = self.imageDescription
+            # append inner objects
+            vm.append( self.provider.buildElements() )
+            vm.append( self.devices.buildElements() )
+            vm.append( self.agents.buildElements() )
+            
+        return vm
+
+    #===========================================================================
+    # functions start 
+    #===========================================================================
+    def update(self, updates=None):
+        action = 'vm/%s/' % self.imageGUID
+        updateFiels = updates
+        if not updateFiels:
+            # default update fields
+            updateFields = ['imageGUID', 'imageName', 'autoProvision', 'SecurityGroupGUID', 'imageDescription']
+            
+        data = ElementTree.tostring( self.buildElements(updateFields) )
+        return self.connection.get_object(action, {}, VirtualMachine, data=data, method='POST')
+    
+    def delete(self):
+        action = 'vm/%s/' % self.imageGUID
+        return self.connection.get_status(action, {}, method='DELETE')
+    
+    def deleteDevice(self, deviceID):
+        action = 'vm/%s/device/%s/' % (self.imageGUID, deviceID)
+        return self.connection.get_status(action, {}, method='DELETE')
+        
+
 
 class SCAgent(SCObject):
+    ValidAttributes = ['agentStatus', 'agentVersion']
     def __init__(self, connection):
         # member information
         self.agentStatus = None
@@ -114,7 +187,7 @@ class SCAgent(SCObject):
     def endElement(self, name, value, connection):
         setattr(self, name, value)
             
-    def buildElements(self):
+    def buildElements(self, elements=None):
         agent = ElementTree.Element('agent')
         if self.agentStatus: agent.attrib['agentStatus'] = self.agentStatus
         if self.agentVersion: agent.attrib['agentVersion'] = self.agentVersion

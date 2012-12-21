@@ -17,7 +17,7 @@ class SCUserTest(SCBaseTestCase):
 
     def testUserCreate(self):
         user = self.connection.createUser( 'unittest2@securecloud.com',
-                                            '',
+                                            '1qaz@WSX',
                                             'localuser',
                                             'unit2',
                                             'test2',
@@ -26,7 +26,7 @@ class SCUserTest(SCBaseTestCase):
                                             'false')
         self.assertNotEqual(user, None)
         if not user:
-            # new user needs activation
+            # new user needs activation or password included
             res = user.update()
             self.assertNotEqual(res, None)
 

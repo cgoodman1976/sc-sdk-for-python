@@ -32,6 +32,14 @@ class SCBaseTestCase(unittest.TestCase):
                                                    config.get('authentication', 'AUTH_PASSWORD'))
             self.assertNotEqual(self.auth, None)
 
-
+    def testAuthentication(self):
+        if self.auth:        
+            xml = self.auth.niceFormat()
+            logging.debug(xml)
+        
     def tearDown(self):
+        self.connection.close()
         pass
+    
+if __name__ == '__main__':
+    unittest.main()

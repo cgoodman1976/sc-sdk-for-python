@@ -34,13 +34,10 @@ class SCProviderTest(SCBaseTestCase):
         #===== implement initial code here for each test =====
         pass
 
-    #===========================================================================
     def testAllProvider(self):
-        pass
-    #    for proivder in self.providers:
-    #        pro = self.connection.getProvider(proivder.uid)
-    #        self.assertEqual(pro.uid, proivder.uid)
-    #===========================================================================
+        for proivder in self.providers:
+            pro = self.connection.getProvider(proivder.name)
+            self.assertEqual(pro.name, proivder.name)
     
 
 if __name__ == '__main__':

@@ -63,8 +63,18 @@ class Certificate(SCObject):
             self.publickey = """-----BEGIN RSA PUBLIC KEY-----\n%s\n-----END RSA PUBLIC KEY-----\n""" % (self.certificate)
         else:
             setattr(self, name, value)
+            
+    def encryptData(self, data):
+        if self.certificate:
+            publickey = RSA.importKey(self.publickey).publickey()
+            cipher = PKCS1_OAEP.new(publickey, Hash.SHA256)
+            encrypted = cipher.encrypt( bytes(data) )
+            return base64.b64encode(encrypted)
+        return None
 
 class Authentication(SCObject):
+    
+    ValidAttributes = ['id', 'token', 'expires', 'data', 'accountId']
     def __init__(self, connection):
         SCObject.__init__(self, connection)
         self.id = None
@@ -88,13 +98,13 @@ class Authentication(SCObject):
     def endElement(self, name, value, connection):
         setattr(self, name, value)
         
-    def buildElement(self):
+    def buildElements(self, elements=None):
         authentication = ElementTree.Element('authentication')
-        if self.id: authentication.attrib['id'] = self.id
-        if self.token: authentication.attrib['token'] = self.token
-        if self.expires: authentication.attrib['expires'] = self.expires
-        if self.data: authentication.attrib['data'] = self.data
-        if self.accountId: authentication.attrib['accountId'] = self.accountId
+        
+        # build attributes
+        for attr in self.ValidAttributes:
+            if getattr(self, attr): authentication.attrib[attr] = getattr(self, attr)
+
         return authentication
 
         
@@ -124,11 +134,8 @@ class SCConnection(SCQueryConnection):
         params = {}
         # build authentication request
         auth_req = Authentication(self)
-        publickey = RSA.importKey(self.certificate.publickey).publickey()
-        cipher = PKCS1_OAEP.new(publickey, Hash.SHA256)
-        encrypted_password = cipher.encrypt( bytes(password) )
-        auth_req.data = base64.b64encode(encrypted_password)
-        req_data = ElementTree.tostring(auth_req.buildElement())
+        auth_req.data = self.certificate.encryptData(password)
+        req_data = ElementTree.tostring(auth_req.buildElements())
 
         auth = self.get_object( 'userBasicAuth/%s' % (name), params, Authentication, data=req_data, method='POST')
         if auth:
@@ -196,7 +203,7 @@ class SCConnection(SCQueryConnection):
         params = {}
         user = User(self)
         user.loginname = login
-        user.logintext = text
+        user.logintext = self.certificate.encryptData(text)
         user.usertype = usertype
         user.firstName = firstname
         user.lastName = lastname
@@ -236,3 +243,9 @@ class SCConnection(SCQueryConnection):
 
         params = {}
         return self.get_list('provider/', params, [('provider', Provider)])
+
+    def getProvider(self, name):
+        if self.authentication is None: return None
+
+        params = {}
+        return self.get_object('provider/%s/' % (name), params, Provider)

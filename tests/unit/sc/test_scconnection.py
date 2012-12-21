@@ -8,8 +8,6 @@ from tests.unit import config, logging
 from tests.unit.sc import SCBaseTestCase
 from sclib.sc.device import Device
 from sclib.sc.user import User
-from xml.etree import ElementTree
-from xml.dom import minidom
 
 class SCConnectionTest(SCBaseTestCase):
     def setUp(self):

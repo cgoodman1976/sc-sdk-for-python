@@ -26,20 +26,21 @@ from xml.etree import ElementTree
 from xml.dom.minidom import parseString
 
 class SCObject(object):
+    # Base class of All SecureCloud objects
 
     def __init__(self, connection=None):
         self.connection = connection
         
-    # for XML parse
     def startElement(self, name, attrs, connection):
-        return None
+        # Mostly parsing XML attributes and begin of elements
+        pass
 
-    # for XML parse
     def endElement(self, name, value, connection):
+        # Mostly parsing XML elements
         setattr(self, name, value)
 
-    # build xml elements structure
-    def buildElements(self):
+    def buildElements(self, elements=None):
+        # To build xml elements structure
         pass
     
     def niceFormat(self):

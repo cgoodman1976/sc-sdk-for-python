@@ -30,15 +30,25 @@ from tests.unit.sc import SCBaseTestCase
 class SCVirtualMachineTest(SCBaseTestCase):
     def setUp(self):
         SCBaseTestCase.setUp(self)
-        self.vms = self.connection.listAllVM()
 
         #===== implement initial code here for each test =====
         pass
 
-    def testUpdateDevice(self):
+    def testUpdateVM(self):
+
+        self.vms = self.connection.listAllVM()
+
         for vm in self.vms:
-            self.connection.getVM(vm.imageGUID)
-    
+            newvm = self.connection.getVM(vm.imageGUID)
+            gabage = newvm.href
+            provision = 'on'
+            newvm.imageDescription = gabage
+            newvm.autoProvision = provision
+            updated = newvm.update()
+            self.assertNotEqual(updated, None)
+
+    def testCreateDeleteVM(self):
+        pass
 
 if __name__ == '__main__':
     unittest.main()
