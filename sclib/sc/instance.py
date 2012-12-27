@@ -29,6 +29,7 @@ from xml.etree import ElementTree
 class Instance(SCObject):
     def __init__(self, connection=None):
         pass
+
     
 class VirtualMachine(SCObject):
     #===========================================================================
@@ -74,7 +75,7 @@ class VirtualMachine(SCObject):
         # Platform object
         self.platform = None
         # SCAgent object
-        self.agent = None
+        self.securecloudAgent = None
         # Device object
         self.devices = None
         
@@ -94,9 +95,9 @@ class VirtualMachine(SCObject):
             self.provider.startElement(name, attrs, connection)
             return self.provider
         elif name == 'securecloudAgent':
-            self.agent = SCAgent(connection)
-            self.agent.startElement(name, attrs, connection)
-            return self.agent
+            self.securecloudAgent = SCAgent(connection)
+            self.securecloudAgent.startElement(name, attrs, connection)
+            return self.securecloudAgent
         elif name == 'devices':
             self.devices = ResultSet([('device', Device)])
             self.devices.name = name
@@ -119,34 +120,34 @@ class VirtualMachine(SCObject):
         if elements:
             # build attributes
             for e in elements:
-                if e in self.ValidAttributes:
-                    vm.attrib[e] = getattr(self, e)
-                elif e == 'imageDescription':
-                    description = ElementTree.SubElement(vm, "imageDescription")
-                    description.text = self.imageDescription
-                elif e == 'provider':
-                    vm.append( self.provider.buildElements() )
-                elif e == 'devices':
-                    vm.append( self.devices.buildElements() )
-                elif e == 'securecloudAgent':
-                    vm.append( self.agents.buildElements() )
+                if hasattr(self, e):
+                    if e in self.ValidAttributes:
+                        vm.attrib[e] = getattr(self, e)
+                    elif e == 'imageDescription':
+                        description = ElementTree.SubElement(vm, "imageDescription")
+                        description.text = self.imageDescription
+                    elif e == 'provider':
+                        vm.append( self.provider.buildElements() )
+                    elif e == 'devices':
+                        vm.append( self.devices.buildElements() )
+                    elif e == 'securecloudAgent':
+                        vm.append( self.agents.buildElements() )
         else:
             # build attributes
             for attr in self.ValidAttributes:
-                vm.attrib[attr] = getattr(self, attr)
-            if self.imageDescription:
+                if hasattr(self, attr): vm.attrib[attr] = getattr(self, attr)
+            if hasattr(self, 'imageDescription'):
                 description = ElementTree.SubElement(vm, "imageDescription")
                 description.text = self.imageDescription
             # append inner objects
-            if self.provider: vm.append( self.provider.buildElements() )
-            if self.devices: vm.append( self.devices.buildElements() )
-            if self.agents: vm.append( self.agents.buildElements() )
+            if hasattr(self, 'provider'): vm.append( self.provider.buildElements() )
+            if hasattr(self, 'devices'): vm.append( self.devices.buildElements() )
+            if hasattr(self, 'securecloudAgent'): vm.append( self.securecloudAgent.buildElements() )
             
         return vm
 
-    #===========================================================================
-    # functions start 
-    #===========================================================================
+    # ----- functions start 
+
     def update(self, updates=None):
         action = 'vm/%s/' % self.imageGUID
         updateFiels = updates
@@ -158,10 +159,18 @@ class VirtualMachine(SCObject):
         return self.connection.get_object(action, {}, VirtualMachine, data=data, method='POST')
     
     def delete(self):
+        #-----------------------------------------------------------------------
+        # delete vm itself
+        #-----------------------------------------------------------------------
         action = 'vm/%s/' % self.imageGUID
         return self.connection.get_status(action, {}, method='DELETE')
     
     def deleteDevice(self, deviceID):
+        #-----------------------------------------------------------------------
+        # delete device inside a virtual machine
+        #-----------------------------------------------------------------------
+        ':deviceID the targe device to be delete in a virtual machine'
+        
         action = 'vm/%s/device/%s/' % (self.imageGUID, deviceID)
         return self.connection.get_status(action, {}, method='DELETE')
         
@@ -189,7 +198,7 @@ class SCAgent(SCObject):
         setattr(self, name, value)
             
     def buildElements(self, elements=None):
-        agent = ElementTree.Element('agent')
+        agent = ElementTree.Element('securecloudAgent')
         if self.agentStatus: agent.attrib['agentStatus'] = self.agentStatus
         if self.agentVersion: agent.attrib['agentVersion'] = self.agentVersion
         return agent

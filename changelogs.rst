@@ -1,3 +1,8 @@
+v0.2.3:
+- add key request class to present a device key request 
+- add authentication check
+- refactoring for non-digest connection
+
 v0.2.2:
 - fix parsing bugs in securityGroup class
 

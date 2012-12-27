@@ -179,7 +179,7 @@ class _SCError:
 
 class SCConnectionError(SCClientError):
     """
-    General error connecting to Amazon Web Services.
+    General error connecting to SecureCloud Service.
     """
     pass
 

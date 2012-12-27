@@ -24,12 +24,14 @@
 import xml.sax
 import base64
 
+from sclib.exception import SCClientError
 from sclib.connection import SCQueryConnection
 from sclib.sc.device import Device
 from sclib.sc.user import User
 from sclib.sc.scobject import SCObject
 from sclib.sc.instance import VirtualMachine, Instance
 from sclib.sc.provider import Provider
+from sclib.sc.keyrequest import KeyRequest
 from sclib.sc.securitygroup import SecurityGroup, SecurityRule, SecurityRuleType
 
 from xml.dom.minidom import parse, parseString
@@ -143,19 +145,27 @@ class SCConnection(SCQueryConnection):
             self.headers['X-UserSession'] = self.authentication.token
         return self.authentication
   
+    def isAuthenticated(self):
+        if self.authentication is None:
+            raise SCClientError('Connection abort. Needs Authentication first!')
+        
+        return True
+  
     #===========================================================================
     # # functions - Device
     #===========================================================================
     
     def listAllDevices(self):
-        if self.authentication is None: return None
+        if self.authentication is None: 
+            return None
     
         params = {}
         return self.get_list('device', params, 
                              [('device', Device)])
 
     def getDevice(self, guid):
-        if self.authentication is None: return None
+        if self.authentication is None: 
+            return None
     
         params = {}
         return self.get_object('device/%s/' % (guid), params, Device)
@@ -164,14 +174,16 @@ class SCConnection(SCQueryConnection):
     # # function - Policy/SecurityGroup
     #===========================================================================
     def listAllSecurityGroup(self):
-        if self.authentication is None: return None
+        if self.authentication is None: 
+            return None
     
         params = {}
         return self.get_list('SecurityGroup', params, 
                              [('securityGroup', SecurityGroup)])
 
     def getSecurityGroup(self, id):
-        if self.authentication is None: return None
+        if self.authentication is None: 
+            return None
     
         params = {}
         action = 'securityGroup/%s/' % (id) 
@@ -179,14 +191,16 @@ class SCConnection(SCQueryConnection):
         return rule
 
     def listAllSecurityRuleTypes(self):
-        if self.authentication is None: return None
+        if self.authentication is None: 
+            return None
 
         params = {}
         return self.get_list('SecurityRule', params, 
                              [('securityRuleType', SecurityRuleType)])
 
     def getSecurityRuleType(self, id):
-        if self.authentication is None: return None
+        if self.authentication is None: 
+            return None
     
         params = {}
         action = 'securityRule/%s/' % (id) 
@@ -197,7 +211,8 @@ class SCConnection(SCQueryConnection):
     # # function - User
     #===========================================================================
     def listAllUsers(self):
-        if self.authentication is None: return None
+        if self.isAuthenticated() is False : 
+            return None
 
         params = {}
         return self.get_list('user', params, [('user', User)])
@@ -205,7 +220,9 @@ class SCConnection(SCQueryConnection):
     def createUser(self, login, text, usertype='localuser', 
                    firstname='', lastname='', email='', 
                    role='Administrator', MFA='false'):
-        if self.authentication is None: return None
+
+        if self.isAuthenticated() is False : 
+            return None
 
         params = {}
         user = User(self)
@@ -222,7 +239,8 @@ class SCConnection(SCQueryConnection):
         return self.get_object('user/', params, User, data=data, method='POST')
     
     def getUser(self, id):
-        if self.authentication is None: return None
+        if self.isAuthenticated() is False : 
+            return None
 
         params = {}
         return self.get_object('user/%s/' % (id), params, User)
@@ -231,13 +249,15 @@ class SCConnection(SCQueryConnection):
     # virtual machine function
     #===========================================================================
     def listAllVM(self):
-        if self.authentication is None: return None
+        if self.isAuthenticated() is False : 
+            return None
 
         params = {}
         return self.get_list('vm/', params, [('vm', VirtualMachine)])
 
     def getVM(self, id):
-        if self.authentication is None: return None
+        if self.isAuthenticated() is False : 
+            return None
 
         params = {}
         return self.get_object('vm/%s/' % (id), params, VirtualMachine)
@@ -246,13 +266,32 @@ class SCConnection(SCQueryConnection):
     # Provider function
     #===========================================================================
     def listAllProvider(self):
-        if self.authentication is None: return None
+        if self.isAuthenticated() is False : 
+            return None
 
         params = {}
         return self.get_list('provider/', params, [('provider', Provider)])
 
     def getProvider(self, name):
-        if self.authentication is None: return None
+        if self.isAuthenticated() is False : 
+            return None
 
         params = {}
         return self.get_object('provider/%s/' % (name), params, Provider)
+    
+    #---------------------------------------------------------------------------
+    # key request
+    #---------------------------------------------------------------------------
+    def listAllKeyRequest(self):
+        if self.isAuthenticated() is False : 
+            return None
+        
+        params = {}
+        return self.get_list('keyrequesttree/', params, [('devicekeyrequest', KeyRequest)])
+
+    def listKeyRequest(self, id):
+        if self.isAuthenticated() is False : 
+            return None
+        
+        params = {}
+        return self.get_object('devicekeyrequest/%s/' % (id), params, KeyRequest)

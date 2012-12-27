@@ -20,9 +20,11 @@
 # IN THE SOFTWARE.
 #
 
-from sclib.sc.scobject import SCObject
 from sclib.resultset import ResultSet
+from sclib.sc.scobject import SCObject
+from sclib.sc.device import Device
 from xml.etree import ElementTree
+
 
 class SecurityGroupAction(SCObject):
     def __init__(self, connection):
@@ -138,6 +140,7 @@ class SecurityRule(SCObject):
         self.dataMissing = None
         # inner objects
         self.ruletype = None
+        self.devices = None
         self.conditions = None
 
     def startElement(self, name, attrs, connection):
@@ -152,6 +155,10 @@ class SecurityRule(SCObject):
             self.ruletype = SecurityRuleType(connection)
             self.ruletype.startElement(name, attrs, connection)
             return self.ruletype
+        elif name == 'deviceList':
+            self.devices = ResultSet([('device', Device)])
+            self.devices.marker = 'deviceList'
+            return self.devices
         elif name == 'securityRuleConditionList':
             self.conditions = ResultSet([('securityRuleCondition', SecurityRuleCondition)])
             self.conditions.marker = 'securityRuleConditionList'

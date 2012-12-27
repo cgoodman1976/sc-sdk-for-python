@@ -1,5 +1,5 @@
-# Copyright (c) 2006-2012 Mitch Garnaat http://garnaat.org/
 # Copyright (c) 2012 Amazon.com, Inc. or its affiliates.
+# Copyright (c) 2006-2012 Mitch Garnaat http://garnaat.org/
 # Copyright (c) 2010 Google
 # Copyright (c) 2008 rPath, Inc.
 # Copyright (c) 2009 The Echo Nest Corporation
@@ -275,88 +275,6 @@ class ConnectionPool(object):
                     del self.host_to_pool[host]
                 self.last_clean_time = now
 
-
-class HTTPRequest(object):
-
-    def __init__(self, method, host, port, path,
-                 params, headers, body):
-        """Represents an HTTP request.
-
-        :type method: string
-        :param method: The HTTP method name, 'GET', 'POST', 'PUT' etc.
-
-        :type host: string
-        :param host: Host to which the request is addressed. eg. abc.com
-
-        :type port: int
-        :param port: port on which the request is being sent. Zero means unset,
-            in which case default port will be chosen.
-
-        :type path: string
-        :param path: URL path that is being accessed.
-
-        :type params: dict
-        :param params: HTTP url query parameters, with key as name of
-            the param, and value as value of param.
-
-        :type headers: dict
-        :param headers: HTTP headers, with key as name of the header and value
-            as value of header.
-
-        :type body: string
-        :param body: Body of the HTTP request. If not present, will be None or
-            empty string ('').
-        """
-        self.method = method
-        self.host = host
-        self.port = port
-        self.path = path
-        self.params = params
-        self.req_path = ''
-        # chunked Transfer-Encoding should act only on PUT request.
-        if headers and 'Transfer-Encoding' in headers and \
-                headers['Transfer-Encoding'] == 'chunked' and \
-                self.method != 'PUT':
-            self.headers = headers.copy()
-            del self.headers['Transfer-Encoding']
-        else:
-            self.headers = headers
-        self.body = body
-
-    def __str__(self):
-        return (('method:(%s) protocol:(%s) host(%s) port(%s) path(%s) '
-                 'req_path(%s) params(%s) headers(%s) body(%s)') % (self.method,
-                 self.protocol, self.host, self.port, self.path, self.req_path,
-                 self.params, self.headers, self.body))
-
-class HTTPResponse(object):
-
-    def __init__(self, *args, **kwargs):
-        httplib.HTTPResponse.__init__(self, *args, **kwargs)
-        self._cached_response = ''
-
-    def read(self, amt=None):
-        """Read the response.
-
-        This method does not have the same behavior as
-        httplib.HTTPResponse.read.  Instead, if this method is called with
-        no ``amt`` arg, then the response body will be cached.  Subsequent
-        calls to ``read()`` with no args **will return the cached response**.
-
-        """
-        if amt is None:
-            # The reason for doing this is that many places in sclib call
-            # response.read() and except to get the response body that they
-            # can then process.  To make sure this always works as they expect
-            # we're caching the response so that multiple calls to read()
-            # will return the full body.  Note that this behavior only
-            # happens if the amt arg is not specified.
-            if not self._cached_response:
-                self._cached_response = httplib.HTTPResponse.read(self)
-            return self._cached_response
-        else:
-            return httplib.HTTPResponse.read(self, amt)
-
 class VerifiedHTTPSConnection(httplib.HTTPSConnection):
     #=======================================================================
     # overrides the version in httplib so that we do certificate verification
@@ -400,10 +318,13 @@ class SCAuthConnection:
                         'Accept': 'application/xml'
                         }
         
-        self.pwd_mgr = urllib2.HTTPPasswordMgr()
-        self.pwd_mgr.add_password(self.realm, self.base_url, self.broker, self.broker_passphrase)
-        self.opener = urllib2.build_opener( VerifiedHTTPSHandler(), 
-                                            urllib2.HTTPDigestAuthHandler(self.pwd_mgr) )
+        self.opener = urllib2.build_opener( VerifiedHTTPSHandler())
+
+        # add digest handler if digest information provided
+        if broker_name and broker_passphase:
+            self.pwd_mgr = urllib2.HTTPPasswordMgr()
+            self.pwd_mgr.add_password(self.realm, self.base_url, self.broker, self.broker_passphrase)
+            self.opener.add_handler(urllib2.HTTPDigestAuthHandler(self.pwd_mgr))
 
     def nice_format(self, data):
         xmlstr = parseString(data)
@@ -524,7 +445,7 @@ class SCQueryConnection(SCAuthConnection):
             return obj
         return None
 
-    def get_status(self, action='GET', headers=None, data='', params=None, path='/', parent=None):
+    def get_status(self, action, headers=None, data='', params=None, path='/', parent=None, method='GET'):
         if not parent:
             parent = self
 

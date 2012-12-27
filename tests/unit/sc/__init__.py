@@ -31,11 +31,6 @@ class SCBaseTestCase(unittest.TestCase):
             self.auth = self.connection.basicAuth( config.get('authentication', 'AUTH_NAME'), 
                                                    config.get('authentication', 'AUTH_PASSWORD'))
             self.assertNotEqual(self.auth, None)
-
-    def testAuthentication(self):
-        if self.auth:        
-            xml = self.auth.niceFormat()
-            logging.debug(xml)
         
     def tearDown(self):
         self.connection.close()
