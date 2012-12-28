@@ -29,7 +29,7 @@ class Device(SCObject):
     def __init__(self, connection):
         SCObject.__init__(self, connection)
         # Device attributes
-        self.uid = None
+        self.msUID = None
         self.id = None
         self.msUID = None
         self.name = None
@@ -90,12 +90,12 @@ class Device(SCObject):
         else:
             setattr(self, name, value)
 
-    def buildElements(self):
+    def buildElements(self, elements = None):
         device = ElementTree.Element('device')
         device.attrib['version'] = '3.5'
 
         # my attributes
-        if self.uid:    device.attrib['msUID'] = self.uid
+        if self.msUID:    device.attrib['msUID'] = self.msUID
         if self.id:     device.attrib['id'] = self.id
         if self.name:   device.attrib['name'] = self.name
         if self.href:   device.attrib['href'] = self.href
@@ -117,7 +117,7 @@ class Device(SCObject):
     
     def update(self):
         # Build XML elements structures
-        action = 'device/' + self.uid + '/'
+        action = 'device/' + self.msUID + '/'
         req_element = self.buildElements()
         data = ElementTree.tostring(req_element)
         response = self.connection.make_request(action, data, method='POST')

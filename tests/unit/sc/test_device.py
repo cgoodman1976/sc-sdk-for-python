@@ -37,8 +37,8 @@ class SCDeviceTest(SCBaseTestCase):
 
     def testGetDevice(self):
         for device in self.devices:
-            dev = self.connection.getDevice(device.uid)
-            self.assertEqual(dev.uid, device.uid)
+            dev = self.connection.getDevice(device.msUID)
+            self.assertEqual(dev.msUID, device.msUID)
     
 
 if __name__ == '__main__':

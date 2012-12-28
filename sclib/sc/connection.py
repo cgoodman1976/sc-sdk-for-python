@@ -36,6 +36,7 @@ from sclib.sc.securitygroup import SecurityGroup, SecurityRule, SecurityRuleType
 
 from xml.dom.minidom import parse, parseString
 from xml.etree import ElementTree
+
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
 from Crypto import Hash
@@ -116,6 +117,18 @@ class Authentication(SCObject):
 
 class SCConnection(SCQueryConnection):
 
+    REST_PUBLIC_CERTIFICATE = 'PublicCertificate'
+    REST_BASIC_AUTH = 'userBasicAuth'
+    REST_DEVICE = 'device'
+    REST_SECURITY_GROUP = 'SecurityGroup'
+    REST_SECURITY_RULE = 'SecurityRule'
+    REST_SECURITY_RULE_TYPE = 'SecurityRule'
+    REST_USER = 'user'
+    REST_VM = 'vm'
+    REST_PROVIDER = 'provider'
+    REST_KEY_REQUEST = 'keyrequesttree'
+    REST_DEVICE_KEY_REQUEST = 'devicekeyrequest'
+
     def __init__(self, host_base, broker_name=None, broker_passphase=None):
         SCQueryConnection.__init__( self, host_base, broker_name, broker_passphase)
         
@@ -125,7 +138,8 @@ class SCConnection(SCQueryConnection):
         
     def getCertificate(self):
         params = {}
-        self.certificate = self.get_object('PublicCertificate', params, Certificate)
+        self.certificate = self.get_object( '%s' % (self.REST_PUBLIC_CERTIFICATE),
+                                            params, Certificate)
         return self.certificate
     
     def basicAuth(self, name, password):
@@ -139,7 +153,8 @@ class SCConnection(SCQueryConnection):
         auth_req.data = self.certificate.encryptData(password)
         req_data = ElementTree.tostring(auth_req.buildElements())
 
-        auth = self.get_object( 'userBasicAuth/%s' % (name), params, Authentication, data=req_data, method='POST')
+        auth = self.get_object( '%s/%s' % (self.REST_BASIC_AUTH, name), 
+                                params, Authentication, data=req_data, method='POST')
         if auth:
             self.authentication = auth
             self.headers['X-UserSession'] = self.authentication.token
@@ -160,15 +175,16 @@ class SCConnection(SCQueryConnection):
             return None
     
         params = {}
-        return self.get_list('device', params, 
-                             [('device', Device)])
+        return self.get_list( '%s' % (self.REST_DEVICE), params, 
+                              [('device', Device)])
 
     def getDevice(self, guid):
         if self.authentication is None: 
             return None
     
         params = {}
-        return self.get_object('device/%s/' % (guid), params, Device)
+        return self.get_object( '%s/%s/' % (self.REST_DEVICE, guid), 
+                                params, Device)
 
     #===========================================================================
     # # function - Policy/SecurityGroup
@@ -178,16 +194,16 @@ class SCConnection(SCQueryConnection):
             return None
     
         params = {}
-        return self.get_list('SecurityGroup', params, 
-                             [('securityGroup', SecurityGroup)])
+        return self.get_list( '%s' % (self.REST_SECURITY_GROUP), 
+                              params, [('securityGroup', SecurityGroup)])
 
     def getSecurityGroup(self, id):
         if self.authentication is None: 
             return None
     
         params = {}
-        action = 'securityGroup/%s/' % (id) 
-        rule = self.get_object(action, params, SecurityGroup)
+        rule = self.get_object( '%s/%s/' % (self.REST_SECURITY_GROUP, id), 
+                                params, SecurityGroup)
         return rule
 
     def listAllSecurityRuleTypes(self):
@@ -195,16 +211,16 @@ class SCConnection(SCQueryConnection):
             return None
 
         params = {}
-        return self.get_list('SecurityRule', params, 
-                             [('securityRuleType', SecurityRuleType)])
+        return self.get_list( '%s' % (self.REST_SECURITY_RULE_TYPE), 
+                              params, [('securityRuleType', SecurityRuleType)])
 
     def getSecurityRuleType(self, id):
         if self.authentication is None: 
             return None
     
         params = {}
-        action = 'securityRule/%s/' % (id) 
-        rule = self.get_object(action, params, SecurityRuleType)
+        rule = self.get_object( '%s/%s/' % (self.REST_SECURITY_RULE_TYPE, id), 
+                                params, SecurityRuleType)
         return rule
 
     #===========================================================================
@@ -215,7 +231,8 @@ class SCConnection(SCQueryConnection):
             return None
 
         params = {}
-        return self.get_list('user', params, [('user', User)])
+        return self.get_list( '$s' % (self.REST_USER), 
+                              params, [('user', User)])
         
     def createUser(self, login, text, usertype='localuser', 
                    firstname='', lastname='', email='', 
@@ -236,14 +253,16 @@ class SCConnection(SCQueryConnection):
         user.MFAStatus = MFA
         user.setRole(role, MFA)
         data = ElementTree.tostring(user.buildElements())
-        return self.get_object('user/', params, User, data=data, method='POST')
+        return self.get_object( '$s' % (self.REST_USER), 
+                                params, User, data=data, method='POST')
     
     def getUser(self, id):
         if self.isAuthenticated() is False : 
             return None
 
         params = {}
-        return self.get_object('user/%s/' % (id), params, User)
+        return self.get_object( '$s/%s/' % (self.REST_USER, id), 
+                                params, User)
     
     #===========================================================================
     # virtual machine function
@@ -253,14 +272,16 @@ class SCConnection(SCQueryConnection):
             return None
 
         params = {}
-        return self.get_list('vm/', params, [('vm', VirtualMachine)])
+        return self.get_list( '%s' % (self.REST_VM), 
+                              params, [('vm', VirtualMachine)])
 
     def getVM(self, id):
         if self.isAuthenticated() is False : 
             return None
 
         params = {}
-        return self.get_object('vm/%s/' % (id), params, VirtualMachine)
+        return self.get_object( '%s/%s/' % (self.REST_VM, id), 
+                                params, VirtualMachine)
     
     #===========================================================================
     # Provider function
@@ -270,14 +291,16 @@ class SCConnection(SCQueryConnection):
             return None
 
         params = {}
-        return self.get_list('provider/', params, [('provider', Provider)])
+        return self.get_list( '%s' % (self.REST_PROVIDER), 
+                              params, [('provider', Provider)])
 
     def getProvider(self, name):
         if self.isAuthenticated() is False : 
             return None
 
         params = {}
-        return self.get_object('provider/%s/' % (name), params, Provider)
+        return self.get_object( '%s/%s/' % (self.REST_PROVIDER, name), 
+                                params, Provider)
     
     #---------------------------------------------------------------------------
     # key request
@@ -287,11 +310,13 @@ class SCConnection(SCQueryConnection):
             return None
         
         params = {}
-        return self.get_list('keyrequesttree/', params, [('devicekeyrequest', KeyRequest)])
+        return self.get_list( '%s' % (self.REST_KEY_REQUEST), 
+                              params, [('devicekeyrequest', KeyRequest)])
 
     def listKeyRequest(self, id):
         if self.isAuthenticated() is False : 
             return None
         
         params = {}
-        return self.get_object('devicekeyrequest/%s/' % (id), params, KeyRequest)
+        return self.get_object( '%s/%s/' % (self.REST_KEY_REQUEST, id ), 
+                                params, KeyRequest)

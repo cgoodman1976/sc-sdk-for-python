@@ -1,3 +1,7 @@
+v0.2.4:
+- extract restful API name
+- fix device object bugs
+
 v0.2.3:
 - add key request class to present a device key request 
 - add authentication check

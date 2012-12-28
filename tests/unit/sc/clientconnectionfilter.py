@@ -7,17 +7,20 @@ import copy
 import StringIO
 import urllib
 
-from sclib.sc.connection import SCConnection
+from sclib.client.connection import SCClientConnection
 from time import gmtime, strftime
 
-class SCConnectionFilter(SCConnection):
+class SCClientConnectionFilter(SCClientConnection):
+    #-------------------------------------------------------------------------------
+    # filter connection class for agent/provisioning service
+    #-------------------------------------------------------------------------------
     #===========================================================================
     # A filter connection class to simulate request. 
     # The class also capture Request and Response into specified result folder.
     #===========================================================================
     def __init__( self, host_base, broker_name=None, broker_passphase=None, 
                   sample_path=None, result_path=None):
-        SCConnection.__init__(self, host_base, broker_name, broker_passphase)
+        SCClientConnection.__init__(self, host_base, broker_name, broker_passphase)
 
         # pseudo sample path
         self.sample_path = sample_path
@@ -49,7 +52,7 @@ class SCConnectionFilter(SCConnection):
             rf.close()
 
             # make request to securecloud
-            response = SCConnection.make_request(self, action, params, headers, data, method)
+            response = SCClientConnection.make_request(self, action, params, headers, data, method)
             if response:
                 body = response.read()
                 
@@ -65,5 +68,3 @@ class SCConnectionFilter(SCConnection):
                 return fake
 
         return None
-
-
