@@ -128,7 +128,7 @@ class ConsoleOutput:
 
 class SCResponseError(SCServerError):
     """
-    Error in response from EC2.
+    Error in response from SecureCloud.
     """
 
     def __init__(self, status, reason, body=None):

@@ -24,7 +24,7 @@
 import xml.sax
 import base64
 
-from sclib.exception import SCClientError
+from sclib.exception import SCClientError, SCResponseError
 from sclib.connection import SCQueryConnection
 from sclib.sc.device import Device
 from sclib.sc.user import User
@@ -138,8 +138,13 @@ class SCConnection(SCQueryConnection):
         
     def getCertificate(self):
         params = {}
-        self.certificate = self.get_object( '%s' % (self.REST_PUBLIC_CERTIFICATE),
-                                            params, Certificate)
+        certificate = self.get_object( '%s' % (self.REST_PUBLIC_CERTIFICATE),
+                                        params, Certificate)
+        if certificate is None:
+            raise SCResponseError( '4xx' , "Unknown error")
+
+        self.certificate = certificate
+
         return self.certificate
     
     def basicAuth(self, name, password):
