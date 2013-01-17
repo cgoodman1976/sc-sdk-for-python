@@ -120,7 +120,7 @@ class Device(SCObject):
         action = 'device/' + self.msUID + '/'
         req_element = self.buildElements()
         data = ElementTree.tostring(req_element)
-        response = self.connection.make_request(action, data, method='POST')
+        response = self.connection.make_request(action, data=data, method='POST')
         return response
         
 

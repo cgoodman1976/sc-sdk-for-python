@@ -32,12 +32,15 @@ class SCClientConnectionFilter(SCClientConnection):
         
     def make_request(self, action='', params=None, headers=None, data='', method='GET'):
 
+        # local var
+        fake = None
+
         if self.sample_path:
             reqfile = action.replace('/', '^')
             reqfile = os.path.join(self.sample_path, '[Response]%s.xml' % (reqfile) )
             rf = io.open(reqfile, 'r')
-            body = rf.read()
-            return body
+            fake = urllib.addinfourl(rf, 'Fake info', regfile, 400)
+            return fake
         
         else:
             reqfile = action.replace('/', '^')
@@ -67,4 +70,4 @@ class SCClientConnectionFilter(SCClientConnection):
                 f.close()
                 return fake
 
-        return None
+        return fake

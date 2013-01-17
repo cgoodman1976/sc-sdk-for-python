@@ -76,7 +76,7 @@ class VirtualMachine(SCObject):
         self.platform = None
         # SCAgent object
         self.securecloudAgent = None
-        # Device object
+        # Devices object
         self.devices = None
         
         pass
@@ -113,49 +113,30 @@ class VirtualMachine(SCObject):
         else:
             setattr(self, name, value)
             
-    def buildElements(self, elements=None):
+    def buildElements(self):
 
         vm = ElementTree.Element('vm')
         
-        if elements:
-            # build attributes
-            for e in elements:
-                if hasattr(self, e):
-                    if e in self.ValidAttributes:
-                        vm.attrib[e] = getattr(self, e)
-                    elif e == 'imageDescription':
-                        description = ElementTree.SubElement(vm, "imageDescription")
-                        description.text = self.imageDescription
-                    elif e == 'provider':
-                        vm.append( self.provider.buildElements() )
-                    elif e == 'devices':
-                        vm.append( self.devices.buildElements() )
-                    elif e == 'securecloudAgent':
-                        vm.append( self.agents.buildElements() )
-        else:
-            # build attributes
-            for attr in self.ValidAttributes:
-                if hasattr(self, attr): vm.attrib[attr] = getattr(self, attr)
-            if hasattr(self, 'imageDescription'):
-                description = ElementTree.SubElement(vm, "imageDescription")
-                description.text = self.imageDescription
-            # append inner objects
-            if hasattr(self, 'provider'): vm.append( self.provider.buildElements() )
-            if hasattr(self, 'devices'): vm.append( self.devices.buildElements() )
-            if hasattr(self, 'securecloudAgent'): vm.append( self.securecloudAgent.buildElements() )
+        # build attributes
+        for e in self.ValidAttributes:
+            vm.attrib[e] = getattr(self, e)
+
+        if self.imageDescription:
+            description = ElementTree.SubElement(vm, "imageDescription")
+            description.text = self.imageDescription
+
+        # append inner objects
+        if getattr(self, 'provider'): vm.append( self.provider.buildElements() )
+        if getattr(self, 'devices'): vm.append( self.devices.buildElements() )
+        if getattr(self, 'securecloudAgent'): vm.append( self.securecloudAgent.buildElements() )
             
         return vm
 
     # ----- functions start 
 
-    def update(self, updates=None):
+    def update(self):
         action = 'vm/%s/' % self.imageGUID
-        updateFiels = updates
-        if not updateFiels:
-            # default update fields
-            updateFields = ['imageGUID', 'imageName', 'autoProvision', 'SecurityGroupGUID', 'imageDescription']
-            
-        data = ElementTree.tostring( self.buildElements(updateFields) )
+        data = self.tostring()
         return self.connection.get_object(action, {}, VirtualMachine, data=data, method='POST')
     
     def delete(self):
@@ -164,6 +145,14 @@ class VirtualMachine(SCObject):
         #-----------------------------------------------------------------------
         action = 'vm/%s/' % self.imageGUID
         return self.connection.get_status(action, {}, method='DELETE')
+
+    def listDevices(self):
+        #-----------------------------------------------------------------------
+        # list all devices
+        #-----------------------------------------------------------------------
+        action = 'vm/%s/device/' % self.imageGUID
+        return self.connection.get_list(action, {}, [('device', Device)])
+
     
     def deleteDevice(self, deviceID):
         #-----------------------------------------------------------------------
@@ -197,7 +186,7 @@ class SCAgent(SCObject):
     def endElement(self, name, value, connection):
         setattr(self, name, value)
             
-    def buildElements(self, elements=None):
+    def buildElements(self):
         agent = ElementTree.Element('securecloudAgent')
         if self.agentStatus: agent.attrib['agentStatus'] = self.agentStatus
         if self.agentVersion: agent.attrib['agentVersion'] = self.agentVersion

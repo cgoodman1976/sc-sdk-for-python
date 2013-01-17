@@ -46,7 +46,7 @@ class Provider(SCObject):
     def endElement(self, name, value, connection):
         setattr(self, name, value)
             
-    def buildElements(self, elements=None):
+    def buildElements(self):
         provider = ElementTree.Element('provider')
 
         # Set all valid attributes

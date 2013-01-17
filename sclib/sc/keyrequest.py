@@ -46,7 +46,7 @@ class KeyRequest(SCObject):
     def endElement(self, name, value, connection):
         setattr(self, name, value)
             
-    def buildElements(self, elements=None):
+    def buildElements(self):
         keyrequest = ElementTree.Element('devicekeyrequest')
 
         # Set all valid attributes

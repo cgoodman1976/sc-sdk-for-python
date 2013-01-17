@@ -39,14 +39,15 @@ class SCObject(object):
         # Mostly parsing XML elements
         setattr(self, name, value)
 
-    def buildElements(self, elements=None):
+    def buildElements(self):
         # To build xml elements structure
         pass
+
+    def tostring(self):
+        return ElementTree.tostring(self.buildElements())
     
     def niceFormat(self):
         # build from self's elements
-        element = self.buildElements()
-        if element is not None:
-            xmlstr = parseString(ElementTree.tostring(element))
-            pretty_res = xmlstr.toprettyxml()
-            return pretty_res
+        xmlstr = parseString(self.tostring())
+        pretty_res = xmlstr.toprettyxml()
+        return pretty_res

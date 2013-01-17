@@ -80,7 +80,7 @@ class ResultSet(list):
         else:
             setattr(self, name, value)
 
-    def buildElements(self, elements=None):
+    def buildElements(self):
 
         # enumerate all objects in list
         root = None
@@ -89,7 +89,6 @@ class ResultSet(list):
             for obj in self:
                 element = obj.buildElements()
                 root.append(element)
-                return root
         
         return root
 

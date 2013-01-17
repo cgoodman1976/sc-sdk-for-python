@@ -29,13 +29,14 @@ class SCConnectionFilter(SCConnection):
         
     def make_request(self, action='', params=None, headers=None, data='', method='GET'):
 
+        fake = None
         if self.sample_path:
             reqfile = action.replace('/', '^')
             reqfile = os.path.join(self.sample_path, '[Response]%s.xml' % (reqfile) )
             rf = io.open(reqfile, 'r')
             body = rf.read()
-            return body
-        
+            fake = urllib.addinfourl(rf, 'Fake info', regfile, 400)
+
         else:
             reqfile = action.replace('/', '^')
             reqfile = os.path.join(self.result_path, '[Request(%s)]%s.xml' % (method, reqfile ) )
@@ -62,8 +63,7 @@ class SCConnectionFilter(SCConnection):
                 if (body is not None) and (len(body) != 0):
                     f.write(self.nice_format(body))
                 f.close()
-                return fake
 
-        return None
+        return fake
 
 

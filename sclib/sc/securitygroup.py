@@ -23,6 +23,7 @@
 from sclib.resultset import ResultSet
 from sclib.sc.scobject import SCObject
 from sclib.sc.device import Device
+from sclib.sc.instance import VirtualMachine
 from xml.etree import ElementTree
 
 
@@ -37,8 +38,8 @@ class SecurityGroupAction(SCObject):
 class SecurityGroup(SCObject):
     
     ValidAttributes = [ 'id', 'name', 'href',
-                       'isDeletable', 'isNameEditable', 'isResourcePool',
-                       'lastModified', 'ruleCount', 'deviceCount', 'imageCount',
+                       'isDeleteble', 'isNameEditable',
+                       'lastModified', 'ruleCount', 'imageCount',
                        'EnableIC', 'ICAction', 'PostponeEnable', 
                        'RevokeIntervalType', 'RevokeIntervalNumber']
     
@@ -48,13 +49,11 @@ class SecurityGroup(SCObject):
         #member initialization
         self.id = None
         self.name = None
-        self.isDeletable = None
+        self.isDeleteble = None
         self.isNameEditable = None
-        self.isResourcePool = None
         self.href = None
         self.lastModified = None
         self.ruleCount = None
-        self.deviceCount = None
         self.imageCount = None
         self.EnableIC = None
         self.ICAction = None
@@ -63,11 +62,15 @@ class SecurityGroup(SCObject):
         self.RevokeIntervalNumber = None
         self.description = None
         #rules
-        self.rules = None
+        self.securityRuleList = ResultSet([('securityRule', SecurityRule)])
+        self.securityRuleList.marker = 'securityRule'
         #action
         self.successAction = None
         self.failedAction = None
         self.integrityAction = None
+        #image or vm
+        self.imageList = ResultSet( [('image', Image)])
+        self.imageList.marker = 'imageList'
         
         
     def startElement(self, name, attrs, connection):
@@ -80,9 +83,13 @@ class SecurityGroup(SCObject):
                 setattr(self, key, value)
             return self
         elif name == 'securityRuleList':
-            self.rules = ResultSet([('securityRule', SecurityRule)])
-            self.rules.marker = name
-            return self.rules
+            self.securityRuleList = ResultSet([('securityRule', SecurityRule)])
+            self.securityRuleList.marker = name
+            return self.securityRuleList
+        elif name == 'imageList':
+            self.imageList = ResultSet( [('image', Image)])
+            self.imageList.marker = name
+            return self.imageList
         else:
             return None
 
@@ -92,43 +99,39 @@ class SecurityGroup(SCObject):
         else:
             setattr(self, name, value)
             
-    def buildElements(self, elements=None):
+    def buildElements(self):
         group = ElementTree.Element('securityGroup')
         
-        if elements:
-            #===================================================================
-            # build selected elements
-            #===================================================================
-            # build attributes
-            for e in elements:
-                if e in self.ValidAttributes:
-                    if getattr(self, e): group.attrib[e] = getattr(self, e)
-                elif e == 'description':
-                    description = ElementTree.SubElement(group, "description")
-                    description.text = self.description
-                elif e == 'securityRuleList':
-                    group.append( self.rules.buildElements() )
-                # TODO - Add actions
-        else:
-            #===================================================================
-            # build all elements
-            #===================================================================
-            # build attributes
-            for attr in self.ValidAttributes:
-                if getattr(self, attr): group.attrib[attr] = getattr(self, attr)
-            
-            if self.description:
-                description = ElementTree.SubElement(group, "description")
-                description.text = self.description
-            # append inner objects
-            if self.rules: group.append( self.rules.buildElements() )
-            # TODO - Add actions
+        #===================================================================
+        # build Required elements
+        # build attributes
+        for e in self.ValidAttributes:
+            if getattr(self, e): group.attrib[e] = getattr(self, e)
+
+        if self.description:
+            description = ElementTree.SubElement(group, "description")
+            description.text = self.description
+
+        # append inner objects
+        if self.imageList: group.append( self.imageList.buildElements() )
+        if self.securityRuleList: group.append( self.securityRuleList.buildElements() )
+        # TODO - Add actions
 
         return group
 
+    # ---------- function ----------
+    
+    def update(self):
+        # Build XML elements structures
+        action = '%s/%s/' % (self.connection.REST_SECURITY_GROUP, self.id)
+        data = ElementTree.tostring(self.buildElements(True))
+        response = self.connection.make_request(action, data=data, method='POST')
+        return response
+    
+
 class SecurityRule(SCObject):
     
-    ValidAttributes = [ 'id', 'description', 'matchType', 'dataMissing']
+    ValidAttributes = ['id', 'description', 'matchType', 'dataMissing']
     
     def __init__(self, connection):
         SCObject.__init__(self, connection)
@@ -139,9 +142,9 @@ class SecurityRule(SCObject):
         self.matchType = None
         self.dataMissing = None
         # inner objects
-        self.ruletype = None
-        self.devices = None
-        self.conditions = None
+        self.securityRuleType = None
+        self.deviceList = None
+        self.securityRuleConditionList = None
 
     def startElement(self, name, attrs, connection):
         ret = SCObject.startElement(self, name, attrs, connection)
@@ -152,50 +155,39 @@ class SecurityRule(SCObject):
             for key, value in attrs.items():
                 setattr(self, key, value)
         elif name == 'securityRuleType':
-            self.ruletype = SecurityRuleType(connection)
-            self.ruletype.startElement(name, attrs, connection)
-            return self.ruletype
+            self.securityRuleType = SecurityRuleType(connection)
+            self.securityRuleType.startElement(name, attrs, connection)
+            return self.securityRuleType
         elif name == 'deviceList':
-            self.devices = ResultSet([('device', Device)])
-            self.devices.marker = 'deviceList'
-            return self.devices
+            self.deviceList = ResultSet([('device', Device)])
+            self.deviceList.marker = 'deviceList'
+            return self.deviceList
         elif name == 'securityRuleConditionList':
-            self.conditions = ResultSet([('securityRuleCondition', SecurityRuleCondition)])
-            self.conditions.marker = 'securityRuleConditionList'
-            return self.conditions
+            self.securityRuleConditionList = ResultSet([('securityRuleCondition', SecurityRuleCondition)])
+            self.securityRuleConditionList.marker = 'securityRuleConditionList'
+            return self.securityRuleConditionList
         else:
             return None
 
     def endElement(self, name, value, connection):
         setattr(self, name, value)
     
-    def buildElements(self, elements=None):
+    def buildElements(self):
         rule = ElementTree.Element('securityRule')
         
-        if elements:
-            #===================================================================
-            # build selected elements
-            #===================================================================
-            # build attributes
-            for e in elements:
-                if e in self.ValidAttributes:
-                    if getattr(self, e): rule.attrib[e] = getattr(self, e)
-                elif e == 'securityRuleType':
-                    rule.append( self.ruletype.buildElements() )
-                elif e == 'securityRuleConditionList':
-                    rule.append( self.conditions.buildElements() )
-        else:
-            #===================================================================
-            # build all elements
-            #===================================================================
-            # build attributes
-            for attr in self.ValidAttributes:
-                if getattr(self, attr): rule.attrib[attr] = getattr(self, attr)
+        #===================================================================
+        # Required elements
+        # build attributes
+        for e in self.ValidAttributes:
+            if getattr(self, e): rule.attrib[e] = getattr(self, e)
+
+        #===================================================================
+        # Optional elements
             
-            # append inner objects
-            if self.ruletype: rule.append( self.ruletype.buildElements() )
-            if self.conditions: rule.append( self.conditions.buildElements() )
-            # TODO - Add actions
+        # append inner objects
+        if self.securityRuleType: rule.append( self.securityRuleType.buildElements() )
+        if self.securityRuleConditionList: rule.append( self.securityRuleConditionList.buildElements() )
+        # TODO - Add actions
 
         return rule
         
@@ -227,7 +219,7 @@ class SecurityRuleCondition(SCObject):
     def endElement(self, name, value, connection):
         setattr(self, name, value)
 
-    def buildElements(self, elements=None):
+    def buildElements(self, all=False):
         condition = ElementTree.Element('securityRuleCondition')
         
         #user info
@@ -252,7 +244,7 @@ class SecurityRuleType(SCObject):
     def startElement(self, name, attrs, connection):
         ret = SCObject.startElement(self, name, attrs, connection)
         if ret is not None:
-            return ret
+            return retn
         
         if name == 'securityRuleType':
             for key, value in attrs.items():
@@ -267,9 +259,10 @@ class SecurityRuleType(SCObject):
         else:
             setattr(self, name, value)
             
-    def buildElements(self, element=None):
+    def buildElements(self, all=False):
         type = ElementTree.Element('securityRuleType')
-        
+
+        # 'Required' fields        
         #user info
         if self.id: type.attrib['id'] = self.id
         if self.name: type.attrib['name'] = self.name
@@ -278,4 +271,5 @@ class SecurityRuleType(SCObject):
         if self.dataType: type.attrib['dataType'] = self.dataType
         if self.description: type.attrib['description'] = self.description
         #actions
+
         return type

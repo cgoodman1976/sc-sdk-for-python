@@ -236,7 +236,7 @@ class SCConnection(SCQueryConnection):
             return None
 
         params = {}
-        return self.get_list( '$s' % (self.REST_USER), 
+        return self.get_list( '%s/' % (self.REST_USER), 
                               params, [('user', User)])
         
     def createUser(self, login, text, usertype='localuser', 
@@ -258,7 +258,7 @@ class SCConnection(SCQueryConnection):
         user.MFAStatus = MFA
         user.setRole(role, MFA)
         data = ElementTree.tostring(user.buildElements())
-        return self.get_object( '$s' % (self.REST_USER), 
+        return self.get_object( '%s' % (self.REST_USER), 
                                 params, User, data=data, method='POST')
     
     def getUser(self, id):
@@ -266,7 +266,7 @@ class SCConnection(SCQueryConnection):
             return None
 
         params = {}
-        return self.get_object( '$s/%s/' % (self.REST_USER, id), 
+        return self.get_object( '%s/%s/' % (self.REST_USER, id), 
                                 params, User)
     
     #===========================================================================
