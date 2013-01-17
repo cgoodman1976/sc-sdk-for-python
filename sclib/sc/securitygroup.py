@@ -23,7 +23,7 @@
 from sclib.resultset import ResultSet
 from sclib.sc.scobject import SCObject
 from sclib.sc.device import Device
-from sclib.sc.instance import VirtualMachine
+from sclib.sc.instance import VirtualMachine, Image
 from xml.etree import ElementTree
 
 
@@ -124,7 +124,7 @@ class SecurityGroup(SCObject):
     def update(self):
         # Build XML elements structures
         action = '%s/%s/' % (self.connection.REST_SECURITY_GROUP, self.id)
-        data = ElementTree.tostring(self.buildElements(True))
+        data = ElementTree.tostring(self.buildElements())
         response = self.connection.make_request(action, data=data, method='POST')
         return response
     
