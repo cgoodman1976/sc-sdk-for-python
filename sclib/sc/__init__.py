@@ -18,5 +18,5 @@
 
 import os
 
-DEFAULT_SC_CONFIG_FILE = os.path.join(os.path.dirname(os.path.abspath(os.getenv('USER'))), ".sc.cfg")
+DEFAULT_SC_CONFIG_FILE = os.path.join(os.path.dirname(os.path.abspath(os.getenv('USER'))), ".sclib.config")
 

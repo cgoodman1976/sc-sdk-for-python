@@ -56,7 +56,6 @@ import sys
 import time
 import xml.sax
 import copy
-import logging
 import urllib2
 from xml.dom.minidom import parseString
 
@@ -67,9 +66,6 @@ from sclib.exception import SCServerError, SCClientError
 from sclib.resultset import ResultSet
 
 HAVE_HTTPS_CONNECTION = False
-LOG_LEVEL = "DEBUG"
-logging.basicConfig(level=LOG_LEVEL)
-
 
 try:
     import threading
@@ -353,16 +349,16 @@ class SCAuthConnection:
         else:
             pass
         
-        logging.debug("===== Request ===== ")
-        logging.debug('method: %s' % (method))
-        logging.debug('url = %s' %(req_url))
-        if data: logging.debug('data = %s' % (data))
-        logging.debug("=================== ")
+        sclib.log.debug("===== Request ===== ")
+        sclib.log.debug('method: %s' % (method))
+        sclib.log.debug('url = %s' %(req_url))
+        if data: sclib.log.debug('data = %s' % (data))
+        sclib.log.debug("=================== ")
         return req
         
     def make_request(self, action='', params=None, headers=None, data='', method='GET'):
 
-        logging.debug(">>>>> make_request")
+        sclib.log.debug(">>>>> make_request")
         
         #prepare request url
         api_url = self.base_url+ '/' + action
@@ -374,13 +370,13 @@ class SCAuthConnection:
             response = self.opener.open(req)
             
             if response.code in (200, 201, 203, 204):
-                logging.debug("<<<<< make_request")
+                sclib.log.debug("<<<<< make_request")
                 return response
             else:
                 sclib.log.error('%s %s' % (response.status, response.reason))
                 raise self.ResponseError(response.status, response.reason)
         except urllib2.HTTPError, e:
-            logging.error(e)
+            sclib.log.error(e)
 
         return None
 
