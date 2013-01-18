@@ -119,7 +119,7 @@ class VirtualMachine(SCObject):
         
         # build attributes
         for e in self.ValidAttributes:
-            vm.attrib[e] = getattr(self, e)
+            if getattr(self, e): vm.attrib[e] = getattr(self, e)
 
         if self.imageDescription:
             description = ElementTree.SubElement(vm, "imageDescription")

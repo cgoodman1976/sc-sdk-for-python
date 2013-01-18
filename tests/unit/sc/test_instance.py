@@ -41,6 +41,7 @@ class SCVirtualMachineTest(SCBaseTestCase):
         for vm in self.vms:
             newvm = self.connection.getVM(vm.imageGUID)
             target = VirtualMachine(self.connection)
+            target.imageGUID = newvm.imageGUID
             target.href = newvm.href
             target.imageDescription = newvm.href
             updated = target.update()
