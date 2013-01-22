@@ -87,8 +87,7 @@ class ResultSet(list):
         if self.marker:
             root = ElementTree.Element(self.marker)
             for obj in self:
-                element = obj.buildElements()
-                root.append(element)
+                root.append(obj.buildElements())
         
         return root
 

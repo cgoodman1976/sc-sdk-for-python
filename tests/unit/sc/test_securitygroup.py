@@ -3,7 +3,7 @@ import unittest
 import logging
 
 from sclib.sc.securitygroup import SecurityGroup
-from sclib.sc.instance import VirtualMachine
+from sclib.sc.instance import VirtualMachine, Image
 from tests.unit import config, logging
 from tests.unit.sc import SCBaseTestCase
 
@@ -48,8 +48,12 @@ class SCSecurityGroupTest(SCBaseTestCase):
                 test_policy = policy
 
         for vm in self.vms:
-            test_policy.imageList.append(vm)
+            new_image = Image(self.connection)
+            new_image.id = vm.imageGUID
+            #new_image.msUID = vm.imageGUID
+            test_policy.imageList.append(new_image)
 
+        test_policy.RevokeIntervalNumber = '59'
         test_policy.update()
 
         

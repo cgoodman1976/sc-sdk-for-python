@@ -193,10 +193,11 @@ class SCAgent(SCObject):
         return agent
 
 class Image(SCObject):
-    ValidAttributes = ['id', 'href']
+    ValidAttributes = ['id', 'msUID', 'href']
     def __init__(self, connection):
         # member information
         self.id = None
+        self.msUID = None
         self.href = None
 
     def startElement(self, name, attrs, connection):
@@ -217,6 +218,7 @@ class Image(SCObject):
     def buildElements(self):
         agent = ElementTree.Element('image')
         if self.id: agent.attrib['id'] = self.id
+        if self.msUID: agent.attrib['msUID'] = self.msUID
         if self.href: agent.attrib['href'] = self.href
         return agent
 

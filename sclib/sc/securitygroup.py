@@ -63,7 +63,7 @@ class SecurityGroup(SCObject):
         self.description = None
         #rules
         self.securityRuleList = ResultSet([('securityRule', SecurityRule)])
-        self.securityRuleList.marker = 'securityRule'
+        self.securityRuleList.marker = 'securityRuleList'
         #action
         self.successAction = None
         self.failedAction = None
@@ -83,13 +83,26 @@ class SecurityGroup(SCObject):
                 setattr(self, key, value)
             return self
         elif name == 'securityRuleList':
-            self.securityRuleList = ResultSet([('securityRule', SecurityRule)])
-            self.securityRuleList.marker = name
+            if not self.securityRuleList:
+                self.securityRuleList = ResultSet([('securityRule', SecurityRule)])
+                self.securityRuleList.marker = name
             return self.securityRuleList
         elif name == 'imageList':
             self.imageList = ResultSet( [('image', Image)])
             self.imageList.marker = name
             return self.imageList
+        elif name == 'successAction':
+            self.successAction = SecurityGroupAction(connection)
+            self.successAction.name = name
+            self.successAction.action = attrs['action']
+            self.successAction.autoDelay = attrs['autoDelay']
+            return self.successAction
+        elif name == 'failedAction':
+            self.failedAction = SecurityGroupAction(connection)
+            self.failedAction.name = name
+            self.failedAction.action = attrs['action']
+            self.failedAction.autoDelay = attrs['autoDelay']
+            return self.failedAction
         else:
             return None
 
@@ -111,6 +124,10 @@ class SecurityGroup(SCObject):
         if self.description:
             description = ElementTree.SubElement(group, "description")
             description.text = self.description
+
+        # actions
+        if self.successAction: group.append( self.successAction.buildElements() )
+        if self.failedAction: group.append( self.failedAction.buildElements() )
 
         # append inner objects
         if self.imageList: group.append( self.imageList.buildElements() )
@@ -219,7 +236,7 @@ class SecurityRuleCondition(SCObject):
     def endElement(self, name, value, connection):
         setattr(self, name, value)
 
-    def buildElements(self, all=False):
+    def buildElements(self):
         condition = ElementTree.Element('securityRuleCondition')
         
         #user info
@@ -259,7 +276,7 @@ class SecurityRuleType(SCObject):
         else:
             setattr(self, name, value)
             
-    def buildElements(self, all=False):
+    def buildElements(self):
         type = ElementTree.Element('securityRuleType')
 
         # 'Required' fields        
@@ -273,3 +290,32 @@ class SecurityRuleType(SCObject):
         #actions
 
         return type
+
+class SecurityGroupAction(SCObject):
+    ValidAttributes = ['action', 'autoDelay']
+    def __init__(self, connection):
+        SCObject.__init__(self, connection)
+
+        #member initialization
+        self.name = None
+        self.action = None
+        self.autoDelay = None
+
+    def startElement(self, name, attrs, connection):
+        ret = SCObject.startElement(self, name, attrs, connection)
+        if ret is not None:
+            return ret
+        
+        return None
+
+    def endElement(self, name, value, connection):
+        setattr(self, name, value)
+
+    def buildElements(self):
+        action = ElementTree.Element(self.name)
+        
+        #user info
+        if self.action: action.attrib['action'] = self.action
+        if self.autoDelay: action.attrib['autoDelay'] = self.autoDelay
+        #actions
+        return action
