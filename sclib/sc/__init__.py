@@ -16,7 +16,4 @@
 # MERCHANTABILITY, NONINFRINGEMENT AND FITNESSFOR A PARTICULAR PURPOSE.
 #
 
-import os
-
-DEFAULT_SC_CONFIG_FILE = os.path.join(os.path.dirname(os.path.abspath(os.getenv('USER'))), ".sclib.config")
 

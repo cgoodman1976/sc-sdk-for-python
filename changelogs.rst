@@ -1,3 +1,11 @@
+v0.3:
+- /bin
+  # add vm.py for listing vm information
+- /sclib
+  # Add POST /SecurityGroup for update
+  # Add Image class
+- change default as common logger in sclib
+
 v0.2.4:
 - extract restful API name
 - fix device object bugs

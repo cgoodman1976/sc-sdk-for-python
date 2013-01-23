@@ -36,7 +36,6 @@ Version = __version__  # for backward compatibility
 __config__ = Config()
 UserAgent = 'sclib/%s (%s)' % (__version__, sys.platform)
 
-
 def init_logging():
     for file in sclibConfigLocations:
         try:
@@ -100,6 +99,6 @@ def connect_sc(sc_host_url, sc_broker, sc_broker_key):
     :return: A connection to SecureCloud
     """
     from sclib.sc.connection import SCConnection
-    return SCConnection(sc_host_url, sc_broker, sc_broker_key)
-
-#sclib.plugin.load_plugins(__config__)
+    return SCConnection( sc_host_url, 
+                         sc_broker, 
+                         sc_broker_key )

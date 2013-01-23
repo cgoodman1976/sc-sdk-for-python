@@ -20,7 +20,9 @@
 # IN THE SOFTWARE.
 #
 
-import StringIO, os, re
+import os
+import re
+import StringIO
 import warnings
 import ConfigParser
 import sclib
@@ -30,9 +32,9 @@ expanduser = os.path.expanduser
 
 # By default we use two locations for the securecloud configurations,
 # /etc/sc.cfg and ~/.sc (which works on Windows and Unix).
-sclibConfigPath = '/etc/sc.cfg'
+sclibConfigPath = '/etc/sclib.config'
 sclibConfigLocations = [sclibConfigPath]
-UserConfigPath = os.path.join(expanduser('~'), '.sclib')
+UserConfigPath = os.path.join(expanduser('~'), '.sclib.config')
 sclibConfigLocations.append(UserConfigPath)
 
 # If there's a SCLIB_CONFIG variable set, we load ONLY 
