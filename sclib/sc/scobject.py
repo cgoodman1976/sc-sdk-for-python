@@ -44,7 +44,7 @@ class SCObject(object):
         pass
 
     def tostring(self):
-        return ElementTree.tostring(self.buildElements())
+        return ElementTree.tostring(self.buildElements(), encoding='utf-8')
     
     def niceFormat(self):
         # build from self's elements

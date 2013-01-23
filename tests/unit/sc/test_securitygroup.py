@@ -43,18 +43,32 @@ class SCSecurityGroupTest(SCBaseTestCase):
             logging.debug(xml_pretty)
 
             if policy.name == 'Default Policy':
-                default_policy = policy
+                default_policy = sec
             elif policy.name == 'TESTING':
-                test_policy = policy
+                test_policy = sec
 
         for vm in self.vms:
             new_image = Image(self.connection)
-            new_image.id = vm.imageGUID
+            new_image.id = vm.imageID
             #new_image.msUID = vm.imageGUID
             test_policy.imageList.append(new_image)
 
+        response = None
         test_policy.RevokeIntervalNumber = '59'
-        test_policy.update()
+        response = test_policy.update()
+        self.assertEqual(response.code, 200)
+
+        for vm in self.vms:
+            new_image = Image(self.connection)
+            new_image.id = vm.imageID
+            #new_image.msUID = vm.imageGUID
+            default_policy.imageList.append(new_image)
+
+        default_policy.RevokeIntervalNumber = '59'
+        response = default_policy.update()
+        self.assertEqual(response.code, 200)
+
+
 
         
 

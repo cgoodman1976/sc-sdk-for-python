@@ -37,7 +37,7 @@ class SecurityGroupAction(SCObject):
 
 class SecurityGroup(SCObject):
     
-    ValidAttributes = [ 'id', 'name', 'href',
+    ValidAttributes = ['id', 'name', 'href',
                        'isDeleteble', 'isNameEditable',
                        'lastModified', 'ruleCount', 'imageCount',
                        'EnableIC', 'ICAction', 'PostponeEnable', 
@@ -92,17 +92,11 @@ class SecurityGroup(SCObject):
             self.imageList.marker = name
             return self.imageList
         elif name == 'successAction':
-            self.successAction = SecurityGroupAction(connection)
-            self.successAction.name = name
-            self.successAction.action = attrs['action']
-            self.successAction.autoDelay = attrs['autoDelay']
-            return self.successAction
+            self.successAction = SecurityGroupAction(name, connection)
+            return self.successAction.startElement(name, attrs, connection)
         elif name == 'failedAction':
-            self.failedAction = SecurityGroupAction(connection)
-            self.failedAction.name = name
-            self.failedAction.action = attrs['action']
-            self.failedAction.autoDelay = attrs['autoDelay']
-            return self.failedAction
+            self.failedAction = SecurityGroupAction(name, connection)
+            return self.failedAction.startElement(name, attrs, connection)
         else:
             return None
 
@@ -132,7 +126,6 @@ class SecurityGroup(SCObject):
         # append inner objects
         if self.imageList: group.append( self.imageList.buildElements() )
         if self.securityRuleList: group.append( self.securityRuleList.buildElements() )
-        # TODO - Add actions
 
         return group
 
@@ -141,7 +134,7 @@ class SecurityGroup(SCObject):
     def update(self):
         # Build XML elements structures
         action = '%s/%s/' % (self.connection.REST_SECURITY_GROUP, self.id)
-        data = ElementTree.tostring(self.buildElements())
+        data = self.tostring()
         response = self.connection.make_request(action, data=data, method='POST')
         return response
     
@@ -247,6 +240,8 @@ class SecurityRuleCondition(SCObject):
     
 
 class SecurityRuleType(SCObject):
+    ValidAttributes = [ 'id', 'name', 'evaluator', 
+                        'context', 'dataType', 'description']
     def __init__(self, connection):
         SCObject.__init__(self, connection)
 
@@ -293,11 +288,11 @@ class SecurityRuleType(SCObject):
 
 class SecurityGroupAction(SCObject):
     ValidAttributes = ['action', 'autoDelay']
-    def __init__(self, connection):
+    def __init__(self, actionName, connection):
         SCObject.__init__(self, connection)
 
         #member initialization
-        self.name = None
+        self.name = actionName
         self.action = None
         self.autoDelay = None
 
@@ -305,8 +300,13 @@ class SecurityGroupAction(SCObject):
         ret = SCObject.startElement(self, name, attrs, connection)
         if ret is not None:
             return ret
-        
-        return None
+
+        if name == self.name:
+            for key, value in attrs.items():
+                setattr(self, key, value)
+            return self
+        else:
+            return None
 
     def endElement(self, name, value, connection):
         setattr(self, name, value)

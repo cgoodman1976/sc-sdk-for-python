@@ -178,8 +178,9 @@ class SCAgent(SCObject):
             return ret
         
         if name == 'securecloudAgent':
-            self.agentStatus = attrs['agentStatus']
-            self.agentVersion = attrs['agentVersion']
+            for key, value in attrs.items():
+                setattr(self, key, value)
+            return self
         else:
             return None
 
@@ -209,6 +210,8 @@ class Image(SCObject):
             # keep all attributes
             for key, value in attrs.items():
                 setattr(self, key, value)
+            return self
+
         else:
             return None
 
@@ -217,9 +220,12 @@ class Image(SCObject):
             
     def buildElements(self):
         agent = ElementTree.Element('image')
-        if self.id: agent.attrib['id'] = self.id
-        if self.msUID: agent.attrib['msUID'] = self.msUID
-        if self.href: agent.attrib['href'] = self.href
+        #===================================================================
+        # build Required elements
+        # build attributes
+        for e in self.ValidAttributes:
+            if getattr(self, e): agent.attrib[e] = getattr(self, e)
+
         return agent
 
     

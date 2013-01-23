@@ -124,12 +124,6 @@ class BooleanResult(object):
             self.status = self.to_boolean(value, 'Success')
         elif name == 'IsValid':
             self.status = self.to_boolean(value, 'True')
-        elif name == 'RequestId':
-            self.request_id = value
-        elif name == 'requestId':
-            self.request_id = value
-        elif name == 'BoxUsage':
-            self.request_id = value
         else:
             setattr(self, name, value)
 
