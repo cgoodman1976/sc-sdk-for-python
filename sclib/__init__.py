@@ -30,7 +30,7 @@ import logging
 import logging.config
 import urlparse
 
-__version__ = '3.5'
+__version__ = '3.5.1000'
 Version = __version__  # for backward compatibility
 
 __config__ = Config()

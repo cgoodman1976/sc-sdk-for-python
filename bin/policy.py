@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/python
 # Copyright (c) 2012 Trend Micro, Inc. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
@@ -28,14 +28,49 @@ from optparse import OptionParser
 import sclib
 from sclib.sc.connection import SCConnection
 from sclib.sc.securitygroup import SecurityGroup
+from sclib.sc.instance import VirtualMachine, Image
+
+def printPolicy(policy):
+    print 'Name: %s' % (policy.name)
+    print 'ID: %s' % (policy.id)
+    print 'Number of Images: %s' % (policy.imageCount)
+    print 'Integrity Check: %s' % (policy.EnableIC)
+    print ''
+
+def listAllSecurityGroup():
+    policy_list = conn.listAllSecurityGroup()
+
+    # list all virtual machines
+    print 'Policies:'
+    print '------------------------------------------'
+    for policy in policy_list:
+        printPolicy(policy)
+
+def listSecurityGroup(id):
+    policy = conn.getSecurityGroup(options.id)    
+    if policy:
+        printPolicy(policy) 
+        
+    return policy   
+
+def addVM(policy, vmid):
+    new_image = Image(policy.connection)
+    new_image.id = vmid
+    policy.imageList.append(new_image)
+    policy.update()
+
 
 if __name__ == '__main__':
 
-    parser = OptionParser(usage="vm [-id] [-addvm]")
-    parser.add_option("-a", "--add_virtual", help="Add a virtual machine to Policy", dest="vm", default="")
-    parser.add_option("-i", "--policy_id", help="", dest="id", default="")
+    # commands
+    parser = OptionParser(usage="policy [-i policy_id] [-l] [-a vm_id]")
+    parser.add_option("-a", "--add_vm", help="Add a virtual machine to Policy", dest="vm", default=False, action='store')
+    parser.add_option("-i", "--policy_id", help="", dest="id", default='', action='store')
+    parser.add_option("-l", "--list", help="", dest='list', default=False, action='store_true')
     (options, args) = parser.parse_args()
 
+
+    # begin connection
     conn = sclib.connect_sc( sclib.__config__.get_value('connection', 'MS_HOST'), 
                              sclib.__config__.get_value('connection', 'MS_BROKER_NAME'), 
                              sclib.__config__.get_value('connection', 'MS_BROKER_PASSPHASE'))
@@ -44,27 +79,15 @@ if __name__ == '__main__':
                                sclib.__config__.get_value('authentication', 'AUTH_PASSWORD'))
 
         if options.id:
-            policy = conn.getSecurityGroup(id)        
-            print 'Policy:'
-            print '------------------------------------------'
-            print 'Name: %s' % (policy.name)
-            print 'ID: %s' % (policy.id)
-            print 'Number of Images: %s' % (policy.imageCount)
-            print 'Integrity Check: %s' % (policy.EnableIC)
-            print ''
-
+            # list information of securityGroup
+            policy = listSecurityGroup(options.id)
+            
+            # add a vm into securityGroup (aka policy)
+            if options.vm:
+                addVM(policy, options.vm)
+    
+        # dump all securityGroup from your account
+        elif options.list:
+            listAllSecurityGroup()
         else:
-            policy_list = conn.listAllSecurityGroup()
-
-            # list all virtual machines
-            print 'Policies:'
-            print '------------------------------------------'
-            for policy in policy_list:
-                print 'Name: %s' % (policy.name)
-                print 'ID: %s' % (policy.id)
-                print 'Number of Images: %s' % (policy.imageCount)
-                print 'Integrity Check: %s' % (policy.EnableIC)
-                print ''
-
-
-
+            listAllSecurityGroup()
