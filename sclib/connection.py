@@ -48,11 +48,7 @@ from __future__ import with_statement
 import httplib
 import ssl
 import os
-import Queue
-import random
-import re
 import socket
-import sys
 import time
 import xml.sax
 import copy
@@ -272,9 +268,9 @@ class ConnectionPool(object):
                 self.last_clean_time = now
 
 class VerifiedHTTPSConnection(httplib.HTTPSConnection):
-    #=======================================================================
-    # overrides the version in httplib so that we do certificate verification
-    #=======================================================================
+    #---------------------------------------------------------------------------
+    # # overrides the version in httplib so that we do certificate verification
+    #---------------------------------------------------------------------------
     def connect(self):
         sock = socket.create_connection((self.host, self.port), self.timeout)
         if self._tunnel_host:
@@ -290,9 +286,9 @@ class VerifiedHTTPSConnection(httplib.HTTPSConnection):
                                     ca_certs=cacert_path)
 
 class VerifiedHTTPSHandler(urllib2.HTTPSHandler):
-    #===============================================================================
-    # wraps https connections with ssl certificate verification
-    #===============================================================================
+    #---------------------------------------------------------------------------
+    # # wraps https connections with ssl certificate verification
+    #---------------------------------------------------------------------------
     def __init__(self, connection_class = VerifiedHTTPSConnection):
         self.specialized_conn_class = connection_class
         urllib2.HTTPSHandler.__init__(self)
@@ -349,11 +345,11 @@ class SCAuthConnection:
         else:
             pass
         
-        sclib.log.debug("===== Request ===== ")
+        sclib.log.debug("----- Request ----- ")
         sclib.log.debug('method: %s' % (method))
-        sclib.log.debug('url = %s' %(req_url))
+        sclib.log.debug('url: %s' %(req_url))
         if data: sclib.log.debug('data = %s' % (data))
-        sclib.log.debug("=================== ")
+        sclib.log.debug("------------------- ")
         return req
         
     def make_request(self, action='', params=None, headers=None, data='', method='GET'):
@@ -411,7 +407,9 @@ class SCQueryConnection(SCAuthConnection):
         for i in range(1, len(items) + 1):
             params['%s.%d' % (label, i)] = items[i - 1]
 
-    # generics
+    #---------------------------------------------------------------------------
+    # # Generic method
+    #---------------------------------------------------------------------------
 
     def get_list(self, action, params, markers, headers=None, data='', path='/', parent=None, method='GET'):
         if not parent:

@@ -12,7 +12,3 @@ config.read(DEFAULT_TEST_CONFIG_FILE)
 logger = logging
 logging.basicConfig(level=config.get('debug', 'level'))
 
-
-#class SCBaseTestCase(unittest):
-#    def setUp(self):
-#        pass

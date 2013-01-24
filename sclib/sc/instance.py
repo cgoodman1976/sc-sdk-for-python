@@ -49,9 +49,9 @@ class VirtualMachine(SCObject):
     
     def __init__(self, connection):
         SCObject.__init__(self, connection)
-        #=======================================================================
-        # Attributes
-        #=======================================================================
+        #-----------------------------------------------------------------------
+        # # Attributes
+        #-----------------------------------------------------------------------
         self.SecurityGroupGUID = None
         self.autoProvision = None
         self.detectedKeyCount = None
@@ -66,17 +66,16 @@ class VirtualMachine(SCObject):
         self.lastModified = None
         self.nonEncryptedDeviceCount = None
         self.pendingDeviceCount = None
-        #=======================================================================
-        # elements
-        #=======================================================================
+        #-----------------------------------------------------------------------
+        # # elements
+        #-----------------------------------------------------------------------
         self.imageDescription = None
-        # Provider object
+        #-----------------------------------------------------------------------
+        # # Inner objects
+        #-----------------------------------------------------------------------
         self.provider = None
-        # Platform object
         self.platform = None
-        # SCAgent object
         self.securecloudAgent = None
-        # Devices object
         self.devices = None
         
         pass
@@ -127,17 +126,26 @@ class VirtualMachine(SCObject):
 
         # append inner objects
         if getattr(self, 'provider'): vm.append( self.provider.buildElements() )
-        if getattr(self, 'devices'): vm.append( self.devices.buildElements() )
+        if getattr(self, 'platform'): vm.append( self.platform.buildElements() )
         if getattr(self, 'securecloudAgent'): vm.append( self.securecloudAgent.buildElements() )
+        if getattr(self, 'devices'): vm.append( self.devices.buildElements() )
             
         return vm
+
+    def _update(self, updated):
+        self.__dict__.update(updated.__dict__)
 
     # ----- functions start 
 
     def update(self):
         action = 'vm/%s/' % self.imageGUID
         data = self.tostring()
-        return self.connection.get_object(action, {}, VirtualMachine, data=data, method='POST')
+        updated = self.connection.get_object(action, {}, VirtualMachine, data=data, method='POST')
+        if updated:
+            _update(updated)
+            return self
+        
+        return updated
     
     def delete(self):
         #-----------------------------------------------------------------------
@@ -166,7 +174,10 @@ class VirtualMachine(SCObject):
 
 
 class SCAgent(SCObject):
+    
+    # Present valid vm object attributes, not inner objects
     ValidAttributes = ['agentStatus', 'agentVersion']
+
     def __init__(self, connection):
         # member information
         self.agentStatus = None
@@ -194,7 +205,10 @@ class SCAgent(SCObject):
         return agent
 
 class Image(SCObject):
+
+    # Present valid vm object attributes, not inner objects
     ValidAttributes = ['id', 'msUID', 'href']
+
     def __init__(self, connection):
         # member information
         self.id = None
@@ -211,7 +225,6 @@ class Image(SCObject):
             for key, value in attrs.items():
                 setattr(self, key, value)
             return self
-
         else:
             return None
 
@@ -220,9 +233,9 @@ class Image(SCObject):
             
     def buildElements(self):
         agent = ElementTree.Element('image')
-        #===================================================================
-        # build Required elements
+        #-----------------------------------------------------------------------
         # build attributes
+        #-----------------------------------------------------------------------
         for e in self.ValidAttributes:
             if getattr(self, e): agent.attrib[e] = getattr(self, e)
 

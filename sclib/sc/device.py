@@ -183,9 +183,9 @@ class Partition(SCObject):
             
     def buildElements(self):
         partition = ElementTree.Element('partition')
-        if self.PartitionNumber: volume.attrib['PartitionNumber'] = self.PartitionNumber
-        if self.size: volume.attrib['size'] = self.size
-        if self.fileSystem: volume.attrib['fileSystem'] = self.fileSystem
-        if self.mountPoint: volume.attrib['mountPoint'] = self.mountPoint
+        if self.PartitionNumber: partition.attrib['PartitionNumber'] = self.PartitionNumber
+        if self.size: partition.attrib['size'] = self.size
+        if self.fileSystem: partition.attrib['fileSystem'] = self.fileSystem
+        if self.mountPoint: partition.attrib['mountPoint'] = self.mountPoint
         return partition
 

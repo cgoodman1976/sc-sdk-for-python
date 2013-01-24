@@ -33,6 +33,7 @@ from sclib.sc.instance import VirtualMachine, Instance
 from sclib.sc.provider import Provider
 from sclib.sc.keyrequest import KeyRequest
 from sclib.sc.securitygroup import SecurityGroup, SecurityRule, SecurityRuleType
+from sclib.sc.administration import DSMConnSettings, KMIPConnSettings
 
 from xml.dom.minidom import parse, parseString
 from xml.etree import ElementTree
@@ -128,6 +129,8 @@ class SCConnection(SCQueryConnection):
     REST_PROVIDER = 'provider'
     REST_KEY_REQUEST = 'keyrequesttree'
     REST_DEVICE_KEY_REQUEST = 'devicekeyrequest'
+    REST_DSM_SETTING = 'dsmConnSettings'
+    REST_KMIP_SETTING = 'kmip'
 
     def __init__(self, host_base, broker_name=None, broker_passphase=None):
         SCQueryConnection.__init__( self, host_base, broker_name, broker_passphase)
@@ -325,3 +328,20 @@ class SCConnection(SCQueryConnection):
         params = {}
         return self.get_object( '%s/%s/' % (self.REST_KEY_REQUEST, id ), 
                                 params, KeyRequest)
+
+    #---------------------------------------------------------------------------
+    # # Administration - Settings
+    #---------------------------------------------------------------------------
+    def getDSMSetting(self):
+        if self.isAuthenticated() is False:
+            return None
+        
+        return self.get_object('%s/' % (self.REST_DSM_SETTING), 
+                               {}, DSMConnSettings)
+
+    def getKMIPSetting(self):
+        if self.isAuthenticated() is False:
+            return None
+        
+        return self.get_object('%s/%s/' % (self.REST_KMIP_SETTING, 'setting'), 
+                               {}, KMIPConnSettings)

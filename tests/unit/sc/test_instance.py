@@ -45,7 +45,7 @@ class SCVirtualMachineTest(SCBaseTestCase):
             target.href = newvm.href
             target.imageDescription = newvm.href
             updated = target.update()
-            self.assertNotEqual(updated, None)
+            self.assertEqual(updated.imageGUID, target.imageGUID)
 
     def testVM_ListDevices(self):
         self.vms = self.connection.listAllVM()
