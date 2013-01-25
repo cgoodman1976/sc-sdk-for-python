@@ -142,7 +142,7 @@ class VirtualMachine(SCObject):
         data = self.tostring()
         updated = self.connection.get_object(action, {}, VirtualMachine, data=data, method='POST')
         if updated:
-            _update(updated)
+            self._update(updated)
             return self
         
         return updated

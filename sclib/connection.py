@@ -443,7 +443,7 @@ class SCQueryConnection(SCAuthConnection):
         if not parent:
             parent = self
 
-        response = self.make_request(action)
+        response = self.make_request(action, method=method)
         if response:
             return response.code
 

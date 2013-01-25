@@ -24,15 +24,13 @@ from sclib.sc.scobject import SCObject
 from xml.etree import ElementTree
 
 class User(SCObject):
+
+    ValidAttributes = ['id', 'loginname', 'logintext', 'usertype',
+                       'email', 'href', 'isPending', 'isCurrent',
+                       'authType', 'ssoIdPName', 'isLicenseUser', 'MFAStatus']
+
     def __init__(self, connection):
         SCObject.__init__(self, connection)
-        #contact information
-        self.firstName = None
-        self.lastName = None
-        self.email = None
-        #account information
-        self.account = None
-        self.role = None
         #user information
         self.id = None
         self.loginname = None
@@ -46,7 +44,13 @@ class User(SCObject):
         self.ssoIdPName = None
         self.isLicensedUser = None
         self.MFAStatus = None
-        #role information
+        #contact information
+        self.firstName = None
+        self.lastName = None
+        self.email = None
+        #account information
+        self.account = None
+        self.role = None
         
     def startElement(self, name, attrs, connection):
         ret = SCObject.startElement(self, name, attrs, connection)
@@ -82,7 +86,7 @@ class User(SCObject):
         user = ElementTree.Element('user')
         user.attrib['version'] = '3.5'
         
-        #user info
+        # build attributes
         if self.id: user.attrib['id'] = self.id
         if self.loginname: user.attrib['loginname'] = self.loginname
         if self.logintext: user.attrib['logintext'] = self.logintext
@@ -94,23 +98,19 @@ class User(SCObject):
         if self.authType: user.attrib['authType'] = self.authType
         if self.ssoIdPName: user.attrib['ssoIdPName'] = self.ssoIdPName
         if self.isLicensedUser: user.attrib['isLicensedUser'] = self.isLicensedUser
-        if self.MFAStatus: user.attrib['MFAStauts'] = self.MFAStatus
+        if self.MFAStatus: user.attrib['MFAStatus'] = self.MFAStatus
         
         #contact info
         contact = ElementTree.SubElement(user, 'contact')
         if self.firstName: 
-            firstName = ElementTree.SubElement(contact, 'firstName')
-            firstName.text = self.firstName
+            ElementTree.SubElement(contact, 'firstName').text = self.firstName
         if self.lastName: 
-            firstName = ElementTree.SubElement(contact, 'lastName')
-            firstName.text = self.lastName
+            firstName = ElementTree.SubElement(contact, 'lastName').text = self.lastName
         if self.email: 
-            firstName = ElementTree.SubElement(contact, 'email')
-            firstName.text = self.email
+            firstName = ElementTree.SubElement(contact, 'email').text = self.email
         
-        #role
-        if self.role: user.append(self.role.buildElements())
         if self.account: user.append(self.account.buildElements())
+        if self.role: user.append(self.role.buildElements())
         return user
 
     def setRole(self, role, MFA):
@@ -124,7 +124,7 @@ class User(SCObject):
         if self.id is None:
             return None
 
-        action = 'user/' + self.id +'/'
+        action = 'user/%s/' % self.id
         response = self.connection.get_status(action, method='DELETE')
         return response == 204
             
@@ -134,7 +134,7 @@ class User(SCObject):
             return None
 
         params = {}
-        action = 'user/' + self.id + '/'
+        action = 'user/%s/' % self.id
         data = ElementTree.tostring(self.buildElements())
         response = self.connection.get_object(action, params, User, data=data, method='POST')
         return response

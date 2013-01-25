@@ -44,6 +44,8 @@ class SCVirtualMachineTest(SCBaseTestCase):
             target.imageGUID = newvm.imageGUID
             target.href = newvm.href
             target.imageDescription = newvm.href
+            target.SecurityGroupGUID = newvm.SecurityGroupGUID
+            target.autoProvision = newvm.autoProvision
             updated = target.update()
             self.assertEqual(updated.imageGUID, target.imageGUID)
 

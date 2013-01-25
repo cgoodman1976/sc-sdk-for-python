@@ -29,15 +29,14 @@ from tests.unit.sc import SCBaseTestCase
 class SCRequestTest(SCBaseTestCase):
     def setUp(self):
         SCBaseTestCase.setUp(self)
-        self.requests = self.connection.listAllKeyRequest()
 
         #===== implement initial code here for each test =====
         pass
 
     def testAllRequest(self):
-        for request in self.requests:
-            req = self.connection.getKeyRequest(request.id)
-            self.assertEqual(req.name, request.name)
+        # This API is gone
+        self.requests = self.connection.listAllKeyRequest()
+        self.assertEqual(self.requests, None)
     
 
 if __name__ == '__main__':

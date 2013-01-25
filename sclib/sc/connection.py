@@ -252,7 +252,7 @@ class SCConnection(SCQueryConnection):
         params = {}
         user = User(self)
         user.loginname = login
-        user.logintext = self.certificate.encryptData(text)
+        user.logintext = base64.b64encode(text)
         user.usertype = usertype
         user.firstName = firstname
         user.lastName = lastname
@@ -261,7 +261,7 @@ class SCConnection(SCQueryConnection):
         user.MFAStatus = MFA
         user.setRole(role, MFA)
         data = ElementTree.tostring(user.buildElements())
-        return self.get_object( '%s' % (self.REST_USER), 
+        return self.get_object( '%s/' % (self.REST_USER), 
                                 params, User, data=data, method='POST')
     
     def getUser(self, id):

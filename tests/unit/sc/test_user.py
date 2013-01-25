@@ -1,6 +1,8 @@
 "Test basic connection"
 import unittest
 import logging
+import base64
+import random
 
 from tests.unit import config, logging
 from tests.unit.sc import SCBaseTestCase
@@ -15,25 +17,45 @@ class SCUserTest(SCBaseTestCase):
         #===== implement initial code here for each test =====
         pass
 
-    def testUserCreate(self):
-        user = self.connection.createUser( 'unittest2@securecloud.com',
-                                            '1qaz@WSX',
-                                            'localuser',
-                                            'unit2',
-                                            'test2',
-                                            'unittest2@securecloud.com',
-                                            'Administrator',
-                                            'false')
-        self.assertNotEqual(user, None)
-        if not user:
-            # new user needs activation or password included
-            res = user.update()
-            self.assertNotEqual(res, None)
+    def testCreateUser(self):
 
-            res = user.delete()
+        users = []
+        for i in range(1, 20):
+            email = 'unittest+%s@securecloud.com' % i
+            password = 'P@ssw0rd'
+            auth = 'localuser'
+            name = 'unit%s' % i
+            first = 'test%s' % i
+            roles = ['Administrator', 'Security Administrator', 
+                     'Auditor', 'Key Approver', 'Data Analyst']
+            MFA = ['True', 'false']
+
+            user = self.connection.createUser( email,
+                                               password,
+                                               auth,
+                                               name,
+                                               first,
+                                               email,
+                                               roles[random.choice(range(1, len(roles)))],
+                                               MFA[random.choice(range(1, len(MFA)))])
+            self.assertNotEqual(user, None)
+            if user:
+                user.firstName = 'Updated'
+                user.lastName = roles[random.choice(range(1, len(roles)))]
+                user.setRole( roles[random.choice(range(1, len(roles)))],
+                              MFA[random.choice(range(1, len(MFA)))] )
+                res = user.update()
+                self.assertNotEqual(res, None)
+
+                # add into list
+                users.append(user)
+
+        # delete all user
+        for u in users:
+            res = u.delete()
             self.assertEqual(res, True)
   
-    def testUserGet(self):      
+    def testGetUser(self):      
         for user in self.users:  
             u = self.connection.getUser(user.id)
             self.assertNotEqual(u, None)
