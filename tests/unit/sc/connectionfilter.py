@@ -44,9 +44,18 @@ class SCConnectionFilter(SCConnection):
             resfile = os.path.join(self.result_path, '[Response]%s.xml' % (resfile) )
 
             # serialize Request data
-            rf = io.open(reqfile, 'w')
-            if (data is not None) and (len(data) != 0):
-                rf.write(self.nice_format(data))
+            rf = io.open(reqfile, 'wb')
+            if data:
+                # Format request data
+                formated = self.nice_format(data)
+                rf.write(formated)
+
+                # Debug
+                sclib.log.debug("---------- RESTFul Request (%s) ---------- " % (method) )
+                sclib.log.debug('URL: %s' %(action))
+                sclib.log.debug('DATA = \n%s' % (formated))
+                sclib.log.debug("------------------------------------------ \n")
+
             rf.close()
 
             # make request to securecloud
@@ -59,9 +68,19 @@ class SCConnectionFilter(SCConnection):
                 fake = urllib.addinfourl(resfp, response.info(), response.geturl(), response.getcode())
                 
                 # serialize Response data
-                f = io.open(resfile, 'w')
-                if (body is not None) and (len(body) != 0):
-                    f.write(self.nice_format(body))
+                f = io.open(resfile, 'wb')
+                if body:
+                    # Format response data
+                    formated = self.nice_format(data)
+                    f.write(formated)
+
+                    # Debug
+                    sclib.log.debug("---------- RESTFul Response (%s) ---------- " % (method) )
+                    sclib.log.debug('URL: %s' %(action))
+                    sclib.log.debug('CODE: %s' % (response.code) )
+                    sclib.log.debug('DATA: \n%s' % (formated))
+                    sclib.log.debug("------------------------------------------")
+
                 f.close()
 
         return fake

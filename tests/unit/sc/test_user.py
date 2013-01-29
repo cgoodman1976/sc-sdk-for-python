@@ -3,9 +3,11 @@ import unittest
 import logging
 import base64
 import random
+import sclib
 
 from tests.unit import config, logging
 from tests.unit.sc import SCBaseTestCase
+from tests.unit.sc.connectionfilter import SCConnectionFilter
 from sclib.sc.device import Device
 from sclib.sc.user import User
 
@@ -13,9 +15,6 @@ class SCUserTest(SCBaseTestCase):
     def setUp(self):
         SCBaseTestCase.setUp(self)
         self.users = self.connection.listAllUsers()
-
-        #===== implement initial code here for each test =====
-        pass
 
     def testCreateUser(self):
 
@@ -28,7 +27,7 @@ class SCUserTest(SCBaseTestCase):
             first = 'test%s' % i
             roles = ['Administrator', 'Security Administrator', 
                      'Auditor', 'Key Approver', 'Data Analyst']
-            MFA = ['True', 'false']
+            MFA = ['true', 'false']
 
             user = self.connection.createUser( email,
                                                password,
@@ -60,6 +59,19 @@ class SCUserTest(SCBaseTestCase):
             u = self.connection.getUser(user.id)
             self.assertNotEqual(u, None)
             self.assertEqual(user.id, u.id)
-               
+
+    def testChangePassword(self):
+
+        # update passoword and validate
+        email = config.get('authentication', 'AUTH_NAME')
+        oldPassword = config.get('authentication', 'AUTH_PASSWORD')
+        newPassword = '1qaz@WSX'
+        res = self.connection.changeUserPassword(oldPassword, newPassword)
+        self.assertNotEqual(res, None)
+
+            # reset original password
+        res = self.connection.changeUserPassword(newPassword, oldPassword)
+        self.assertNotEqual(res, None)
+
 if __name__ == '__main__':
     unittest.main()

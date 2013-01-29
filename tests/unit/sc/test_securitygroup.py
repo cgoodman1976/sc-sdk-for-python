@@ -21,6 +21,12 @@ class SCSecurityGroupTest(SCBaseTestCase):
             self.assertEqual(policy.id, sec.id)
             xml_pretty = sec.niceFormat()
             logging.debug(xml_pretty)
+
+            # data validation test
+
+            # RevokeIntervalNumber
+            self.assertGreaterEqual(policy.RevokeIntervalNumber, 0)
+            self.assertLessEqual(policy.RevokeIntervalNumber, 59)
             
     def testListAllRuleTypes(self):
         rulelist = self.connection.listAllSecurityRuleTypes()

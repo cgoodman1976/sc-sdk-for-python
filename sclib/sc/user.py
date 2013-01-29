@@ -20,6 +20,8 @@
 # IN THE SOFTWARE.
 #
 
+import base64
+
 from sclib.sc.scobject import SCObject
 from xml.etree import ElementTree
 
@@ -35,6 +37,7 @@ class User(SCObject):
         self.id = None
         self.loginname = None
         self.logintext = None
+        self.lastlogintext = None
         self.usertype = None
         self.email = None
         self.href = None
@@ -90,6 +93,7 @@ class User(SCObject):
         if self.id: user.attrib['id'] = self.id
         if self.loginname: user.attrib['loginname'] = self.loginname
         if self.logintext: user.attrib['logintext'] = self.logintext
+        if self.lastlogintext: user.attrib['lastlogintext'] = self.lastlogintext
         if self.usertype: user.attrib['usertype'] = self.usertype
         if self.email: user.attrib['email'] = self.email
         if self.href: user.attrib['href'] = self.href
@@ -102,13 +106,11 @@ class User(SCObject):
         
         #contact info
         contact = ElementTree.SubElement(user, 'contact')
-        if self.firstName: 
-            ElementTree.SubElement(contact, 'firstName').text = self.firstName
-        if self.lastName: 
-            firstName = ElementTree.SubElement(contact, 'lastName').text = self.lastName
-        if self.email: 
-            firstName = ElementTree.SubElement(contact, 'email').text = self.email
+        if self.firstName: ElementTree.SubElement(contact, 'firstName').text = self.firstName
+        if self.lastName: ElementTree.SubElement(contact, 'lastName').text = self.lastName
+        if self.email: ElementTree.SubElement(contact, 'email').text = self.email
         
+        # objects
         if self.account: user.append(self.account.buildElements())
         if self.role: user.append(self.role.buildElements())
         return user

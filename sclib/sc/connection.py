@@ -242,7 +242,7 @@ class SCConnection(SCQueryConnection):
         return self.get_list( '%s/' % (self.REST_USER), 
                               params, [('user', User)])
         
-    def createUser(self, login, text, usertype='localuser', 
+    def createUser(self, login, logintext, usertype='localuser', 
                    firstname='', lastname='', email='', 
                    role='Administrator', MFA='false'):
 
@@ -252,7 +252,7 @@ class SCConnection(SCQueryConnection):
         params = {}
         user = User(self)
         user.loginname = login
-        user.logintext = base64.b64encode(text)
+        user.logintext = base64.b64encode(logintext)
         user.usertype = usertype
         user.firstName = firstname
         user.lastName = lastname
@@ -271,7 +271,20 @@ class SCConnection(SCQueryConnection):
         params = {}
         return self.get_object( '%s/%s/' % (self.REST_USER, id), 
                                 params, User)
-    
+   
+    def changeUserPassword(self, lastlogintext, newlogintext):
+
+        if self.isAuthenticated() is False : 
+            return None
+
+        params = {}
+        user = User(self)
+        user.lastlogintext = base64.b64encode(lastlogintext)
+        user.logintext = base64.b64encode(newlogintext)
+        data = ElementTree.tostring(user.buildElements())
+        return self.get_status( 'user/%s/%s/' % ('logintext', self.authentication.id), 
+                                data=data, method='POST')
+
     #===========================================================================
     # virtual machine function
     #===========================================================================

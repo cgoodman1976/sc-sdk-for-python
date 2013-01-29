@@ -53,7 +53,9 @@ import time
 import xml.sax
 import copy
 import urllib2
+
 from xml.dom.minidom import parseString
+from xml.parsers.expat import ExpatError
 
 import sclib
 
@@ -319,10 +321,16 @@ class SCAuthConnection:
             self.opener.add_handler(urllib2.HTTPDigestAuthHandler(self.pwd_mgr))
 
     def nice_format(self, data):
-        xmlstr = parseString(data)
-        pretty_res = xmlstr.toprettyxml()
 
-        return pretty_res
+        try:
+            xmlstr = parseString(data)
+            pretty_res = xmlstr.toprettyxml()
+            return pretty_res
+        except ExpatError:
+            sclib.log.debug(ExpatError)
+
+        # Got exception or error, return original data
+        return data
 
     # ----- help function start -----
     
@@ -345,28 +353,21 @@ class SCAuthConnection:
         else:
             pass
         
-        sclib.log.debug("----- Request ----- ")
-        sclib.log.debug('method: %s' % (method))
-        sclib.log.debug('url: %s' %(req_url))
-        if data: sclib.log.debug('data = %s' % (data))
-        sclib.log.debug("------------------- ")
         return req
         
     def make_request(self, action='', params=None, headers=None, data='', method='GET'):
 
-        sclib.log.debug(">>>>> make_request")
-        
         #prepare request url
-        api_url = self.base_url+ '/' + action
+        api_url = '%s/%s' % (self.base_url, action)
         
         #make request
         req = self.build_request(api_url, params, headers, data, method)
 
+        response = None
         try:
             response = self.opener.open(req)
-            
+
             if response.code in (200, 201, 203, 204):
-                sclib.log.debug("<<<<< make_request")
                 return response
             else:
                 sclib.log.error('%s %s' % (response.status, response.reason))
@@ -374,7 +375,7 @@ class SCAuthConnection:
         except urllib2.HTTPError, e:
             sclib.log.error(e)
 
-        return None
+        return response
 
     def close(self):
         #=======================================================================
@@ -418,7 +419,6 @@ class SCQueryConnection(SCAuthConnection):
         response = self.make_request(action, headers=headers, data=data, method=method)
         if response:
             body = response.read()
-            sclib.log.debug(self.nice_format(body))
             rs = ResultSet(markers)
             h = sclib.handler.XmlHandler(rs, parent)
             xml.sax.parseString(body, h)
@@ -432,7 +432,6 @@ class SCQueryConnection(SCAuthConnection):
         response = self.make_request(action, headers=headers, data=data, method=method)
         if response:
             body = response.read()
-            sclib.log.debug(self.nice_format(body))
             obj = cls(parent)
             h = sclib.handler.XmlHandler(obj, parent)
             xml.sax.parseString(body, h)
@@ -443,7 +442,7 @@ class SCQueryConnection(SCAuthConnection):
         if not parent:
             parent = self
 
-        response = self.make_request(action, method=method)
+        response = self.make_request(action, data=data, method=method)
         if response:
             return response.code
 
