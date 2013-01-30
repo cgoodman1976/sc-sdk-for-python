@@ -69,7 +69,7 @@ class User(SCObject):
             self.account.startElement(name, attrs, connection)
             return self.account
         elif name == 'role':
-            self.role = Role(connection)
+            self.role = UserRole(connection)
             self.role.startElement(name, attrs, connection)
             return self.role
         else:
@@ -167,7 +167,7 @@ class Account(SCObject):
         if self.name: account.attrib['name'] = self.name
         return account
         
-class Role(SCObject):
+class UserRole(SCObject):
     def __init__(self,connection):
         SCObject.__init__(self, connection)
         self.MFAStatus = None
@@ -192,5 +192,31 @@ class Role(SCObject):
         if self.MFAStatus: role.attrib['MFAStatus'] = self.MFAStatus
         if self.name: role.attrib['name'] = self.name
         return role
+        
+class UserRight(SCObject):
+    def __init__(self,connection):
+        SCObject.__init__(self, connection)
+        self.right = None
+        
+    def startElement(self, name, attrs, connection):
+        ret = SCObject.startElement(self, name, attrs, connection)
+        if ret is not None:
+            return ret
+        
+        if name == 'right':
+            pass
+        else:
+            return None
+
+    def endElement(self, name, value, connection):
+        if name == 'right':
+            setattr(self, 'right', value)
+        else:
+            setattr(self, name, value)
+            
+    def buildElements(self):
+        right = ElementTree.Element('right')
+        if self.right: role.text['right'] = self.right
+        return right
         
         

@@ -27,7 +27,7 @@ import base64
 from sclib.exception import SCClientError, SCResponseError
 from sclib.connection import SCQueryConnection
 from sclib.sc.device import Device
-from sclib.sc.user import User
+from sclib.sc.user import User, UserRight, UserRole
 from sclib.sc.scobject import SCObject
 from sclib.sc.instance import VirtualMachine, Instance
 from sclib.sc.provider import Provider
@@ -125,6 +125,8 @@ class SCConnection(SCQueryConnection):
     REST_SECURITY_RULE = 'SecurityRule'
     REST_SECURITY_RULE_TYPE = 'SecurityRule'
     REST_USER = 'user'
+    REST_USER_RIGHT = 'rights'
+    REST_USER_ROLE = 'roles'
     REST_VM = 'vm'
     REST_PROVIDER = 'provider'
     REST_KEY_REQUEST = 'keyrequesttree'
@@ -284,6 +286,14 @@ class SCConnection(SCQueryConnection):
         data = ElementTree.tostring(user.buildElements())
         return self.get_status( 'user/%s/%s/' % ('logintext', self.authentication.id), 
                                 data=data, method='POST')
+
+    def getUserRights(self):
+        if self.isAuthenticated() is False : 
+            return None
+
+        params = {}
+        return self.get_list( '%s/' % (self.REST_USER_RIGHT), 
+                                params,  [('userRights', UserRight)])
 
     #===========================================================================
     # virtual machine function
