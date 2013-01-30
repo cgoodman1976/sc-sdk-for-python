@@ -44,6 +44,8 @@ class SCConnectionFilter(SCConnection):
             resfile = os.path.join(self.result_path, '[Response]%s.xml' % (resfile) )
 
             # serialize Request data
+            sclib.log.debug("---------- RESTFul Request (%s) ---------- " % (method) )
+            sclib.log.debug('URL: %s' %(action))
             rf = io.open(reqfile, 'wb')
             if data:
                 # Format request data
@@ -51,38 +53,33 @@ class SCConnectionFilter(SCConnection):
                 rf.write(formated)
 
                 # Debug
-                sclib.log.debug("---------- RESTFul Request (%s) ---------- " % (method) )
-                sclib.log.debug('URL: %s' %(action))
                 sclib.log.debug('DATA = \n%s' % (formated))
-                sclib.log.debug("------------------------------------------ \n")
-
             rf.close()
 
             # make request to securecloud
             response = SCConnection.make_request(self, action, params, headers, data, method)
             if response:
+                sclib.log.debug("---------- RESTFul Response (%s) ---------- " % (method) )
+                sclib.log.debug('CODE: %s' % (response.code) )
                 body = response.read()
-                
-                #make fake response
-                resfp = StringIO.StringIO(body)
-                fake = urllib.addinfourl(resfp, response.info(), response.geturl(), response.getcode())
                 
                 # serialize Response data
                 f = io.open(resfile, 'wb')
                 if body:
                     # Format response data
-                    formated = self.nice_format(data)
+                    formated = self.nice_format(body)
                     f.write(formated)
 
                     # Debug
-                    sclib.log.debug("---------- RESTFul Response (%s) ---------- " % (method) )
-                    sclib.log.debug('URL: %s' %(action))
-                    sclib.log.debug('CODE: %s' % (response.code) )
-                    sclib.log.debug('DATA: \n%s' % (formated))
-                    sclib.log.debug("------------------------------------------")
-
+                    if formated: sclib.log.debug('DATA: \n%s' % (formated))
                 f.close()
 
+                #make fake response
+                resfp = StringIO.StringIO(body)
+                fake = urllib.addinfourl(resfp, response.info(), response.geturl(), response.getcode())
+                
+
+            sclib.log.debug("------------------------------------------\n")
         return fake
 
 
