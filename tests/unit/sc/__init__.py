@@ -21,10 +21,11 @@ class SCBaseTestCase(unittest.TestCase):
 
     def setUp(self):
         if not self.connection:
+            path = os.path.join(self.result_path, '%s.%s' % (self.__class__.__name__, self._testMethodName) )
             self.connection = SCConnectionFilter( config.get('connection', 'MS_HOST'),
                                                   config.get('connection', 'MS_BROKER_NAME'), 
                                                   config.get('connection', 'MS_BROKER_PASSPHASE'),
-                                                  result_path=self.result_path)
+                                                  result_path=path)
             self.assertNotEqual(self.connection, None)
 
         if self.connection and (not self.auth):        

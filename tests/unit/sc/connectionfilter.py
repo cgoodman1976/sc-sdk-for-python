@@ -30,22 +30,19 @@ class SCConnectionFilter(SCConnection):
     def make_request(self, action='', params=None, headers=None, data='', method='GET'):
 
         fake = None
+        resfile = reqfile = action.replace('/', '^')
+        reqfile = os.path.join(self.result_path, '[Request]-%s %s.xml' % (method, reqfile ) )
+        resfile = os.path.join(self.result_path, '[Response]-%s %s.xml' % (method, resfile) )
+
         if self.sample_path:
-            reqfile = action.replace('/', '^')
-            reqfile = os.path.join(self.sample_path, '[Response]%s.xml' % (reqfile) )
             rf = io.open(reqfile, 'r')
             body = rf.read()
             fake = urllib.addinfourl(rf, 'Fake info', regfile, 400)
-
         else:
-            reqfile = action.replace('/', '^')
-            reqfile = os.path.join(self.result_path, '[Request(%s)]%s.xml' % (method, reqfile ) )
-            resfile = action.replace('/', '^')
-            resfile = os.path.join(self.result_path, '[Response]%s.xml' % (resfile) )
 
             # serialize Request data
-            sclib.log.debug("---------- RESTFul Request (%s) ---------- " % (method) )
-            sclib.log.debug('URL: %s' %(action))
+            sclib.log.debug("---------- RESTFul Request ---------- " )
+            sclib.log.debug('%s %s' % (method, action))
             rf = io.open(reqfile, 'wb')
             if data:
                 # Format request data
@@ -59,8 +56,7 @@ class SCConnectionFilter(SCConnection):
             # make request to securecloud
             response = SCConnection.make_request(self, action, params, headers, data, method)
             if response:
-                sclib.log.debug("---------- RESTFul Response (%s) ---------- " % (method) )
-                sclib.log.debug('CODE: %s' % (response.code) )
+                sclib.log.debug("---------- RESTFul Response (%s) ---------- " % (response.code) )
                 body = response.read()
                 
                 # serialize Response data
