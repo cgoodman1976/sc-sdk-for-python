@@ -59,6 +59,10 @@ class SCUserTest(SCBaseTestCase):
             u = self.connection.getUser(user.id)
             self.assertNotEqual(u, None)
             self.assertEqual(user.id, u.id)
+            
+        # testGet current user
+        current = self.connection.getUser(self.connection.authentication.id)
+        self.assertEqual(current.id, self.connection.authentication.id)
 
     def testChangePassword(self):
 

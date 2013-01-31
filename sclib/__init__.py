@@ -30,11 +30,13 @@ import logging
 import logging.config
 import urlparse
 
+__module__ = 'sclib'
+
 __version__ = '3.5.1000'
 Version = __version__  # for backward compatibility
 
 __config__ = Config()
-UserAgent = 'sclib/%s (%s)' % (__version__, sys.platform)
+UserAgent = '%s/%s (%s)' % (__module__, __version__, sys.platform)
 
 def init_logging():
     for file in sclibConfigLocations:
@@ -48,8 +50,8 @@ class NullHandler(logging.Handler):
     def emit(self, record):
         pass
 
-log = logging.getLogger('sclib')
-perflog = logging.getLogger('sclib.perf')
+log = logging.getLogger(__module__)
+perflog = logging.getLogger('%s.perf' % (__module__))
 log.addHandler(NullHandler())
 perflog.addHandler(NullHandler())
 init_logging()

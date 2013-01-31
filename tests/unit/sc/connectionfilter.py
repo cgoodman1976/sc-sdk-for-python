@@ -49,8 +49,8 @@ class SCConnectionFilter(SCConnection):
                 formated = self.nice_format(data)
                 rf.write(formated)
 
-                # Debug
-                sclib.log.debug('DATA = \n%s' % (formated))
+                # Debug - request data
+                sclib.log.debug('\n%s' % (formated))
             rf.close()
 
             # make request to securecloud
@@ -66,8 +66,8 @@ class SCConnectionFilter(SCConnection):
                     formated = self.nice_format(body)
                     f.write(formated)
 
-                    # Debug
-                    if formated: sclib.log.debug('DATA: \n%s' % (formated))
+                    # Debug - response data
+                    if formated: sclib.log.debug('\n%s' % (formated))
                 f.close()
 
                 #make fake response
