@@ -27,7 +27,7 @@ import base64
 from sclib.exception import SCClientError, SCResponseError
 from sclib.connection import SCQueryConnection
 from sclib.sc.device import Device
-from sclib.sc.user import User, UserRight, UserRole
+from sclib.sc.user import User, UserRight, UserRole, Account
 from sclib.sc.scobject import SCObject
 from sclib.sc.instance import VirtualMachine, Instance
 from sclib.sc.provider import Provider
@@ -133,6 +133,7 @@ class SCConnection(SCQueryConnection):
     REST_DEVICE_KEY_REQUEST = 'devicekeyrequest'
     REST_DSM_SETTING = 'dsmConnSettings'
     REST_KMIP_SETTING = 'kmip'
+    REST_ACCOUNT = 'acctData'
 
     def __init__(self, host_base, broker_name=None, broker_passphase=None):
         SCQueryConnection.__init__( self, host_base, broker_name, broker_passphase)
@@ -140,6 +141,8 @@ class SCConnection(SCQueryConnection):
         #members
         self.authentication = None
         self.certificate = None
+        self.user = None
+        self.account = None
         
     def getCertificate(self):
         params = {}
@@ -168,6 +171,8 @@ class SCConnection(SCQueryConnection):
         if auth:
             self.authentication = auth
             self.headers['X-UserSession'] = self.authentication.token
+            self.user = self.getUser(auth.id)
+            self.account = self.getAccount(self.user.account.id)
         return self.authentication
   
     def isAuthenticated(self):
@@ -368,3 +373,21 @@ class SCConnection(SCQueryConnection):
         
         return self.get_object('%s/%s/' % (self.REST_KMIP_SETTING, 'setting'), 
                                {}, KMIPConnSettings)
+
+    #---------------------------------------------------------------------------
+    # # Administration - Account
+    #---------------------------------------------------------------------------
+    def getAccount(self, id):
+        if self.isAuthenticated() is False:
+            return None
+
+        return self.get_object('%s/' % (self.REST_ACCOUNT), {}, Account)
+
+    def updatePassphrase(self, passphrase):
+        if self.isAuthenticated() is False:
+            return None
+
+        return self.get_object('%s/%s/' % (self.REST_ACCOUNT, 'passphrase'), 
+                                   {}, Account)
+
+        
