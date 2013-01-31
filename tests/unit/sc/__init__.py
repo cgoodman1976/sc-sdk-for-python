@@ -22,6 +22,8 @@ class SCBaseTestCase(unittest.TestCase):
     def setUp(self):
         if not self.connection:
             path = os.path.join(self.result_path, '%s.%s' % (self.__class__.__name__, self._testMethodName) )
+            logpath = os.path.join(path, 'test.log' )
+            sclib.set_file_logger(self._testMethodName, logpath, 'DEBUG')
             self.connection = SCConnectionFilter( config.get('connection', 'MS_HOST'),
                                                   config.get('connection', 'MS_BROKER_NAME'), 
                                                   config.get('connection', 'MS_BROKER_PASSPHASE'),
