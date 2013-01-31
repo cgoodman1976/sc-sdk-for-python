@@ -134,26 +134,47 @@ class SCConnection(SCQueryConnection):
     REST_DSM_SETTING = 'dsmConnSettings'
     REST_KMIP_SETTING = 'kmip'
     REST_ACCOUNT = 'acctData'
+    REST_ACCOUNTS = 'accounts'
 
     def __init__(self, host_base, broker_name=None, broker_passphase=None):
         SCQueryConnection.__init__( self, host_base, broker_name, broker_passphase)
         
         #members
-        self.authentication = None
-        self.certificate = None
-        self.user = None
-        self.account = None
-        
+        self.__authentication = None
+        self.__certificate = None
+        self.__user = None
+        self.__account = None
+
+    # ---------------
+    # properties
+    # ---------------  
+    @property
+    def authentication(self):
+        return self.__authentication
+
+    @property
+    def certificate(self):
+        return self.__certificate
+
+    @property
+    def user(self):
+        return self.__user
+
+    @property
+    def account(self):
+        return self.__account
+
+    # ---------------
+    # member functions
+    # ---------------  
     def getCertificate(self):
         params = {}
-        certificate = self.get_object( '%s' % (self.REST_PUBLIC_CERTIFICATE),
+        self.__certificate = self.get_object( '%s' % (self.REST_PUBLIC_CERTIFICATE),
                                         params, Certificate)
-        if certificate is None:
+        if not self.__certificate:
             raise SCResponseError( '4xx' , "Unknown error")
 
-        self.certificate = certificate
-
-        return self.certificate
+        return self.__certificate
     
     def basicAuth(self, name, password):
         
@@ -169,10 +190,10 @@ class SCConnection(SCQueryConnection):
         auth = self.get_object( '%s/%s' % (self.REST_BASIC_AUTH, name), 
                                 params, Authentication, data=req_data, method='POST')
         if auth:
-            self.authentication = auth
+            self.__authentication = auth
             self.headers['X-UserSession'] = self.authentication.token
             self.user = self.getUser(auth.id)
-            self.account = self.getAccount(self.user.account.id)
+            self.account = self.getAccount()
         return self.authentication
   
     def isAuthenticated(self):
@@ -377,17 +398,11 @@ class SCConnection(SCQueryConnection):
     #---------------------------------------------------------------------------
     # # Administration - Account
     #---------------------------------------------------------------------------
-    def getAccount(self, id):
+    def getAccount(self):
         if self.isAuthenticated() is False:
             return None
 
+        # get account info with current connection
         return self.get_object('%s/' % (self.REST_ACCOUNT), {}, Account)
-
-    def updatePassphrase(self, passphrase):
-        if self.isAuthenticated() is False:
-            return None
-
-        return self.get_object('%s/%s/' % (self.REST_ACCOUNT, 'passphrase'), 
-                                   {}, Account)
 
         

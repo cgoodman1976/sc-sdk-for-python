@@ -9,7 +9,7 @@ from tests.unit import config, logging
 from tests.unit.sc import SCBaseTestCase
 from tests.unit.sc.connectionfilter import SCConnectionFilter
 from sclib.sc.device import Device
-from sclib.sc.user import User, UserRight, UserRole
+from sclib.sc.user import User, UserRight, UserRole, Account
 
 class SCUserTest(SCBaseTestCase):
     def setUp(self):
@@ -73,7 +73,7 @@ class SCUserTest(SCBaseTestCase):
         res = self.connection.changeUserPassword(oldPassword, newPassword)
         self.assertNotEqual(res, None)
 
-            # reset original password
+        # reset original password
         res = self.connection.changeUserPassword(newPassword, oldPassword)
         self.assertNotEqual(res, None)
 
@@ -81,6 +81,19 @@ class SCUserTest(SCBaseTestCase):
         rights = self.connection.getUserRights()
         for right in rights:  
             self.assertNotEqual(right.right, None)
+
+    def testValidateAccount(self):
+        account = self.connection.getAccount()
+        self.assertEqual(account.id, self.connection.account.id)
+        self.assertEqual(account.name, self.connection.account.name)
+        self.assertEqual(account.passphrase, self.connection.account.passphrase)
+
+    def testUpdateAccount(self):
+        test_passphrase = '12345678'
+        account = self.connection.account
+        account.passphrase = test_passphrase
+        account.update()
+        self.assertEqual(account.passphrase, test_passphrase)
 
 if __name__ == '__main__':
     unittest.main()

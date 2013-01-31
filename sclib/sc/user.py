@@ -142,10 +142,18 @@ class User(SCObject):
         return response
 
 class Account(SCObject):
+
+    ValidAttributes = ['name', 'id', 'dataFormat', 
+                       'passphrase', 'sessionTimeout', 'timezoneID']
+
     def __init__(self, connection):
         SCObject.__init__(self, connection)
         self.name = None
         self.id = None
+        self.dataFormat = None
+        self.passphrase = None
+        self.sessionTimeout = None
+        self.timezoneID = None
         
     def startElement(self, name, attrs, connection):
         ret = SCObject.startElement(self, name, attrs, connection)
@@ -153,8 +161,8 @@ class Account(SCObject):
             return ret
         
         if name == 'account':
-            self.id = attrs['id']
-            self.name = attrs['name']
+            for key, value in attrs.items():
+                setattr(self, key, value)
         else:
             return None
 
@@ -165,7 +173,26 @@ class Account(SCObject):
         account = ElementTree.Element('account')
         if self.id: account.attrib['id'] = self.id
         if self.name: account.attrib['name'] = self.name
+        if self.dataFormat: account.attrib['dataFormat'] = self.dataFormat
+        if self.passphrase: account.attrib['passphrase'] = self.passphrase
+        if self.sessionTimeout: account.attrib['sessionTimeout'] = self.sessionTimeout
+        if self.timezoneID: account.attrib['timezoneID'] = self.timezoneID
         return account
+
+    def _update(self, updated):
+        self.__dict__.update(updated.__dict__)
+
+    # ----- functions start 
+    def update(self):
+        action = '%s/settings/' % self.connection.REST_ACCOUNT
+        data = self.tostring()
+        updated = self.connection.get_object(action, {}, Account, data=data, method='POST')
+        if updated:
+            self._update(updated)
+            return self
+        
+        return updated
+
         
 class UserRole(SCObject):
     def __init__(self,connection):
