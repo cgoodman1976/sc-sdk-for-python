@@ -158,3 +158,39 @@ class KMIPConnSettings(SCObject):
             ElementTree.SubElement(setting, "serverCertificate").text = self.serverCertificate
 
         return setting
+
+
+class Timezone(SCObject):
+    ValidAttributes = ['baseUtcOffset', 'timezonEn', 
+                       'timezoneId']
+    
+    def __init__(self, connection):
+        SCObject.__init__(self, connection)
+        
+        # attributes
+        self.baseUtcOffset = None
+        self.timezonEn = None 
+        self.timezoneId = None
+
+    def startElement(self, name, attrs, connection):
+        ret = SCObject.startElement(self, name, attrs, connection)
+        if ret is not None:
+            return ret
+        
+        if name == 'timezone':
+            for key, value in attrs.items():
+                setattr(self, name, value)
+        else:
+            return None
+
+    def endElement(self, name, value, connection):
+        setattr(self, name, value)
+            
+    def buildElements(self):
+        timezone = ElementTree.Element('timezone')
+
+        # build attributes
+        for e in self.ValidAttributes:
+            if getattr(self, e): setting.attrib[e] = getattr(self, e)
+
+        return timezone

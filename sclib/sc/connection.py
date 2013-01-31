@@ -33,7 +33,7 @@ from sclib.sc.instance import VirtualMachine, Instance
 from sclib.sc.provider import Provider
 from sclib.sc.keyrequest import KeyRequest
 from sclib.sc.securitygroup import SecurityGroup, SecurityRule, SecurityRuleType
-from sclib.sc.administration import DSMConnSettings, KMIPConnSettings
+from sclib.sc.administration import DSMConnSettings, KMIPConnSettings, Timezone
 
 from xml.dom.minidom import parse, parseString
 from xml.etree import ElementTree
@@ -135,6 +135,7 @@ class SCConnection(SCQueryConnection):
     REST_KMIP_SETTING = 'kmip'
     REST_ACCOUNT = 'acctData'
     REST_ACCOUNTS = 'accounts'
+    REST_TIMEZONE = 'timezone'
 
     def __init__(self, host_base, broker_name=None, broker_passphase=None):
         SCQueryConnection.__init__( self, host_base, broker_name, broker_passphase)
@@ -405,4 +406,15 @@ class SCConnection(SCQueryConnection):
         # get account info with current connection
         return self.get_object('%s/' % (self.REST_ACCOUNT), {}, Account)
 
+    #---------------------------------------------------------------------------
+    # # Administration - Timezon
+    #---------------------------------------------------------------------------
+    def listTimezone(self):
+        if self.isAuthenticated() is False:
+            return None
+
+        # get account info with current connection
+        return self.get_list('%s/' % (self.REST_TIMEZONE), {}, 
+                             [('timezoneList', Timezone)] )
         
+    
