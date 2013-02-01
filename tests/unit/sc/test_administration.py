@@ -36,6 +36,8 @@ class SCAdministrationTest(SCBaseTestCase):
         timezones = self.connection.listTimezone()
         self.assertNotEqual(timezones.__len__, 0)
 
+        # put validation code here
+
 
 if __name__ == '__main__':
     unittest.main()

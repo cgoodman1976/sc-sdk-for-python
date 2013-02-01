@@ -5,7 +5,6 @@ import base64
 import random
 import sclib
 
-from tests.unit import config, logging
 from tests.unit.sc import SCBaseTestCase
 from tests.unit.sc.connectionfilter import SCConnectionFilter
 from sclib.sc.device import Device

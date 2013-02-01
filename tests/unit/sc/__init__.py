@@ -4,7 +4,6 @@ import sclib
 import os
 
 from sclib.sc.connection import SCConnection
-from tests.unit import config, logging
 from tests.unit.sc.connectionfilter import SCConnectionFilter
 
 class SCBaseTestCase(unittest.TestCase):
@@ -27,15 +26,15 @@ class SCBaseTestCase(unittest.TestCase):
 
             logpath = os.path.join(path, 'testCase.log' )
             sclib.set_file_logger(self._testMethodName, logpath, 'DEBUG')
-            self.connection = SCConnectionFilter( config.get('connection', 'MS_HOST'),
-                                                  config.get('connection', 'MS_BROKER_NAME'), 
-                                                  config.get('connection', 'MS_BROKER_PASSPHASE'),
+            self.connection = SCConnectionFilter( sclib.__config__.get('connection', 'MS_HOST'),
+                                                  sclib.__config__.get('connection', 'MS_BROKER_NAME'), 
+                                                  sclib.__config__.get('connection', 'MS_BROKER_PASSPHASE'),
                                                   result_path=path)
             self.assertNotEqual(self.connection, None)
 
         if self.connection and (not self.auth):        
-            self.auth = self.connection.basicAuth( config.get('authentication', 'AUTH_NAME'), 
-                                                   config.get('authentication', 'AUTH_PASSWORD'))
+            self.auth = self.connection.basicAuth( sclib.__config__.get('authentication', 'AUTH_NAME'), 
+                                                   sclib.__config__.get('authentication', 'AUTH_PASSWORD'))
             self.assertNotEqual(self.auth, None)
         
     def tearDown(self):
