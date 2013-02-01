@@ -116,7 +116,7 @@ class User(SCObject):
         return user
 
     def setRole(self, role, MFA):
-        self.role = Role(self.connection)
+        self.role = UserRole(self.connection)
         self.role.name = role
         self.role.MFAStatus = MFA
 

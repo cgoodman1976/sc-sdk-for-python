@@ -66,8 +66,8 @@ class SCUserTest(SCBaseTestCase):
     def testChangePassword(self):
 
         # update passoword and validate
-        email = config.get('authentication', 'AUTH_NAME')
-        oldPassword = config.get('authentication', 'AUTH_PASSWORD')
+        email = sclib.__config__.get('authentication', 'AUTH_NAME')
+        oldPassword = sclib.__config__.get('authentication', 'AUTH_PASSWORD')
         newPassword = '1qaz@WSX'
         res = self.connection.changeUserPassword(oldPassword, newPassword)
         self.assertNotEqual(res, None)
