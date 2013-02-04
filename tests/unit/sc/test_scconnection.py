@@ -4,7 +4,7 @@
 import unittest
 import logging
 
-from tests.unit import config, logging
+from tests.unit import logging
 from tests.unit.sc import SCBaseTestCase
 from sclib.sc.device import Device
 from sclib.sc.user import User

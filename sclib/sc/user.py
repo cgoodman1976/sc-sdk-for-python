@@ -135,10 +135,9 @@ class User(SCObject):
         if self.id is None:
             return None
 
-        params = {}
         action = 'user/%s/' % self.id
         data = ElementTree.tostring(self.buildElements())
-        response = self.connection.get_object(action, params, User, data=data, method='POST')
+        response = self.connection.get_object(action, User, data=data, method='POST')
         return response
 
 class Account(SCObject):
@@ -186,7 +185,18 @@ class Account(SCObject):
     def update(self):
         action = '%s/settings/' % self.connection.REST_ACCOUNT
         data = self.tostring()
-        updated = self.connection.get_object(action, {}, Account, data=data, method='POST')
+        updated = self.connection.get_object(action, Account, data=data, method='POST')
+        if updated:
+            self._update(updated)
+            return self
+        
+        return updated
+
+    def setPassphrase(self, new):
+        action = '%s/passphrase/' % self.connection.REST_ACCOUNT
+        self.passphrase = new
+        data = self.tostring()
+        updated = self.connection.get_object(action, Account, data=data, method='POST')
         if updated:
             self._update(updated)
             return self

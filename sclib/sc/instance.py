@@ -140,7 +140,7 @@ class VirtualMachine(SCObject):
     def update(self):
         action = 'vm/%s/' % self.imageGUID
         data = self.tostring()
-        updated = self.connection.get_object(action, {}, VirtualMachine, data=data, method='POST')
+        updated = self.connection.get_object(action, VirtualMachine, data=data, method='POST')
         if updated:
             self._update(updated)
             return self
@@ -152,14 +152,14 @@ class VirtualMachine(SCObject):
         # delete vm itself
         #-----------------------------------------------------------------------
         action = 'vm/%s/' % self.imageGUID
-        return self.connection.get_status(action, {}, method='DELETE')
+        return self.connection.get_status(action, method='DELETE')
 
     def listDevices(self):
         #-----------------------------------------------------------------------
         # list all devices
         #-----------------------------------------------------------------------
         action = 'vm/%s/device/' % self.imageGUID
-        return self.connection.get_list(action, {}, [('device', Device)])
+        return self.connection.get_list(action, [('device', Device)])
 
     
     def deleteDevice(self, deviceID):
@@ -169,7 +169,7 @@ class VirtualMachine(SCObject):
         ':deviceID the targe device to be delete in a virtual machine'
         
         action = 'vm/%s/device/%s/' % (self.imageGUID, deviceID)
-        return self.connection.get_status(action, {}, method='DELETE')
+        return self.connection.get_status(action, method='DELETE')
         
 
 

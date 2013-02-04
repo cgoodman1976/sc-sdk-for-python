@@ -412,7 +412,7 @@ class SCQueryConnection(SCAuthConnection):
     # # Generic method
     #---------------------------------------------------------------------------
 
-    def get_list(self, action, params, markers, headers=None, data='', path='/', parent=None, method='GET'):
+    def get_list(self, action, markers, params=None, headers=None, data='', path='/', parent=None, method='GET'):
         if not parent:
             parent = self
 
@@ -425,7 +425,7 @@ class SCQueryConnection(SCAuthConnection):
             return rs
         return None
 
-    def get_object(self, action, params, cls, headers=None, data='',path='/', parent=None, method='GET'):
+    def get_object(self, action, cls, params=None, headers=None, data='',path='/', parent=None, method='GET'):
         if not parent:
             parent = self
 
@@ -438,7 +438,7 @@ class SCQueryConnection(SCAuthConnection):
             return obj
         return None
 
-    def get_status(self, action, headers=None, data='', params=None, path='/', parent=None, method='GET'):
+    def get_status(self, action, params=None, headers=None, data='', path='/', parent=None, method='GET'):
         if not parent:
             parent = self
 

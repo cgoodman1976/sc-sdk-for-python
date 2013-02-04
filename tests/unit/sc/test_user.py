@@ -90,9 +90,19 @@ class SCUserTest(SCBaseTestCase):
     def testUpdateAccount(self):
         test_passphrase = '12345678'
         account = self.connection.account
-        account.passphrase = test_passphrase
+        account.sessionTimeout = '30'
         account.update()
+        # temporaliy failed, because not merge with 
+        self.assertEqual(account.sessionTimeout, '30')
+
+    def testSetPassphrase(self):
+        test_passphrase = '12345678'
+        account = self.connection.account
+        account.passphrase = test_passphrase
+        account.setPassphrase(test_passphrase)
+        # temporaliy failed, because not merge with 
         self.assertEqual(account.passphrase, test_passphrase)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -33,7 +33,7 @@ from sclib.sc.instance import VirtualMachine, Instance
 from sclib.sc.provider import Provider
 from sclib.sc.keyrequest import KeyRequest
 from sclib.sc.securitygroup import SecurityGroup, SecurityRule, SecurityRuleType
-from sclib.sc.administration import DSMConnSettings, KMIPConnSettings, Timezone
+from sclib.sc.administration import DSMConnSettings, KMIPConnSettings, Timezone, License
 
 from xml.dom.minidom import parse, parseString
 from xml.etree import ElementTree
@@ -136,6 +136,9 @@ class SCConnection(SCQueryConnection):
     REST_ACCOUNT = 'acctData'
     REST_ACCOUNTS = 'accounts'
     REST_TIMEZONE = 'timezone'
+    REST_STATUS = 'status'
+    REST_ENTRYPOINT = 'entrypoint'
+    REST_LICENSE = 'licenses'
 
     def __init__(self, host_base, broker_name=None, broker_passphase=None):
         SCQueryConnection.__init__( self, host_base, broker_name, broker_passphase)
@@ -169,9 +172,8 @@ class SCConnection(SCQueryConnection):
     # member functions
     # ---------------  
     def getCertificate(self):
-        params = {}
         self.__certificate = self.get_object( '%s' % (self.REST_PUBLIC_CERTIFICATE),
-                                        params, Certificate)
+                                              Certificate)
         if not self.__certificate:
             raise SCResponseError( '4xx' , "Unknown error")
 
@@ -182,14 +184,13 @@ class SCConnection(SCQueryConnection):
         if self.certificate is None:
             self.getCertificate()
         
-        params = {}
         # build authentication request
         auth_req = Authentication(self)
         auth_req.data = self.certificate.encryptData(password)
         req_data = ElementTree.tostring(auth_req.buildElements())
 
         auth = self.get_object( '%s/%s' % (self.REST_BASIC_AUTH, name), 
-                                params, Authentication, data=req_data, method='POST')
+                                Authentication, data=req_data, method='POST')
         if auth:
             self.__authentication = auth
             self.headers['X-UserSession'] = self.authentication.token
@@ -211,17 +212,15 @@ class SCConnection(SCQueryConnection):
         if self.authentication is None: 
             return None
     
-        params = {}
-        return self.get_list( '%s' % (self.REST_DEVICE), params, 
+        return self.get_list( '%s' % (self.REST_DEVICE),
                               [('device', Device)])
 
     def getDevice(self, guid):
         if self.authentication is None: 
             return None
     
-        params = {}
         return self.get_object( '%s/%s/' % (self.REST_DEVICE, guid), 
-                                params, Device)
+                                Device)
 
     #===========================================================================
     # # function - Policy/SecurityGroup
@@ -230,34 +229,30 @@ class SCConnection(SCQueryConnection):
         if self.authentication is None: 
             return None
     
-        params = {}
         return self.get_list( '%s' % (self.REST_SECURITY_GROUP), 
-                              params, [('securityGroup', SecurityGroup)])
+                              [('securityGroup', SecurityGroup)])
 
     def getSecurityGroup(self, id):
         if self.authentication is None: 
             return None
     
-        params = {}
         rule = self.get_object( '%s/%s/' % (self.REST_SECURITY_GROUP, id), 
-                                params, SecurityGroup)
+                                SecurityGroup)
         return rule
 
     def listAllSecurityRuleTypes(self):
         if self.authentication is None: 
             return None
 
-        params = {}
         return self.get_list( '%s' % (self.REST_SECURITY_RULE_TYPE), 
-                              params, [('securityRuleType', SecurityRuleType)])
+                              [('securityRuleType', SecurityRuleType)])
 
     def getSecurityRuleType(self, id):
         if self.authentication is None: 
             return None
     
-        params = {}
         rule = self.get_object( '%s/%s/' % (self.REST_SECURITY_RULE_TYPE, id), 
-                                params, SecurityRuleType)
+                                SecurityRuleType)
         return rule
 
     #===========================================================================
@@ -267,9 +262,8 @@ class SCConnection(SCQueryConnection):
         if self.isAuthenticated() is False : 
             return None
 
-        params = {}
         return self.get_list( '%s/' % (self.REST_USER), 
-                              params, [('user', User)])
+                              [('user', User)])
         
     def createUser(self, login, logintext, usertype='localuser', 
                    firstname='', lastname='', email='', 
@@ -278,7 +272,6 @@ class SCConnection(SCQueryConnection):
         if self.isAuthenticated() is False : 
             return None
 
-        params = {}
         user = User(self)
         user.loginname = login
         user.logintext = base64.b64encode(logintext)
@@ -291,15 +284,14 @@ class SCConnection(SCQueryConnection):
         user.setRole(role, MFA)
         data = ElementTree.tostring(user.buildElements())
         return self.get_object( '%s/' % (self.REST_USER), 
-                                params, User, data=data, method='POST')
+                                User, data=data, method='POST')
     
     def getUser(self, id):
         if self.isAuthenticated() is False : 
             return None
 
-        params = {}
         return self.get_object( '%s/%s/' % (self.REST_USER, id), 
-                                params, User)
+                                User)
    
     def changeUserPassword(self, lastlogintext, newlogintext):
 
@@ -318,9 +310,8 @@ class SCConnection(SCQueryConnection):
         if self.isAuthenticated() is False : 
             return None
 
-        params = {}
         return self.get_list( '%s/' % (self.REST_USER_RIGHT), 
-                                params,  [('userRights', UserRight)])
+                              [('userRights', UserRight)])
 
     #===========================================================================
     # virtual machine function
@@ -329,17 +320,15 @@ class SCConnection(SCQueryConnection):
         if self.isAuthenticated() is False : 
             return None
 
-        params = {}
         return self.get_list( '%s' % (self.REST_VM), 
-                              params, [('vm', VirtualMachine)])
+                              [('vm', VirtualMachine)])
 
     def getVM(self, id):
         if self.isAuthenticated() is False : 
             return None
 
-        params = {}
         return self.get_object( '%s/%s/' % (self.REST_VM, id), 
-                                params, VirtualMachine)
+                                VirtualMachine)
     
     #===========================================================================
     # Provider function
@@ -348,17 +337,15 @@ class SCConnection(SCQueryConnection):
         if self.isAuthenticated() is False : 
             return None
 
-        params = {}
         return self.get_list( '%s' % (self.REST_PROVIDER), 
-                              params, [('provider', Provider)])
+                              [('provider', Provider)])
 
     def getProvider(self, name):
         if self.isAuthenticated() is False : 
             return None
 
-        params = {}
         return self.get_object( '%s/%s/' % (self.REST_PROVIDER, name), 
-                                params, Provider)
+                                Provider)
     
     #---------------------------------------------------------------------------
     # key request
@@ -367,17 +354,15 @@ class SCConnection(SCQueryConnection):
         if self.isAuthenticated() is False : 
             return None
         
-        params = {}
         return self.get_list( '%s' % (self.REST_KEY_REQUEST), 
-                              params, [('devicekeyrequest', KeyRequest)])
+                              [('devicekeyrequest', KeyRequest)])
 
     def listKeyRequest(self, id):
         if self.isAuthenticated() is False : 
             return None
         
-        params = {}
         return self.get_object( '%s/%s/' % (self.REST_KEY_REQUEST, id ), 
-                                params, KeyRequest)
+                                KeyRequest)
 
     #---------------------------------------------------------------------------
     # # Administration - Settings
@@ -386,15 +371,15 @@ class SCConnection(SCQueryConnection):
         if self.isAuthenticated() is False:
             return None
         
-        return self.get_object('%s/' % (self.REST_DSM_SETTING), 
-                               {}, DSMConnSettings)
+        return self.get_object( '%s/' % (self.REST_DSM_SETTING), 
+                                DSMConnSettings)
 
     def getKMIPSetting(self):
         if self.isAuthenticated() is False:
             return None
         
-        return self.get_object('%s/%s/' % (self.REST_KMIP_SETTING, 'setting'), 
-                               {}, KMIPConnSettings)
+        return self.get_object( '%s/%s/' % (self.REST_KMIP_SETTING, 'setting'), 
+                                KMIPConnSettings)
 
     #---------------------------------------------------------------------------
     # # Administration - Account
@@ -404,7 +389,7 @@ class SCConnection(SCQueryConnection):
             return None
 
         # get account info with current connection
-        return self.get_object('%s/' % (self.REST_ACCOUNT), {}, Account)
+        return self.get_object('%s/' % (self.REST_ACCOUNT), Account)
 
     #---------------------------------------------------------------------------
     # # Administration - Timezon
@@ -414,7 +399,26 @@ class SCConnection(SCQueryConnection):
             return None
 
         # get account info with current connection
-        return self.get_list('%s/' % (self.REST_TIMEZONE), {}, 
+        return self.get_list('%s/' % (self.REST_TIMEZONE),
                              [('timezoneList', Timezone)] )
         
+    #---------------------------------------------------------------------------
+    # # Administration - Server Status
+    #---------------------------------------------------------------------------
+    def getEntrypoint(self):
+        if self.isAuthenticated() is False:
+            return None
+
+        # get account info with current connection
+        return self.get_status('%s/' % (self.REST_ENTRYPOINT) )
+
+    #---------------------------------------------------------------------------
+    # # Administration - License status
+    #---------------------------------------------------------------------------
+    def getLicense(self):
+        if self.isAuthenticated() is False:
+            return None
+
+        # get account info with current connection
+        return self.get_object('%s/' % (self.REST_LICENSE), License )
     

@@ -4,7 +4,7 @@ import logging
 
 from sclib.sc.securitygroup import SecurityGroup
 from sclib.sc.instance import VirtualMachine, Image
-from tests.unit import config, logging
+from tests.unit import logging
 from tests.unit.sc import SCBaseTestCase
 
 class SCSecurityGroupTest(SCBaseTestCase):

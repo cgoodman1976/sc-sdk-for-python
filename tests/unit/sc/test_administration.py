@@ -22,7 +22,7 @@
 #
 
 import unittest
-from sclib.sc.administration import Timezone
+from sclib.sc.administration import Timezone, License
 from tests.unit.sc import SCBaseTestCase
 
 class SCAdministrationTest(SCBaseTestCase):
@@ -30,13 +30,23 @@ class SCAdministrationTest(SCBaseTestCase):
         SCBaseTestCase.setUp(self)
 
         #===== implement initial code here for each test =====
-        pass
 
     def testListTimezone(self):
         timezones = self.connection.listTimezone()
         self.assertNotEqual(timezones.__len__, 0)
 
         # put validation code here
+
+    def testServiceStatus(self):
+        #status = self.connection.getServiceStatus()
+        status = self.connection.getEntrypoint()
+        self.assertEqual(status, 200)
+ 
+    def testGetLicense(self):
+        license = self.connection.getLicense()
+        self.assertNotEqual(license, None)
+        if license:
+            self.assertEqual(license.verifyStatus, 'VALID')
 
 
 if __name__ == '__main__':

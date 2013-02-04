@@ -161,8 +161,7 @@ class KMIPConnSettings(SCObject):
 
 
 class Timezone(SCObject):
-    ValidAttributes = ['baseUtcOffset', 'timezonEn', 
-                       'timezoneId']
+    ValidAttributes = ['baseUtcOffset', 'timezonEn', 'timezoneId']
     
     def __init__(self, connection):
         SCObject.__init__(self, connection)
@@ -179,7 +178,7 @@ class Timezone(SCObject):
         
         if name == 'timezone':
             for key, value in attrs.items():
-                setattr(self, name, value)
+                setattr(self, key, value)
         else:
             return None
 
@@ -194,3 +193,57 @@ class Timezone(SCObject):
             if getattr(self, e): setting.attrib[e] = getattr(self, e)
 
         return timezone
+
+class License(SCObject):
+    ValidAttributes = ['ac', 'account', 'activationDate', 'expirationDate', 'expireNotificationDate'
+                       'gracePeriod', 'id', 'inUse', 'isPRLicense', 'isTrial', 'lastUpdate', 'seats'
+                       'updateInterval', 'verifyStatus', 'LicenseProfile']
+    
+    def __init__(self, connection):
+        SCObject.__init__(self, connection)
+        
+        # attributes
+        self.ac = None
+        self.account = None 
+        self.activationDate = None
+        self.expirationDate = None
+        self.expireNotificationDate = None
+        self.gracePeriod = None
+        self.id = None
+        self.inUse = None
+        self.isPRLicense = None
+        self.isTrial = None
+        self.lastUpdate = None
+        self.seats = None
+        self.updateInterval = None
+        self.verifyStatus = None
+        self.LicenseProfile = None
+
+    def startElement(self, name, attrs, connection):
+        ret = SCObject.startElement(self, name, attrs, connection)
+        if ret is not None:
+            return ret
+        
+        if name == 'license':
+            for key, value in attrs.items():
+                setattr(self, key, value)
+        else:
+            return None
+
+    def endElement(self, name, value, connection):
+        if name == 'LicenseProfile':
+            self.LicenseProfile = value
+        else:
+            setattr(self, name, value)
+            
+    def buildElements(self):
+        license = ElementTree.Element('license')
+
+        # build attributes
+        for e in self.ValidAttributes:
+            if getattr(self, e): setting.attrib[e] = getattr(self, e)
+
+        if self.LicenseProfile: 
+            ElementTree.SubElement(license, "LicenseProfile").text = self.LicenseProfile
+
+        return license
