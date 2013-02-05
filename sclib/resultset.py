@@ -40,28 +40,24 @@ class ResultSet(list):
     will be created and popped onto the stack.
 
     """
-    def __init__(self, marker_elem=None):
+    def __init__(self, marker_elem=None, marker=None):
         list.__init__(self)
         if isinstance(marker_elem, list):
             self.markers = marker_elem
         else:
             self.markers = []
-        self.marker = None
+        self.marker = marker
         self.key_marker = None
         self.status = True
 
     def startElement(self, name, attrs, connection):
         for t in self.markers:
             if name == t[0]:
-                if t[1] is None:
-                    #This is ResultSet name marker
-                    self.marker = name 
-                else:
-                    # This is Object marker
-                    obj = t[1](connection)
-                    obj.startElement(name, attrs, connection)
-                    self.append(obj)
-                    return obj
+                # This is Object marker
+                obj = t[1](connection)
+                obj.startElement(name, attrs, connection)
+                self.append(obj)
+                return obj
         return None
 
     def to_boolean(self, value, true_value='true'):
@@ -73,10 +69,6 @@ class ResultSet(list):
     def endElement(self, name, value, connection):
         if name == 'return':
             self.status = self.to_boolean(value)
-        elif name == 'StatusCode':
-            self.status = self.to_boolean(value, 'Success')
-        elif name == 'IsValid':
-            self.status = self.to_boolean(value, 'True')
         else:
             setattr(self, name, value)
 

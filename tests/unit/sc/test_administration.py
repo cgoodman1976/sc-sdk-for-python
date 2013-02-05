@@ -48,6 +48,16 @@ class SCAdministrationTest(SCBaseTestCase):
         if license:
             self.assertEqual(license.verifyStatus, 'VALID')
 
+    def testListLanguages(self):
+        langs = self.connection.listLanguages()
+        self.assertNotEqual(langs, None)
+        if langs:
+            for i in langs:
+                if i.languageCode == 'en                  ':
+                    self.assertEqual(i.isDefault, 'true')
+                else:
+                    self.assertEqual(i.isDefault, 'false')
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -159,6 +159,39 @@ class KMIPConnSettings(SCObject):
 
         return setting
 
+class Language(SCObject):
+    ValidAttributes = ['isDefault', 'languageCode']
+    
+    def __init__(self, connection):
+        SCObject.__init__(self, connection)
+        
+        # attributes
+        self.isDefault = None
+        self.languageCode = None 
+
+    def startElement(self, name, attrs, connection):
+        ret = SCObject.startElement(self, name, attrs, connection)
+        if ret is not None:
+            return ret
+        
+        if name == 'language':
+            for key, value in attrs.items():
+                setattr(self, key, value)
+        else:
+            return None
+
+    def endElement(self, name, value, connection):
+        setattr(self, name, value)
+            
+    def buildElements(self):
+        language = ElementTree.Element('language')
+
+        # build attributes
+        for e in self.ValidAttributes:
+            if getattr(self, e): setting.attrib[e] = getattr(self, e)
+
+        return language
+
 
 class Timezone(SCObject):
     ValidAttributes = ['baseUtcOffset', 'timezonEn', 'timezoneId']
