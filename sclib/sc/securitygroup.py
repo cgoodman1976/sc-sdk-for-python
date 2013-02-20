@@ -82,12 +82,10 @@ class SecurityGroup(SCObject):
             return self
         elif name == 'securityRuleList':
             if not self.securityRuleList:
-                self.securityRuleList = ResultSet([('securityRule', SecurityRule)])
-                self.securityRuleList.marker = name
+                self.securityRuleList = ResultSet([('securityRule', SecurityRule)], name)
             return self.securityRuleList
         elif name == 'imageList':
-            self.imageList = ResultSet( [('image', Image)])
-            self.imageList.marker = name
+            self.imageList = ResultSet( [('image', Image)], name)
             return self.imageList
         elif name == 'successAction':
             self.successAction = SecurityGroupAction(name, connection)
@@ -166,8 +164,7 @@ class SecurityRule(SCObject):
             self.securityRuleType.startElement(name, attrs, connection)
             return self.securityRuleType
         elif name == 'deviceList':
-            self.deviceList = ResultSet([('device', Device)])
-            self.deviceList.marker = 'deviceList'
+            self.deviceList = ResultSet([('device', Device)], name)
             return self.deviceList
         elif name == 'securityRuleConditionList':
             self.securityRuleConditionList = ResultSet([('securityRuleCondition', SecurityRuleCondition)], name)

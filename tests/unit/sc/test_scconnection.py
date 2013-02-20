@@ -15,13 +15,7 @@ class SCConnectionTest(SCBaseTestCase):
 
         #===== implement initial code here for each test =====
         pass
- 
-    def testListAllDevice(self):
-        devicelist = self.connection.listAllDevices()
-        for dev in devicelist:
-            xml_pretty = dev.niceFormat()
-            logging.debug(xml_pretty)
-            
+             
     def testListAllUsers(self):
         userlist = self.connection.listAllUsers()
         for user in userlist:

@@ -97,8 +97,7 @@ class VirtualMachine(SCObject):
             self.securecloudAgent.startElement(name, attrs, connection)
             return self.securecloudAgent
         elif name == 'devices':
-            self.devices = ResultSet([('device', Device)])
-            self.devices.name = name
+            self.devices = ResultSet([('device', Device)], name)
             return self.devices
         else:
             return None

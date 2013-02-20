@@ -33,7 +33,7 @@ from sclib.sc.instance import VirtualMachine, Instance
 from sclib.sc.provider import Provider
 from sclib.sc.keyrequest import KeyRequest
 from sclib.sc.securitygroup import SecurityGroup, SecurityRule, SecurityRuleType
-from sclib.sc.administration import DSMConnSettings, KMIPConnSettings, Timezone, Language
+from sclib.sc.administration import DSMConnSettings, KMIPConnSettings, Timezone, Language, License
 
 from xml.dom.minidom import parse, parseString
 from xml.etree import ElementTree
@@ -206,22 +206,23 @@ class SCConnection(SCQueryConnection):
         return True
   
     #===========================================================================
-    # # functions - Device
+    # # functions - Device (API Retired)
     #===========================================================================
     
-    def listAllDevices(self):
-        if self.authentication is None: 
-            return None
-    
-        return self.get_list( '%s' % (self.REST_DEVICE),
-                              [('device', Device)])
 
-    def getDevice(self, guid):
-        if self.authentication is None: 
-            return None
-    
-        return self.get_object( '%s/%s/' % (self.REST_DEVICE, guid), 
-                                Device)
+    #def listAllDevices(self):
+    #    if self.authentication is None: 
+    #        return None
+    #
+    #    return self.get_list( '%s' % (self.REST_DEVICE),
+    #                          [('device', Device)])
+
+    #def getDevice(self, guid):
+    #    if self.authentication is None: 
+    #        return None
+    #
+    #    return self.get_object( '%s/%s/' % (self.REST_DEVICE, guid), 
+    #                            Device)
 
     #===========================================================================
     # # function - Policy/SecurityGroup
