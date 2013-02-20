@@ -57,6 +57,14 @@ class SCVirtualMachineTest(SCBaseTestCase):
             for dev in newvm.devices:
                 d = newvm.getDevice(dev.id)
 
+    def testCreateRAID(self):
+        vm  = self.connection.getVM('8dbf182f-0a1a-43b5-93ae-b4354252059c')
+        devicelist = []
+        devicelist.append('596364df-05f3-48d7-aa86-5223897421d1')
+        devicelist.append('31932062-5d64-46a6-b637-ac96dfc0c9e3')
+
+        raid = vm.createRAID0('template', 'ext3', '/mnt/template', devicelist)
+
     def testCreateDeleteVM(self):
         pass
 

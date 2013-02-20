@@ -114,8 +114,7 @@ class SecurityGroup(SCObject):
             if getattr(self, e): group.attrib[e] = getattr(self, e)
 
         if self.description:
-            description = ElementTree.SubElement(group, "description")
-            description.text = self.description
+            ElementTree.SubElement(group, "description").text = self.description
 
         # actions
         if self.successAction: group.append( self.successAction.buildElements() )
@@ -171,8 +170,7 @@ class SecurityRule(SCObject):
             self.deviceList.marker = 'deviceList'
             return self.deviceList
         elif name == 'securityRuleConditionList':
-            self.securityRuleConditionList = ResultSet([('securityRuleCondition', SecurityRuleCondition)])
-            self.securityRuleConditionList.marker = 'securityRuleConditionList'
+            self.securityRuleConditionList = ResultSet([('securityRuleCondition', SecurityRuleCondition)], name)
             return self.securityRuleConditionList
         else:
             return None

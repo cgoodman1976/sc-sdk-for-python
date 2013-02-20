@@ -48,7 +48,6 @@ class Device(SCObject):
 
         self.info = None
         self.detachable = None
-        self.description = None
         self.lastModified = None
         self.writeAccess = None
 
@@ -57,15 +56,27 @@ class Device(SCObject):
         self.provisionProgress = None
         self.provisionState = None
         self.raidLevel = None
+
+        # elements
+        self.description = None
+        self.fileSystem = None
         
         # subDevices List
-        self.subDevices = None
+        self.__subDevices = ResultSet([('subDevices', Device)], 'subDevices')
         # volume object
         self.volume = None
         # provider object
         self.provider = None
         # partition list
         self.partitionList = None
+
+    # ---------------
+    # properties
+    # ---------------  
+    @property
+    def subDevices(self):
+        return self.__subDevices
+
         
     def startElement(self, name, attrs, connection):
         ret = SCObject.startElement(self, name, attrs, connection)
@@ -85,12 +96,10 @@ class Device(SCObject):
             self.provider.startElement(name, attrs, connection)
             return self.provider
         elif name == 'partitionList':
-            partitionList = ResultSet([('partition', Partition)])
-            partitionList.name = name
+            partitionList = ResultSet([('partition', Partition)], name)
             return self.partitionList
         elif name == 'subDevices':
-            self.subDevices = ResultSet([('subDevices', Device)])
-            self.subDevices.name = name
+            self.__subDevices = ResultSet([('subDevices', Device)], name)
             return self.subDevices
         else:
             return None
@@ -99,6 +108,8 @@ class Device(SCObject):
         
         if name == 'description':
             self.description = value
+        elif name =='fileSystem':
+            self.fileSystem = value
         else:
             setattr(self, name, value)
 
@@ -109,15 +120,16 @@ class Device(SCObject):
         for e in self.ValidAttributes:
             if getattr(self, e): device.attrib[e] = getattr(self, e)
 
-        if self.description:
-            description = ElementTree.SubElement(device, "description")
-            description.text = self.description
+        if self.description: 
+            ElementTree.SubElement(device, 'description').text = self.description
+        if self.fileSystem: 
+            ElementTree.SubElement(device, 'fileSystem').text = self.fileSystem
 
         # inner objects
         if self.partitionList: device.append(self.partitionList.buildElements())
         if self.volume: device.append(self.volume.buildElements())
         if self.provider: device.append(self.provider.buildElements())
-        if self.subDevices: device.append(self.subDevices.buildElements())
+        if self.__subDevices: device.append(self.__subDevices.buildElements())
             
         return device
 

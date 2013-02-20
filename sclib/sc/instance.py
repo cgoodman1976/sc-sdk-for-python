@@ -20,9 +20,11 @@
 # IN THE SOFTWARE.
 #
 
+import uuid
+
 from sclib.resultset import ResultSet
 from sclib.sc.scobject import SCObject
-from sclib.sc.device import Device
+from sclib.sc.device import Device, Volume
 from sclib.sc.provider import Provider
 from xml.etree import ElementTree
 
@@ -157,7 +159,6 @@ class VirtualMachine(SCObject):
         #-----------------------------------------------------------------------
         action = 'vm/%s/device/%s/' % (self.imageGUID, deviceID)
         return self.connection.get_object(action, Device)
-
     
     def deleteDevice(self, deviceID):
         #-----------------------------------------------------------------------
@@ -167,8 +168,27 @@ class VirtualMachine(SCObject):
         
         action = 'vm/%s/device/%s/' % (self.imageGUID, deviceID)
         return self.connection.get_status(action, method='DELETE')
-        
+       
+    def createRAID0(self, name, filesystem, mountpoint, device_id_list):
 
+        # create raid device object
+        dev = Device(self.connection)
+        dev.name = name
+        dev.msUID = str(uuid.uuid4())
+        dev.raidLevel = 'RAID0'
+        dev.fileSystem = filesystem
+        dev.volume = Volume(self.connection)
+        dev.volume.mountPoint = mountpoint
+
+        for d in device_id_list:
+            new = Device(self.connection)
+            new.msUID = d
+            dev.subDevices.append(new)
+
+        # call create RAID API
+        action = 'vm/createraid/%s/' % (self.imageGUID)
+        data = dev.tostring()
+        return self.connection.get_status(action, Device, data=data, method='POST')
 
 class SCAgent(SCObject):
     
