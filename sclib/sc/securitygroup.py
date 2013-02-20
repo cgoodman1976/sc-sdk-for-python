@@ -62,15 +62,13 @@ class SecurityGroup(SCObject):
         self.RevokeIntervalNumber = None
         self.description = None
         #rules
-        self.securityRuleList = ResultSet([('securityRule', SecurityRule)])
-        self.securityRuleList.marker = 'securityRuleList'
+        self.securityRuleList = ResultSet([('securityRule', SecurityRule)], 'securityGroupList')
         #action
         self.successAction = None
         self.failedAction = None
         self.integrityAction = None
         #image or vm
-        self.imageList = ResultSet( [('image', Image)])
-        self.imageList.marker = 'imageList'
+        self.imageList = ResultSet( [('image', Image)], 'imageList')
         
         
     def startElement(self, name, attrs, connection):

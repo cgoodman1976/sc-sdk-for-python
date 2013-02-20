@@ -36,6 +36,19 @@ class SCSecurityGroupTest(SCBaseTestCase):
             xml_pretty = newrule.niceFormat()
             logging.debug(xml_pretty)
 
+    def testCreatePolicy(self):
+
+        policyName="mapi_test"
+
+
+        # create policy
+        policy = self.connection.createSecurityGroup(policyName)
+        self.assertNotEqual(policy, None)
+
+        res = self.connection.deleteSecurityGroup(policy.id)
+        self.assertEqual(res, 200)
+
+
     def testAddVM(self):
         policys = self.connection.listAllSecurityGroup()
         self.vms = self.connection.listAllVM()

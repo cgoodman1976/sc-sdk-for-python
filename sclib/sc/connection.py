@@ -241,6 +241,22 @@ class SCConnection(SCQueryConnection):
                                 SecurityGroup)
         return rule
 
+    def createSecurityGroup(self, name):
+        if self.authentication is None: 
+            return None
+
+        policy = SecurityGroup(self)
+        policy.name = name
+        data = policy.tostring()
+        policy = self.get_object( '%s/' % (self.REST_SECURITY_GROUP), 
+                                 SecurityGroup, data=data, method='POST')
+    def deleteSecurityGroup(self, id):
+        if self.authentication is None: 
+            return None
+
+        policy = self.get_status( '%s/%s/' % (self.REST_SECURITY_GROUP, id), 
+                                  method='DELETE')
+
     def listAllSecurityRuleTypes(self):
         if self.authentication is None: 
             return None

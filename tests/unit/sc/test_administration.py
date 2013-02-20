@@ -53,6 +53,7 @@ class SCAdministrationTest(SCBaseTestCase):
         self.assertNotEqual(langs, None)
         if langs:
             for i in langs:
+                # test for default value
                 if i.languageCode == 'en                  ':
                     self.assertEqual(i.isDefault, 'true')
                 else:

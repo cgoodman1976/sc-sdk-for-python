@@ -46,9 +46,13 @@ class ResultSet(list):
             self.markers = marker_elem
         else:
             self.markers = []
-        self.marker = marker
+        self.__marker = marker
         self.key_marker = None
         self.status = True
+
+    @property
+    def marker(self):
+        return self.__marker
 
     def startElement(self, name, attrs, connection):
         for t in self.markers:
