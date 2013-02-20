@@ -387,7 +387,7 @@ class SCAuthConnection:
         self.opener.close()
 
         # compact field
-        sclib.log.debug('closing all HTTP connections')
+        sclib.log.debug('----- closing all HTTP connections -----')
         self._connection = None
 
 

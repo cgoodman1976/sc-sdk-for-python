@@ -35,10 +35,7 @@ class VirtualMachine(SCObject):
     #===========================================================================
     # present vm object
     #===========================================================================
-    
-    # Required fields
-    Required = ['imageGUID', 'imageName', 'autoProvision', 'SecurityGroupGUID', 'imageDescription']
-    
+        
     # Present valid vm object attributes, not inner objects
     ValidAttributes = [ 'SecurityGroupGUID', 'autoProvision',
                         'detectedKeyCount', 'encryptedDeviceCount', 'encryptingDeviceCount', 'href',
@@ -154,12 +151,12 @@ class VirtualMachine(SCObject):
         action = 'vm/%s/' % self.imageGUID
         return self.connection.get_status(action, method='DELETE')
 
-    def listDevices(self):
+    def getDevice(self, deviceID):
         #-----------------------------------------------------------------------
         # list all devices
         #-----------------------------------------------------------------------
-        action = 'vm/%s/device/' % self.imageGUID
-        return self.connection.get_list(action, [('device', Device)])
+        action = 'vm/%s/device/%s/' % (self.imageGUID, deviceID)
+        return self.connection.get_object(action, Device)
 
     
     def deleteDevice(self, deviceID):

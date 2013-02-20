@@ -54,7 +54,8 @@ class SCVirtualMachineTest(SCBaseTestCase):
         for vm in self.vms:
             newvm = self.connection.getVM(vm.imageGUID)
             
-            devs = newvm.listDevices()
+            for dev in newvm.devices:
+                d = newvm.getDevice(dev.id)
 
     def testCreateDeleteVM(self):
         pass

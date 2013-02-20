@@ -26,10 +26,16 @@ from sclib.sc.provider import Provider
 from xml.etree import ElementTree
 
 class Device(SCObject):
+    
+    ValidAttributes = [ 'id', 'msUID', "name", 'href',
+                        'deviceType', 'cspDeviceType', 'deviceState', 'deviceStatus',
+                        'info', 'detachable', 'description', 'lastModified', 'writeAccess', 
+                        'EncryptedName', 'partitionType', 'provisionProgress', 'provisionState', 
+                        'raidLevel']
+
     def __init__(self, connection):
         SCObject.__init__(self, connection)
         # Device attributes
-        self.msUID = None
         self.id = None
         self.msUID = None
         self.name = None
@@ -50,13 +56,16 @@ class Device(SCObject):
         self.partitionType = None
         self.provisionProgress = None
         self.provisionState = None
+        self.raidLevel = None
         
+        # subDevices List
+        self.subDevices = None
         # volume object
         self.volume = None
         # provider object
         self.provider = None
-        # pritition list
-        self.partitions = None
+        # partition list
+        self.partitionList = None
         
     def startElement(self, name, attrs, connection):
         ret = SCObject.startElement(self, name, attrs, connection)
@@ -76,10 +85,13 @@ class Device(SCObject):
             self.provider.startElement(name, attrs, connection)
             return self.provider
         elif name == 'partitionList':
-            self.partitions = ResultSet([('partition', Partition)])
-            self.partitions.name = name
-            return self.partitions
-
+            partitionList = ResultSet([('partition', Partition)])
+            partitionList.name = name
+            return self.partitionList
+        elif name == 'subDevices':
+            self.subDevices = ResultSet([('subDevices', Device)])
+            self.subDevices.name = name
+            return self.subDevices
         else:
             return None
 
@@ -92,24 +104,20 @@ class Device(SCObject):
 
     def buildElements(self, elements = None):
         device = ElementTree.Element('device')
-        device.attrib['version'] = '3.5'
 
-        # my attributes
-        if self.msUID:    device.attrib['msUID'] = self.msUID
-        if self.id:     device.attrib['id'] = self.id
-        if self.name:   device.attrib['name'] = self.name
-        if self.href:   device.attrib['href'] = self.href
-        if self.cspDeviceType:   device.attrib['cspDeviceType'] = self.cspDeviceType
-        if self.info:   device.attrib['info'] = self.info
-        if self.lastModified:   device.attrib['lastModified'] = self.lastModified
-        if self.writeAccess: device.attrib['writeaccess'] = self.writeAccess
-        if self.provisionState:   device.attrib['provisionState'] = self.provisionState
+        # build attributes
+        for e in self.ValidAttributes:
+            if getattr(self, e): device.attrib[e] = getattr(self, e)
+
         if self.description:
             description = ElementTree.SubElement(device, "description")
             description.text = self.description
+
         # inner objects
+        if self.partitionList: device.append(self.partitionList.buildElements())
         if self.volume: device.append(self.volume.buildElements())
         if self.provider: device.append(self.provider.buildElements())
+        if self.subDevices: device.append(self.subDevices.buildElements())
             
         return device
 
@@ -117,9 +125,8 @@ class Device(SCObject):
     
     def update(self):
         # Build XML elements structures
-        action = 'device/' + self.msUID + '/'
-        req_element = self.buildElements()
-        data = ElementTree.tostring(req_element)
+        action = 'device/%s/' % (self.msUID)
+        data = self.tostring()
         response = self.connection.make_request(action, data=data, method='POST')
         return response
         
