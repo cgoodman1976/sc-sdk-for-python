@@ -6,6 +6,10 @@ python interface SDK for SecureCloud Management API
 - PyCrypto >= 2.6
 	- https://pypi.python.org/pypi/pycrypto
 	- For windows pre-compiled version at http://www.voidspace.org.uk/python/modules.shtml#pycrypto
+	
+## SCLIB Installation (optional)
+- Install sclib package to python
+	> python setup.py install
 
 ## SCLIB Configuration
 
@@ -22,17 +26,14 @@ Config sample:
 	[connection]
 	MS_HOST = https://ms.cloud9.identum.com:7443/broker/API.svc/v3.5
 	MS_BROKER_PATH = /broker/API.svc/v3.5/
-	MS_BROKER_NAME = bobby
+	MS_BROKER_NAME = <your broker name>
 	MS_BROKER_PASSPHASE = <your passphase>
 
 	[authentication]
-	AUTH_NAME = bobby_chien@trendmicro.com
+	AUTH_NAME = <your account(email)>
 	AUTH_PASSWORD = <your password>
 
 ## Unit Test
-
-### Configuration:
-	/tests/unit/test.cfg
 
 ### Testing:
 	cd tests/unit/
