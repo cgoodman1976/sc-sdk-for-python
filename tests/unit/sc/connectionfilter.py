@@ -26,7 +26,7 @@ class SCConnectionFilter(SCConnection):
     def make_request(self, action='', params=None, headers=None, data='', method='GET'):
 
         fake = None
-        resfile = reqfile = action.replace('/', '^')
+        resfile = reqfile = action.replace('/', '.')
         reqfile = os.path.join(self.result_path, '[Request]-%s %s.xml' % (method, reqfile ) )
         resfile = os.path.join(self.result_path, '[Response]-%s %s.xml' % (method, resfile) )
 
