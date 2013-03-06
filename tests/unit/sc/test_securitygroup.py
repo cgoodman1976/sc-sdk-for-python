@@ -3,7 +3,7 @@ import unittest
 import logging
 
 from sclib.sc.securitygroup import SecurityGroup
-from sclib.sc.instance import VirtualMachine, Image
+from sclib.sc.instance import VirtualMachine
 from tests.unit import logging
 from tests.unit.sc import SCBaseTestCase
 
@@ -36,6 +36,16 @@ class SCSecurityGroupTest(SCBaseTestCase):
             xml_pretty = newrule.niceFormat()
             logging.debug(xml_pretty)
 
+    def testGetPolicy(self):
+
+        target_id = '245e35df-492a-40c8-8543-b07e1e252744'
+        policy = self.connection.getSecurityGroup(target_id)    
+
+        self.assertEqual(policy.name, 'Default Policy')
+        self.assertEqual(policy.id, target_id)
+        self.assertEqual(policy.EnableIC, 'false')
+
+
     def testCreatePolicy(self):
 
         policyName="mapi_test"
@@ -66,29 +76,26 @@ class SCSecurityGroupTest(SCBaseTestCase):
             elif policy.name == 'TESTING':
                 test_policy = sec
 
+        # move all vm into test policy
         for vm in self.vms:
-            new_image = Image(self.connection)
-            new_image.id = vm.imageID
-            #new_image.msUID = vm.imageGUID
-            test_policy.imageList.append(new_image)
+            new_vm = VirtualMachine(self.connection)
+            new_vm.imageID = vm.imageID
+            test_policy.vmList.append(new_vm)
 
         response = None
         test_policy.RevokeIntervalNumber = '59'
         response = test_policy.update()
         self.assertEqual(response.code, 200)
 
+        # move all vm back to default policy
         for vm in self.vms:
-            new_image = Image(self.connection)
-            new_image.id = vm.imageID
-            #new_image.msUID = vm.imageGUID
-            default_policy.imageList.append(new_image)
+            new_vm = VirtualMachine(self.connection)
+            new_vm.imageID = vm.imageID
+            default_policy.vmList.append(new_vm)
 
         default_policy.RevokeIntervalNumber = '59'
         response = default_policy.update()
         self.assertEqual(response.code, 200)
-
-
-
         
 
 if __name__ == '__main__':

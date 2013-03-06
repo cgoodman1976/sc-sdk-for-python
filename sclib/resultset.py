@@ -77,7 +77,6 @@ class ResultSet(list):
             setattr(self, name, value)
 
     def buildElements(self):
-
         # enumerate all objects in list
         root = None
         if self.marker:

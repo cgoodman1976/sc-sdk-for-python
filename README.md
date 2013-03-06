@@ -9,6 +9,7 @@ python interface SDK for SecureCloud Management API
 
 ## Install SCLIB (optional)
 - Install sclib package to python
+
 	> python setup.py install
 
 ## SCLIB Configuration
@@ -43,8 +44,10 @@ Config sample:
 ###Unit Test Result:
 
 Default result folder:
-<sc-sdk-for-python>/tests/unit/result/
+
+    <sc-sdk-for-python>/tests/unit/result/
 
 Naming Convention:
-Request Message: <result>/<TestClassName>.<TestMethod>/[Request]-<method> <api>.xml
-Response message: <result>/<TestClassName>.<TestMethod>/[Response]-<method> <api>.xml
+
+    Request Message: <result>/<TestClassName>.<TestMethod>/[Request]-<method> <api>.xml
+    Response message: <result>/<TestClassName>.<TestMethod>/[Response]-<method> <api>.xml

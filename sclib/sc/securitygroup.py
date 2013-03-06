@@ -23,7 +23,7 @@
 from sclib.resultset import ResultSet
 from sclib.sc.scobject import SCObject
 from sclib.sc.device import Device
-from sclib.sc.instance import VirtualMachine, Image
+from sclib.sc.instance import VirtualMachine
 from xml.etree import ElementTree
 
 
@@ -54,7 +54,6 @@ class SecurityGroup(SCObject):
         self.href = None
         self.lastModified = None
         self.ruleCount = None
-        self.imageCount = None
         self.EnableIC = None
         self.ICAction = None
         self.PostponeEnable = None
@@ -67,9 +66,18 @@ class SecurityGroup(SCObject):
         self.successAction = None
         self.failedAction = None
         self.integrityAction = None
-        #image or vm
-        self.imageList = ResultSet( [('image', Image)], 'imageList')
-        
+        #vm
+        self.__vmList = ResultSet( [('vm', VirtualMachine)], 'vmList')
+    
+    @property
+    def vmList(self):
+        return self.__vmList
+
+    def addVM(self, vm):
+        if isInstance(vm, VirtualMachine):
+            return self.__vmList.append(vm)
+
+    # Parse functions
         
     def startElement(self, name, attrs, connection):
         ret = SCObject.startElement(self, name, attrs, connection)
@@ -78,15 +86,16 @@ class SecurityGroup(SCObject):
         
         if name == 'securityGroup':
             for key, value in attrs.items():
-                setattr(self, key, value)
+                if key in self.ValidAttributes: 
+                    setattr(self, key, value)
             return self
         elif name == 'securityRuleList':
             if not self.securityRuleList:
                 self.securityRuleList = ResultSet([('securityRule', SecurityRule)], name)
             return self.securityRuleList
-        elif name == 'imageList':
-            self.imageList = ResultSet( [('image', Image)], name)
-            return self.imageList
+        elif name == 'vmList':
+            self.__vmList = ResultSet( [('vm', VirtualMachine)], name)
+            return self.vmList
         elif name == 'successAction':
             self.successAction = SecurityGroupAction(name, connection)
             return self.successAction.startElement(name, attrs, connection)
@@ -109,7 +118,7 @@ class SecurityGroup(SCObject):
         # build Required elements
         # build attributes
         for e in self.ValidAttributes:
-            if getattr(self, e): group.attrib[e] = getattr(self, e)
+            if getattr(self, e, None): group.attrib[e] = getattr(self, e)
 
         if self.description:
             ElementTree.SubElement(group, "description").text = self.description
@@ -118,8 +127,13 @@ class SecurityGroup(SCObject):
         if self.successAction: group.append( self.successAction.buildElements() )
         if self.failedAction: group.append( self.failedAction.buildElements() )
 
-        # append inner objects
-        if self.imageList: group.append( self.imageList.buildElements() )
+        # Here is workaround to build vmList
+        vmList = ElementTree.SubElement(group, 'vmList')
+        vms = ElementTree.SubElement(vmList, 'vms')
+        for vm in self.vmList:
+            vms.append(vm.buildElements())
+
+        # append security rule list
         if self.securityRuleList: group.append( self.securityRuleList.buildElements() )
 
         return group

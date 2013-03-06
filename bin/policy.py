@@ -28,13 +28,17 @@ from optparse import OptionParser
 import sclib
 from sclib.sc.connection import SCConnection
 from sclib.sc.securitygroup import SecurityGroup
-from sclib.sc.instance import VirtualMachine, Image
+from sclib.sc.instance import VirtualMachine
 
 def printPolicy(policy):
-    print 'Name: %s' % (policy.name)
-    print 'ID: %s' % (policy.id)
-    print 'Number of Images: %s' % (policy.imageCount)
-    print 'Integrity Check: %s' % (policy.EnableIC)
+    print 'Name\t\t\t: %s' % (policy.name)
+    print 'ID\t\t\t: %s' % (policy.id)
+    print 'Integrity Check\t\t: %s' % (policy.EnableIC)
+    print 'Number of VM\t\t: %s' % (policy.imageCount)
+    if len(policy.vmList):
+        print 'VM List\t\t\t:'
+        for vm in policy.vmList:
+            print '%s\t%s' % (vm.imageGUID, vm.imageID)
     print ''
 
 def listAllSecurityGroup():
@@ -54,9 +58,9 @@ def listSecurityGroup(id):
     return policy   
 
 def addVM(policy, vmid):
-    new_image = Image(policy.connection)
-    new_image.id = vmid
-    policy.imageList.append(new_image)
+    new_image = VirtualMachine(policy.connection)
+    new_image.imageID = vmid
+    policy.vmList.append(new_image)
     policy.update()
 
 

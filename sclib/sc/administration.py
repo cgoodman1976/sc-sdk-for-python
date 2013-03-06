@@ -25,7 +25,8 @@ from xml.etree import ElementTree
 
 class DSMConnSettings(SCObject):
     
-    ValidAttributes = ['Enabled', 'ServerAddress', 'Port', 'Tenant', 'Username', 'Password']
+    ValidAttributes = ['Enabled', 'ServerAddress', 'Port', 
+                       'Tenant', 'Username', 'Password']
     
     def __init__(self, connection):
         SCObject.__init__(self, connection)
@@ -43,7 +44,8 @@ class DSMConnSettings(SCObject):
         
         if name == 'DSMConnSettings':
             for key, value in attrs.items():
-                setattr(self, key, value)
+                if key in self.ValidAttributes:
+                    setattr(self, key, value)
         else:
             return None
 
@@ -117,7 +119,8 @@ class KMIPConnSettings(SCObject):
         
         if name == 'kmipConnectionSetting':
             for key, value in attrs.items():
-                setattr(self, key, value)
+                if key in self.ValidAttributes:
+                    setattr(self, key, value)
         else:
             return None
 
@@ -211,7 +214,8 @@ class Timezone(SCObject):
         
         if name == 'timezone':
             for key, value in attrs.items():
-                setattr(self, key, value)
+                if key in self.ValidAttributes:
+                    setattr(self, key, value)
         else:
             return None
 

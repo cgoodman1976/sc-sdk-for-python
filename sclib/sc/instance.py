@@ -220,43 +220,4 @@ class SCAgent(SCObject):
         if self.agentVersion: agent.attrib['agentVersion'] = self.agentVersion
         return agent
 
-class Image(SCObject):
-
-    # Present valid vm object attributes, not inner objects
-    ValidAttributes = ['id', 'msUID', 'href']
-
-    def __init__(self, connection):
-        # member information
-        self.id = None
-        self.msUID = None
-        self.href = None
-
-    def startElement(self, name, attrs, connection):
-        ret = SCObject.startElement(self, name, attrs, connection)
-        if ret is not None:
-            return ret
-        
-        if name == 'image':
-            # keep all attributes
-            for key, value in attrs.items():
-                setattr(self, key, value)
-            return self
-        else:
-            return None
-
-    def endElement(self, name, value, connection):
-        setattr(self, name, value)
-            
-    def buildElements(self):
-        agent = ElementTree.Element('image')
-        #-----------------------------------------------------------------------
-        # build attributes
-        #-----------------------------------------------------------------------
-        for e in self.ValidAttributes:
-            if getattr(self, e): agent.attrib[e] = getattr(self, e)
-
-        return agent
-
-    
-    
     
