@@ -27,7 +27,7 @@ from optparse import OptionParser
 
 import sclib
 from sclib.sc.connection import SCConnection
-from sclib.sc.securitygroup import SecurityGroup
+from sclib.sc.securitygroup import SecurityGroup, SecurityGroupAction
 from sclib.sc.instance import VirtualMachine
 
 def printPolicy(policy):
@@ -63,14 +63,21 @@ def addVM(policy, vmid):
     policy.vmList.append(new_image)
     policy.update()
 
+def createPolicy(name):
+    policy = conn.createSecurityGroup(name, SecurityGroupAction.Approve, SecurityGroupAction.Deny)
+    if policy:
+        printPolicy(Policy)
+
+    return policy
 
 if __name__ == '__main__':
 
     # commands
-    parser = OptionParser(usage="policy [-i policy_id] [-l] [-a vm_id]")
+    parser = OptionParser(usage="policy [-c name] [-i policy_id] [-l] [-a vm_id]")
     parser.add_option("-a", "--add_vm", help="Add a virtual machine to Policy", dest="vm", default=False, action='store')
     parser.add_option("-i", "--policy_id", help="", dest="id", default='', action='store')
     parser.add_option("-l", "--list", help="", dest='list', default=False, action='store_true')
+    parser.add_option("-c", "--create", help="Create new Policy", dest="create", default=None, action='store')
     (options, args) = parser.parse_args()
 
 
@@ -81,6 +88,9 @@ if __name__ == '__main__':
     if conn:
         auth = conn.basicAuth( sclib.__config__.get_value('authentication', 'AUTH_NAME'),
                                sclib.__config__.get_value('authentication', 'AUTH_PASSWORD'))
+
+        if options.create:
+            policy = createPolicy(options.create)
 
         if options.id:
             # list information of securityGroup

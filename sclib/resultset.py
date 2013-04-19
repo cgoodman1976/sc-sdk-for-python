@@ -89,6 +89,10 @@ class ResultSet(list):
 
 class BooleanResult(object):
 
+    #constant
+    true = 'true'
+    false = 'false'
+
     def __init__(self, marker_elem=None):
         self.status = True
         self.request_id = None
@@ -96,9 +100,9 @@ class BooleanResult(object):
 
     def __repr__(self):
         if self.status:
-            return 'True'
+            return 'true'
         else:
-            return 'False'
+            return 'false'
 
     def __nonzero__(self):
         return self.status

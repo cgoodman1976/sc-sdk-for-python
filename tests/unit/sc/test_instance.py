@@ -50,7 +50,11 @@ class SCVirtualMachineTest(SCBaseTestCase):
             self.assertEqual(updated.imageGUID, target.imageGUID)
 
     def testVM_ListDevices(self):
+
+        # list all Computers
         self.vms = self.connection.listAllVM()
+        self.assertNotEqual(self.vms, None)
+
         for vm in self.vms:
             newvm = self.connection.getVM(vm.imageGUID)
             
@@ -63,10 +67,21 @@ class SCVirtualMachineTest(SCBaseTestCase):
         devicelist.append('596364df-05f3-48d7-aa86-5223897421d1')
         devicelist.append('31932062-5d64-46a6-b637-ac96dfc0c9e3')
 
-        raid = vm.createRAID0('template', 'ext3', '/mnt/template', devicelist)
+        raid = vm.createRAID('template', 'ext3', '/mnt/template', devicelist)
+        self.assertNotEqual(raid, None)
 
     def testCreateDeleteVM(self):
+        vm  = self.connection.getVM('8dbf182f-0a1a-43b5-93ae-b4354252059c')
+        res = vm.encrypt()
+        self.assertEqual(res, 200)
+
+        #res = vm.cancelPending()
+        #self.assertEqual(res, 200)
+
+
+    def testEncryptAndPending(self):
         pass
+
 
 if __name__ == '__main__':
     unittest.main()

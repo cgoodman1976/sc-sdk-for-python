@@ -2,7 +2,7 @@
 import unittest
 import logging
 
-from sclib.sc.securitygroup import SecurityGroup
+from sclib.sc.securitygroup import SecurityGroup, SecurityGroupAction
 from sclib.sc.instance import VirtualMachine
 from tests.unit import logging
 from tests.unit.sc import SCBaseTestCase
@@ -49,11 +49,14 @@ class SCSecurityGroupTest(SCBaseTestCase):
     def testCreatePolicy(self):
 
         policyName="mapi_test"
-
+        sAction=SecurityGroupAction.Approve
+        fAction=SecurityGroupAction.Deny
 
         # create policy
-        policy = self.connection.createSecurityGroup(policyName)
+        policy = self.connection.createSecurityGroup(policyName, sAction, fAction)
         self.assertNotEqual(policy, None)
+        self.assertEqual(policy.successAction.action, sAction)
+        self.assertEqual(policy.failedAction.action, fAction)
 
         res = self.connection.deleteSecurityGroup(policy.id)
         self.assertEqual(res, 200)

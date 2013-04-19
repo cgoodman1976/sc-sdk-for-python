@@ -61,13 +61,13 @@ class SecurityGroup(SCObject):
         self.RevokeIntervalNumber = None
         self.description = None
         #rules
-        self.securityRuleList = ResultSet([('securityRule', SecurityRule)], 'securityGroupList')
+        self.securityRuleList = ResultSet([('securityRule', SecurityRule)], 'securityRuleList')
         #action
         self.successAction = None
         self.failedAction = None
         self.integrityAction = None
         #vm
-        self.__vmList = ResultSet( [('vm', VirtualMachine)], 'vmList')
+        self.__vmList = ResultSet([('vm', VirtualMachine)], 'vmList')
     
     @property
     def vmList(self):
@@ -127,11 +127,12 @@ class SecurityGroup(SCObject):
         if self.successAction: group.append( self.successAction.buildElements() )
         if self.failedAction: group.append( self.failedAction.buildElements() )
 
-        # Here is workaround to build vmList
-        vmList = ElementTree.SubElement(group, 'vmList')
-        vms = ElementTree.SubElement(vmList, 'vms')
-        for vm in self.vmList:
-            vms.append(vm.buildElements())
+        if self.vmList:
+            # ===== Here is workaround to build vmList =====
+            vmList = ElementTree.SubElement(group, 'vmList')
+            vms = ElementTree.SubElement(vmList, 'vms')
+            for vm in self.vmList:
+                vms.append(vm.buildElements())
 
         # append security rule list
         if self.securityRuleList: group.append( self.securityRuleList.buildElements() )
@@ -295,13 +296,18 @@ class SecurityRuleType(SCObject):
 
 class SecurityGroupAction(SCObject):
     ValidAttributes = ['action', 'autoDelay']
-    def __init__(self, actionName, connection):
+
+    # constant 
+    Approve = 'Approve'
+    Deny = 'Deny'
+
+    def __init__(self, connection, actionName, action=None, autoDelay='-1'):
         SCObject.__init__(self, connection)
 
         #member initialization
         self.name = actionName
-        self.action = None
-        self.autoDelay = None
+        self.action = action
+        self.autoDelay = autoDelay
 
     def startElement(self, name, attrs, connection):
         ret = SCObject.startElement(self, name, attrs, connection)

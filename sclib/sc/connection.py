@@ -32,7 +32,7 @@ from sclib.sc.scobject import SCObject
 from sclib.sc.instance import VirtualMachine, Instance
 from sclib.sc.provider import Provider
 from sclib.sc.keyrequest import KeyRequest
-from sclib.sc.securitygroup import SecurityGroup, SecurityRule, SecurityRuleType
+from sclib.sc.securitygroup import SecurityGroup, SecurityRule, SecurityRuleType, SecurityGroupAction
 from sclib.sc.administration import DSMConnSettings, KMIPConnSettings, Timezone, Language, License
 
 from xml.dom.minidom import parse, parseString
@@ -242,15 +242,18 @@ class SCConnection(SCQueryConnection):
                                 SecurityGroup)
         return rule
 
-    def createSecurityGroup(self, name):
+    def createSecurityGroup(self, name, sAction, fAction):
         if self.authentication is None: 
             return None
 
         policy = SecurityGroup(self)
         policy.name = name
+        policy.successAction = SecurityGroupAction(self, 'successAction', sAction)
+        policy.failedAction = SecurityGroupAction(self, 'failedAction', fAction)
         data = policy.tostring()
         policy = self.get_object( '%s/' % (self.REST_SECURITY_GROUP), 
                                  SecurityGroup, data=data, method='POST')
+
     def deleteSecurityGroup(self, id):
         if self.authentication is None: 
             return None
