@@ -163,12 +163,24 @@ class VirtualMachine(SCObject):
         #-----------------------------------------------------------------------
         # delete device inside a virtual machine
         #-----------------------------------------------------------------------
-        ':deviceID the targe device to be delete in a virtual machine'
+        # :deviceID the targe device to be delete in a virtual machine'
         
         action = 'vm/%s/device/%s/' % (self.imageGUID, deviceID)
         return self.connection.get_status(action, method='DELETE')
+
+    # ----- Encryption -----
+
+    def encrypt(self, deviceID):
+        #-----------------------------------------------------------------------
+        # encrypt a VM/Computer
+        #-----------------------------------------------------------------------
+        
+        action = 'vm/%s/encrypt/' % (self.imageGUID)
+        return self.connection.get_status(action)
+
+    # ----- Create RAID device
        
-    def createRAID0(self, name, filesystem, mountpoint, device_id_list):
+    def createRAID(self, name, filesystem, mountpoint, device_id_list):
 
         # create raid device object
         dev = Device(self.connection)
@@ -185,7 +197,7 @@ class VirtualMachine(SCObject):
             dev.subDevices.append(new)
 
         # call create RAID API
-        action = 'vm/createraid/%s/' % (self.imageGUID)
+        action = 'vm/%s/device/raid/' % (self.imageGUID)
         data = dev.tostring()
         return self.connection.get_status(action, Device, data=data, method='POST')
 

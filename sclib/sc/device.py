@@ -141,6 +141,31 @@ class Device(SCObject):
         data = self.tostring()
         response = self.connection.make_request(action, data=data, method='POST')
         return response
+
+    def cancelEncryption(self):
+        # Build XML elements structures
+        action = 'vm/%s/device/%s/encrypt' % (self.imageGUID, self.msUID)
+        data = self.tostring()
+        response = self.connection.make_request(action, data=data, method='DELETE')
+        return response
+
+    def exportKey(self):
+        action = 'vm/%s/device/%s/keyfile/' % (self.imageGUID, self.msUID)
+        data = self.tostring()
+        response = self.connection.make_request(action, data=data, method='POST')
+        return response
+
+    def importKey(self):
+        action = 'vm/%s/device/%s/key/' % (self.imageGUID, self.msUID)
+        data = self.tostring()
+        response = self.connection.make_request(action, data=data, method='POST')
+        return response
+
+    def deleteKey(self):
+        action = 'vm/%s/device/%s/key/' % (self.imageGUID, self.msUID)
+        data = self.tostring()
+        response = self.connection.make_request(action, data=data, method='DELETE')
+        return response
         
 
 class Volume (SCObject):

@@ -49,11 +49,9 @@ class SCSecurityGroupTest(SCBaseTestCase):
     def testCreatePolicy(self):
 
         policyName="mapi_test"
-        sAction=SecurityGroupAction.Approve
-        fAction=SecurityGroupAction.Deny
 
         # create policy
-        policy = self.connection.createSecurityGroup(policyName, sAction, fAction)
+        policy = self.connection.createSecurityGroup(policyName)
         self.assertNotEqual(policy, None)
         self.assertEqual(policy.successAction.action, sAction)
         self.assertEqual(policy.failedAction.action, fAction)

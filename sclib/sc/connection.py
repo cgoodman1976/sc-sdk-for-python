@@ -206,25 +206,6 @@ class SCConnection(SCQueryConnection):
         return True
   
     #===========================================================================
-    # # functions - Device (API Retired)
-    #===========================================================================
-    
-
-    #def listAllDevices(self):
-    #    if self.authentication is None: 
-    #        return None
-    #
-    #    return self.get_list( '%s' % (self.REST_DEVICE),
-    #                          [('device', Device)])
-
-    #def getDevice(self, guid):
-    #    if self.authentication is None: 
-    #        return None
-    #
-    #    return self.get_object( '%s/%s/' % (self.REST_DEVICE, guid), 
-    #                            Device)
-
-    #===========================================================================
     # # function - Policy/SecurityGroup
     #===========================================================================
     def listAllSecurityGroup(self):
@@ -242,14 +223,16 @@ class SCConnection(SCQueryConnection):
                                 SecurityGroup)
         return rule
 
-    def createSecurityGroup(self, name, sAction, fAction):
+    def createSecurityGroup(self, name):
         if self.authentication is None: 
             return None
 
         policy = SecurityGroup(self)
         policy.name = name
-        policy.successAction = SecurityGroupAction(self, 'successAction', sAction)
-        policy.failedAction = SecurityGroupAction(self, 'failedAction', fAction)
+        # default values
+        policy.successAction = SecurityGroupAction(self, 'successAction', SecurityGroupAction.Approve)
+        policy.failedAction = SecurityGroupAction(self, 'failedAction', SecurityGroupAction.Deny)
+
         data = policy.tostring()
         policy = self.get_object( '%s/' % (self.REST_SECURITY_GROUP), 
                                  SecurityGroup, data=data, method='POST')
