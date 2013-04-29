@@ -49,7 +49,7 @@ class SCVirtualMachineTest(SCBaseTestCase):
             updated = target.update()
             self.assertEqual(updated.imageGUID, target.imageGUID)
 
-    def testVM_ListDevices(self):
+    def testVMAllDevices(self):
 
         # list all Computers
         self.vms = self.connection.listAllVM()

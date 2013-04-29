@@ -32,7 +32,7 @@ from sclib.sc.instance import VirtualMachine
 
 def printPolicy(policy):
     print 'Name\t\t\t: %s' % (policy.name)
-    print 'ID\t\t\t: %s' % (policy.id)
+    print 'Policy ID\t\t: %s' % (policy.id)
     print 'Integrity Check\t\t: %s' % (policy.EnableIC)
     print 'Number of VM\t\t: %s' % (policy.imageCount)
     if len(policy.vmList):
@@ -58,10 +58,14 @@ def listSecurityGroup(id):
     return policy   
 
 def addVM(policy, vmid):
-    new_image = VirtualMachine(policy.connection)
-    new_image.imageID = vmid
-    policy.vmList.append(new_image)
-    policy.update()
+
+    # add new vm into a Policy
+    if isinstance(policy, SecurityGroup):
+        new = VirtualMachine(policy.connection)
+        new.imageGUID = vmid
+        policy.addVM(new)
+        policy.update()
+        printPolicy(policy) 
 
 def createPolicy(name):
     policy = conn.createSecurityGroup(name, SecurityGroupAction.Approve, SecurityGroupAction.Deny)
@@ -75,9 +79,9 @@ if __name__ == '__main__':
     # commands
     parser = OptionParser(usage="policy [-c name] [-i policy_id] [-l] [-a vm_id]")
     parser.add_option("-a", "--add_vm", help="Add a virtual machine to Policy", dest="vm", default=False, action='store')
+    parser.add_option("-c", "--create", help="Create new Policy", dest="create", default=None, action='store')
     parser.add_option("-i", "--policy_id", help="", dest="id", default='', action='store')
     parser.add_option("-l", "--list", help="", dest='list', default=False, action='store_true')
-    parser.add_option("-c", "--create", help="Create new Policy", dest="create", default=None, action='store')
     (options, args) = parser.parse_args()
 
 
@@ -95,10 +99,11 @@ if __name__ == '__main__':
         if options.id:
             # list information of securityGroup
             policy = listSecurityGroup(options.id)
-            
+
             # add a vm into securityGroup (aka policy)
             if options.vm:
                 addVM(policy, options.vm)
+
     
         # dump all securityGroup from your account
         elif options.list:

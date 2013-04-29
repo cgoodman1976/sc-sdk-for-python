@@ -27,7 +27,7 @@ from optparse import OptionParser
 
 import sclib
 from sclib.sc.connection import SCConnection
-from sclib.sc.instance import VirtualMachine, Image
+from sclib.sc.instance import VirtualMachine
 
 def printVM(vm):
     print 'Name: %s' % (vm.imageName)

@@ -60,6 +60,7 @@ class SecurityGroup(SCObject):
         self.RevokeIntervalType = None
         self.RevokeIntervalNumber = None
         self.description = None
+        self.imageCount = None
         #rules
         self.securityRuleList = ResultSet([('securityRule', SecurityRule)], 'securityRuleList')
         #action
@@ -69,13 +70,18 @@ class SecurityGroup(SCObject):
         #vm
         self.__vmList = ResultSet([('vm', VirtualMachine)], 'vmList')
     
+    # Property function (vmList)
     @property
     def vmList(self):
         return self.__vmList
 
     def addVM(self, vm):
-        if isInstance(vm, VirtualMachine):
-            return self.__vmList.append(vm)
+        ret = False
+        if isinstance(vm, VirtualMachine):
+            self.__vmList.append(vm)
+            self.imageCount = str(len(self.__vmList))
+            ret = True
+        return ret
 
     # Parse functions
         
@@ -116,7 +122,6 @@ class SecurityGroup(SCObject):
         
         #===================================================================
         # build Required elements
-        # build attributes
         for e in self.ValidAttributes:
             if getattr(self, e, None): group.attrib[e] = getattr(self, e)
 
@@ -145,7 +150,7 @@ class SecurityGroup(SCObject):
         # Build XML elements structures
         action = '%s/%s/' % (self.connection.REST_SECURITY_GROUP, self.id)
         data = self.tostring()
-        response = self.connection.make_request(action, data=data, method='POST')
+        response = self.connection.get_status(action, data=data, method='POST')
         return response
     
 

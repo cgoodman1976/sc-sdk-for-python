@@ -370,10 +370,11 @@ class SCAuthConnection:
             if response.code in (200, 201, 203, 204):
                 return response
             else:
-                sclib.log.error('%s %s' % (response.status, response.reason))
                 raise self.ResponseError(response.status, response.reason)
         except urllib2.HTTPError, e:
             sclib.log.error(e)
+        except SCServerError, error:
+            sclib.log.error('%s %s' % (error.status, error.reason))
 
         return response
 

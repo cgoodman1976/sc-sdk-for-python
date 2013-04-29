@@ -26,7 +26,7 @@ class SCSecurityGroupTest(SCBaseTestCase):
 
             # RevokeIntervalNumber
             self.assertGreaterEqual(policy.RevokeIntervalNumber, 0)
-            self.assertLessEqual(policy.RevokeIntervalNumber, 59)
+            self.assertLessEqual(policy.RevokeIntervalNumber, '-1')
             
     def testListAllRuleTypes(self):
         rulelist = self.connection.listAllSecurityRuleTypes()
@@ -69,8 +69,6 @@ class SCSecurityGroupTest(SCBaseTestCase):
         for policy in policys:
             sec = self.connection.getSecurityGroup(policy.id)
             self.assertEqual(policy.id, sec.id)
-            xml_pretty = sec.niceFormat()
-            logging.debug(xml_pretty)
 
             if policy.name == 'Default Policy':
                 default_policy = sec
@@ -80,23 +78,22 @@ class SCSecurityGroupTest(SCBaseTestCase):
         # move all vm into test policy
         for vm in self.vms:
             new_vm = VirtualMachine(self.connection)
-            new_vm.imageID = vm.imageID
-            test_policy.vmList.append(new_vm)
+            new_vm.imageGUID = vm.imageGUID
+            test_policy.addVM(new_vm)
 
         response = None
-        test_policy.RevokeIntervalNumber = '59'
         response = test_policy.update()
-        self.assertEqual(response.code, 200)
+        self.assertEqual(response, 200)
 
         # move all vm back to default policy
+        default = self.connection.getSecurityGroup(default_policy.id)
         for vm in self.vms:
             new_vm = VirtualMachine(self.connection)
-            new_vm.imageID = vm.imageID
-            default_policy.vmList.append(new_vm)
+            new_vm.imageGUID = vm.imageGUID
+            default.vmList.append(new_vm)
 
-        default_policy.RevokeIntervalNumber = '59'
-        response = default_policy.update()
-        self.assertEqual(response.code, 200)
+        response = default.update()
+        self.assertEqual(response, 200)
         
 
 if __name__ == '__main__':

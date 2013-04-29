@@ -39,8 +39,10 @@ class VirtualMachine(SCObject):
     #===========================================================================
         
     # Present valid vm object attributes, not inner objects
-    ValidAttributes = [ 'SecurityGroupGUID', 'autoProvision',
-                        'detectedKeyCount', 'encryptedDeviceCount', 'encryptingDeviceCount', 'href',
+    ValidAttributes = [ 'SecurityGroupGUID', 'SecurityGroupName',
+                        'autoProvision', 'detectedKeyCount', 
+                        'encryptableDeviceCount', 'encryptedDeviceCount', 'encryptingDeviceCount', 
+                        'hostname', 'href',
                         'imageGUID', 'imageID', 'imageName', 
                         'instanceGUID','instanceID', 'lastModified', 
                         'nonEncryptedDeviceCount', 'pendingDeviceCount']
@@ -52,11 +54,14 @@ class VirtualMachine(SCObject):
         # # Attributes
         #-----------------------------------------------------------------------
         self.SecurityGroupGUID = None
+        self.SecurityGroupName = None
         self.autoProvision = None
         self.detectedKeyCount = None
+        self.encryptableDeviceCount = None
         self.encryptedDeviceCount = None
         self.encryptingDeviceCount = None
         self.href = None
+        self.hostname = None
         self.imageGUID = None
         self.imageID = None
         self.imageName = None
