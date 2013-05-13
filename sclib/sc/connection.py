@@ -186,11 +186,12 @@ class SCConnection(SCQueryConnection):
             self.getCertificate()
         
         # build authentication request
+        auth_name = base64.b64encode(name)
         auth_req = Authentication(self)
         auth_req.data = self.certificate.encryptData(password)
         req_data = ElementTree.tostring(auth_req.buildElements())
 
-        auth = self.get_object( '%s/%s' % (self.REST_BASIC_AUTH, name), 
+        auth = self.get_object( '%s/%s' % (self.REST_BASIC_AUTH, auth_name), 
                                 Authentication, data=req_data, method='POST')
         if auth:
             self.__authentication = auth
