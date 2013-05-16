@@ -80,7 +80,8 @@ class VirtualMachine(SCObject):
         self.provider = None
         self.platform = None
         self.securecloudAgent = None
-        self.devices = None
+        # Device list
+        self.devices = ResultSet([('device', Device)], 'devices')
         
         pass
 

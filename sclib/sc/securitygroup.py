@@ -103,10 +103,10 @@ class SecurityGroup(SCObject):
             self.__vmList = ResultSet( [('vm', VirtualMachine)], name)
             return self.vmList
         elif name == 'successAction':
-            self.successAction = SecurityGroupAction(name, connection)
+            self.successAction = SecurityGroupAction(connection, name)
             return self.successAction.startElement(name, attrs, connection)
         elif name == 'failedAction':
-            self.failedAction = SecurityGroupAction(name, connection)
+            self.failedAction = SecurityGroupAction(connection, name)
             return self.failedAction.startElement(name, attrs, connection)
         else:
             return None
@@ -303,6 +303,7 @@ class SecurityGroupAction(SCObject):
     ValidAttributes = ['action', 'autoDelay']
 
     # constant 
+    ManualApprove = 'ManualApprove'
     Approve = 'Approve'
     Deny = 'Deny'
 

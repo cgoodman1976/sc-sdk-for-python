@@ -135,13 +135,6 @@ class Device(SCObject):
 
     # ---------- function ----------
     
-    def update(self):
-        # Build XML elements structures
-        action = 'device/%s/' % (self.msUID)
-        data = self.tostring()
-        response = self.connection.make_request(action, data=data, method='POST')
-        return response
-
     def cancelEncryption(self):
         # Build XML elements structures
         action = 'vm/%s/device/%s/encrypt' % (self.imageGUID, self.msUID)

@@ -23,6 +23,9 @@
 
 "Test basic instance and vm"
 import unittest
+import random
+import string
+
 from sclib.sc.device import Device
 from sclib.sc.instance import VirtualMachine
 from sclib.sc.user import User
@@ -43,7 +46,7 @@ class SCVirtualMachineTest(SCBaseTestCase):
             target = VirtualMachine(self.connection)
             target.imageGUID = newvm.imageGUID
             target.href = newvm.href
-            target.imageDescription = newvm.href
+            target.imageDescription = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(360))
             target.SecurityGroupGUID = newvm.SecurityGroupGUID
             target.autoProvision = newvm.autoProvision
             updated = target.update()
@@ -81,6 +84,33 @@ class SCVirtualMachineTest(SCBaseTestCase):
 
     def testEncryptAndPending(self):
         pass
+
+
+    def testCase2903(self):
+        newvm = self.connection.getVM("b2f57910-0543-491e-92d7-ab00a47448de")
+        target = VirtualMachine(self.connection)
+        target.imageGUID = newvm.imageGUID
+
+        # should be removed
+        target.SecurityGroupGUID = newvm.SecurityGroupGUID
+        target.autoProvision = newvm.autoProvision
+
+        target.imageName = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(32))
+        updated = target.update()
+        self.assertEqual(updated.imageName, target.imageName)
+
+    def testCase2904(self):
+        newvm = self.connection.getVM("b2f57910-0543-491e-92d7-ab00a47448de")
+        target = VirtualMachine(self.connection)
+        target.imageGUID = newvm.imageGUID
+
+        # should be removed
+        target.SecurityGroupGUID = newvm.SecurityGroupGUID
+        target.autoProvision = newvm.autoProvision
+
+        target.imageDescription = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(500))
+        updated = target.update()
+        self.assertEqual(updated, None)
 
 
 if __name__ == '__main__':

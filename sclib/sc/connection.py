@@ -213,7 +213,7 @@ class SCConnection(SCQueryConnection):
         if self.authentication is None: 
             return None
     
-        return self.get_list( '%s' % (self.REST_SECURITY_GROUP), 
+        return self.get_list( '%s/' % (self.REST_SECURITY_GROUP), 
                               [('securityGroup', SecurityGroup)])
 
     def getSecurityGroup(self, id):
@@ -230,20 +230,21 @@ class SCConnection(SCQueryConnection):
 
         policy = SecurityGroup(self)
         policy.name = name
-        # default values
-        policy.successAction = SecurityGroupAction(self, 'successAction', SecurityGroupAction.Approve)
-        policy.failedAction = SecurityGroupAction(self, 'failedAction', SecurityGroupAction.Deny)
+        # Test default value here
+        #========================
 
         data = policy.tostring()
         policy = self.get_object( '%s/' % (self.REST_SECURITY_GROUP), 
-                                 SecurityGroup, data=data, method='POST')
+                                  SecurityGroup, data=data, method='POST')
+        return policy
 
     def deleteSecurityGroup(self, id):
         if self.authentication is None: 
             return None
 
-        policy = self.get_status( '%s/%s/' % (self.REST_SECURITY_GROUP, id), 
+        status = self.get_status( '%s/%s/' % (self.REST_SECURITY_GROUP, id), 
                                   method='DELETE')
+        return status
 
     def listAllSecurityRuleTypes(self):
         if self.authentication is None: 

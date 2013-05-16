@@ -1,6 +1,8 @@
 "Test basic security group function"
 import unittest
 import logging
+import string
+import random
 
 from sclib.sc.securitygroup import SecurityGroup, SecurityGroupAction
 from sclib.sc.instance import VirtualMachine
@@ -22,11 +24,6 @@ class SCSecurityGroupTest(SCBaseTestCase):
             xml_pretty = sec.niceFormat()
             logging.debug(xml_pretty)
 
-            # data validation test
-
-            # RevokeIntervalNumber
-            self.assertGreaterEqual(policy.RevokeIntervalNumber, 0)
-            self.assertLessEqual(policy.RevokeIntervalNumber, '-1')
             
     def testListAllRuleTypes(self):
         rulelist = self.connection.listAllSecurityRuleTypes()
@@ -48,17 +45,25 @@ class SCSecurityGroupTest(SCBaseTestCase):
 
     def testCreatePolicy(self):
 
-        policyName="mapi_test"
+        policyName="testCreatePolicy"
 
         # create policy
         policy = self.connection.createSecurityGroup(policyName)
         self.assertNotEqual(policy, None)
-        self.assertEqual(policy.successAction.action, sAction)
-        self.assertEqual(policy.failedAction.action, fAction)
+        # validate default
+        self.assertEqual(policy.successAction.action, 'ManualApprove')
+        self.assertEqual(policy.failedAction.action, 'ManualApprove')
+        self.assertEqual(policy.ruleCount, '0')
+        self.assertEqual(policy.name, policyName)
+        self.assertEqual(policy.EnableIC, 'false')
+        self.assertEqual(policy.ICAction, 'Nothing')
+        self.assertEqual(policy.PostponeEnable, 'false')
+        self.assertEqual(policy.RevokeIntervalNumber, '0')
+        self.assertEqual(policy.isNameEditable, 'true')
 
+        # delete created policy 
         res = self.connection.deleteSecurityGroup(policy.id)
-        self.assertEqual(res, 200)
-
+        self.assertEqual(res, 204)
 
     def testAddVM(self):
         policys = self.connection.listAllSecurityGroup()
@@ -94,7 +99,54 @@ class SCSecurityGroupTest(SCBaseTestCase):
 
         response = default.update()
         self.assertEqual(response, 200)
-        
+     
+
+    def testCase2940(self):
+        policy = SecurityGroup(self)
+        policy.name = "testCase2940"
+        # default values
+        vm = VirtualMachine(self)
+        vm.imageGUID = '245e35df-492a-40c8-8543-b07e1e252744'
+        policy.addVM(vm)
+
+        data = policy.tostring()
+        policy = self.connection.get_object( '%s/' % (self.connection.REST_SECURITY_GROUP), 
+                                             SecurityGroup, data=data, method='POST')
+
+        # create policy
+        self.assertEqual(policy, None)
+
+    def testCase2942(self):
+        policyName="testCase294229422942294229422942="
+
+        # create policy
+        policy = self.connection.createSecurityGroup(policyName)
+        self.assertEqual(policy, None)
+
+    def testCase2943(self):
+        policy = SecurityGroup(self)
+        policy.name = "testCase2943"
+        # default values
+        policy.description = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(361))
+
+        data = policy.tostring()
+        policy = self.connection.get_object( '%s/' % (self.connection.REST_SECURITY_GROUP), 
+                                             SecurityGroup, data=data, method='POST')
+        # create policy
+        self.assertEqual(policy, None)
+
+    def testCase2944(self):
+        policy = SecurityGroup(self)
+        policy.name = "testCase2944"
+        # default values
+        policy.description = ''.join(random.choice("~!@#$%^&*()_+=-`][}{;?><,./)") for x in range(361))
+
+        data = policy.tostring()
+        policy = self.connection.get_object( '%s/' % (self.connection.REST_SECURITY_GROUP), 
+                                             SecurityGroup, data=data, method='POST')
+        # create policy
+        self.assertEqual(policy, None)
+
 
 if __name__ == '__main__':
     unittest.main()
