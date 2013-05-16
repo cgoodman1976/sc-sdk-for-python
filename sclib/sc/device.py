@@ -29,7 +29,7 @@ class Device(SCObject):
     
     ValidAttributes = [ 'id', 'msUID', "name", 'href',
                         'deviceType', 'cspDeviceType', 'deviceState', 'deviceStatus',
-                        'info', 'detachable', 'description', 'lastModified', 'writeAccess', 
+                        'info', 'detachable', 'lastModified', 'writeAccess', 
                         'EncryptedName', 'partitionType', 'provisionProgress', 'provisionState', 
                         'raidLevel']
 

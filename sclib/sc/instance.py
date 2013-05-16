@@ -186,12 +186,15 @@ class VirtualMachine(SCObject):
 
     # ----- Create RAID device
        
-    def createRAID(self, name, filesystem, mountpoint, device_id_list):
+    def createRAID(self, name, filesystem, mountpoint, device_id_list, deviceID=None):
 
         # create raid device object
         dev = Device(self.connection)
         dev.name = name
-        dev.msUID = str(uuid.uuid4())
+        if deviceID:
+            dev.msUID = deviceID
+        else:
+            dev.msUID = str(uuid.uuid4())
         dev.raidLevel = 'RAID0'
         dev.fileSystem = filesystem
         dev.volume = Volume(self.connection)
