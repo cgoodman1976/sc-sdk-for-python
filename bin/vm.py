@@ -30,10 +30,13 @@ from sclib.sc.connection import SCConnection
 from sclib.sc.instance import VirtualMachine
 
 def printVM(vm):
-    print 'Name: %s' % (vm.imageName)
-    print 'GUID: %s' % (vm.imageGUID)
-    print 'ID: %s' % (vm.imageID)
+    print 'VM Name: %s' % (vm.imageName)
+    print 'VM ID: %s' % (vm.imageID)
+    print 'VM GUID: %s' % (vm.imageGUID)
     print 'Encrypted Devices: %s' % (vm.encryptedDeviceCount)
+    print 'Devices:\n'
+    for device in vm.devices:
+        print '%s\t%s' % (device.name, device.id)
     print ''
 
 def listAllVM():
