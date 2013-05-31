@@ -281,11 +281,20 @@ class VerifiedHTTPSConnection(httplib.HTTPSConnection):
 
         # wrap the socket using verification with the root certs in trusted_root_certs
         cacert_path = os.path.join(os.path.dirname(os.path.abspath(sclib.__file__ )), 'cacerts', 'cacert.pem')
-        self.sock = ssl.wrap_socket(sock,
-                                    self.key_file,
-                                    self.cert_file,
-                                    cert_reqs=ssl.CERT_REQUIRED,
-                                    ca_certs=cacert_path)
+        validation = sclib.__config__.get('connection', 'SSL_VALIDATION')
+
+        if validation == 'Disable':
+            self.sock = ssl.wrap_socket(sock,
+                                        self.key_file,
+                                        self.cert_file,
+                                        cert_reqs=ssl.CERT_NONE,
+                                        ca_certs=cacert_path)
+        else:
+            self.sock = ssl.wrap_socket(sock,
+                                        self.key_file,
+                                        self.cert_file,
+                                        cert_reqs=ssl.CERT_REQUIRED,
+                                        ca_certs=cacert_path)
 
 class VerifiedHTTPSHandler(urllib2.HTTPSHandler):
     #---------------------------------------------------------------------------
