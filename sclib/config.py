@@ -31,14 +31,17 @@ os.path.expanduser('~')
 expanduser = os.path.expanduser
 
 # By default we use two locations for the securecloud configurations,
-# /etc/sc.cfg and ~/.sc (which works on Windows and Unix).
-sclibConfigPath = '/etc/sclib.config'
-sclibConfigLocations = [sclibConfigPath]
-UserConfigPath = os.path.join(expanduser('~'), '.sclib.config')
+# /etc/sclib.config and ~/.sclib.config (which works on Windows and Unix).
+
+CONFIG_FILE = '.sclib.config'
+sclibConfigPath = os.path.join('/etc', CONFIG_FILE)
+UserConfigPath = os.path.join(expanduser('~'), CONFIG_FILE)
+
+sclibConfigLocations = [CONFIG_FILE]
+sclibConfigLocations.append(sclibConfigPath)
 sclibConfigLocations.append(UserConfigPath)
 
-# If there's a SCLIB_CONFIG variable set, we load ONLY 
-# that variable
+# If there's a SCLIB_CONFIG variable set, we load ONLY that variable
 if 'SCLIB_CONFIG' in os.environ:
     sclibConfigLocations = [expanduser(os.environ['SCLIB_CONFIG'])]
 
