@@ -55,8 +55,10 @@ Naming Convention:
 ## Server Certificate Validation
 
 Default certificate file:
+
     <sc-sdk-for-python>/sclib/cacerts/cacert.pem
     
 How to generate root CA certificate file to valid SecureCloud server
+
     > openssl pkcs12 -in <your pfx file> -nodes -nokeys -out cacert.pem
     
