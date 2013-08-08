@@ -10,6 +10,7 @@ from sclib.sc.securitygroup import SecurityGroup, SecurityGroupAction
 from sclib.sc.instance import VirtualMachine
 from tests.unit import logging
 from tests.unit.sc import SCBaseTestCase
+from tests.unit.sc import testlib
 
 class SCTrackerTest(SCBaseTestCase):
     def setUp(self):
@@ -34,7 +35,7 @@ class SCTrackerTest(SCBaseTestCase):
         target.SecurityGroupGUID = newvm.SecurityGroupGUID
         target.autoProvision = newvm.autoProvision
 
-        target.imageName = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(32))
+        target.imageName = testlib.RandomString(36)
         updated = target.update()
         self.assertEqual(updated.imageName, target.imageName)
 
@@ -47,7 +48,7 @@ class SCTrackerTest(SCBaseTestCase):
         target.SecurityGroupGUID = newvm.SecurityGroupGUID
         target.autoProvision = newvm.autoProvision
 
-        target.imageDescription = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(361))
+        target.imageDescription = testlib.RandomString(361)
         updated = target.update()
         self.assertEqual(updated, None)
 
@@ -60,7 +61,7 @@ class SCTrackerTest(SCBaseTestCase):
 
         # create raid device object
         dev = Device(self.connection)
-        dev.name = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(1025))
+        dev.name = testlib.RandomString(1025)
         dev.msUID = deviceID
         dev.raidLevel = 'RAID0'
         dev.fileSystem = self.filesystem
@@ -90,7 +91,7 @@ class SCTrackerTest(SCBaseTestCase):
         # create raid device object
         dev = Device(self.connection)
         dev.name = 'testCase2919'
-        dev.description = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(1025))
+        dev.description = testlib.RandomString(1025)
         dev.msUID = deviceID
         dev.raidLevel = 'RAID0'
         dev.fileSystem = self.filesystem
@@ -121,7 +122,7 @@ class SCTrackerTest(SCBaseTestCase):
         dev.raidLevel = 'RAID0'
         dev.fileSystem = self.filesystem
         dev.volume = Volume(self.connection)
-        dev.volume.mountPoint = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(256))
+        dev.volume.mountPoint = testlib.RandomString(256)
 
         for d in devicelist:
             new = Device(self.connection)
@@ -147,7 +148,7 @@ class SCTrackerTest(SCBaseTestCase):
         dev.raidLevel = 'RAID0'
         dev.fileSystem = self.filesystem
         dev.volume = Volume(self.connection)
-        dev.volume.mountPoint = ''.join(random.choice('~!@#$%^&*()_+=-][}{;?><,./)') for x in range(256))
+        dev.volume.mountPoint = testlib.RandomString(256)
 
         for d in devicelist:
             new = Device(self.connection)
@@ -168,7 +169,7 @@ class SCTrackerTest(SCBaseTestCase):
 
         # create raid device object
         dev = Device(self.connection)
-        dev.name = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(3000))
+        dev.name = testlib.RandomString(3000)
         dev.msUID = deviceID
         dev.raidLevel = 'RAID0'
         dev.fileSystem = self.filesystem
@@ -212,7 +213,7 @@ class SCTrackerTest(SCBaseTestCase):
         policy = SecurityGroup(self)
         policy.name = "testCase2943"
         # default values
-        policy.description = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(361))
+        policy.description = testlib.RandomString(361)
 
         data = policy.tostring()
         policy = self.connection.get_object( '%s/' % (self.connection.REST_SECURITY_GROUP), 
