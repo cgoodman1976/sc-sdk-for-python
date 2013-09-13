@@ -20,24 +20,30 @@
 # IN THE SOFTWARE.
 #
 
+from sclib.resultset import ResultSet
 from sclib.sc.scobject import SCObject
+from sclib.sc.instance import VirtualMachine
+from sclib.sc.device import Device
 from xml.etree import ElementTree
 
 class KeyRequest(SCObject):
     
-    ValidAttributes = ['name', 'providerLocation', 'href']
+    ValidAttributes = ['requestID', 'requested', 'deviceKeyRequestState',
+                       'href']
     
     def __init__(self, connection):
-        SCObject.__init__(self, connection)
-        self.id = None
+        SCObject.__init__(self, connection, 'runningVMKeyRequest')
+        self.requestID = None
+        self.requested = None
+        self.deviceKeyRequestState = None
         self.href = None
         
     def startElement(self, name, attrs, connection):
         ret = SCObject.startElement(self, name, attrs, connection)
         if ret is not None:
             return ret
-        
-        if name == 'devicekeyrequest':
+
+        if name == 'runningVMKeyRequest':
             for key, value in attrs.items():
                 setattr(self, key, value)
         else:
@@ -47,10 +53,106 @@ class KeyRequest(SCObject):
         setattr(self, name, value)
             
     def buildElements(self):
-        keyrequest = ElementTree.Element('devicekeyrequest')
+        keyrequest = ElementTree.Element('runningVMKeyRequest')
 
         # Set all valid attributes
         for attr in self.ValidAttributes:
             if getattr(self, attr): keyrequest.attrib[attr] = getattr(self, attr)
 
         return keyrequest
+
+class RunningDevice(Device):
+    
+    ValidAttributes = [ 'deviceRequestID', 'allowKeyAction', 'KeyDeliveryStatus',
+                        'integrity', 'deviceKeyRequestState']
+    
+    def __init__(self, connection, token='runningVMDevice'):
+        Device.__init__(self, connection, token)
+        self.deviceRequestID = None
+        self.allowKeyAction = None
+        self.KeyDeliveryStatus = None
+        self.integrity = None
+        self.deviceKeyRequestState = None
+         # Device list
+        self.device = None
+       
+    def startElement(self, name, attrs, connection):
+        ret = Device.startElement(self, name, attrs, connection)
+        if ret is not None:
+            return ret
+        
+        if name == self.token:
+            for key, value in attrs.items():
+                setattr(self, key, value)
+        elif name == 'device':
+            self.device = Device(connection)
+            self.device.startElement(name, attrs, connection)
+            return self.device
+        else:
+            return None
+
+    def endElement(self, name, value, connection):
+        setattr(self, name, value)
+            
+    def buildElements(self):
+        runningVMDevice = ElementTree.Element('runningVMDevice')
+
+        # Set all valid attributes
+        for attr in self.ValidAttributes:
+            if getattr(self, attr): runningVMDevice.attrib[attr] = getattr(self, attr)
+
+                # append inner objects
+        if getattr(self, 'device'): runningVMDevice.append( self.device.buildElements() )
+
+        return runningVMDevice
+
+class RunningVM(VirtualMachine):
+    
+    ValidAttributes = ['providerName', 'providerLocation']
+    
+    def __init__(self, connection, token='runningVM'):
+        VirtualMachine.__init__(self, connection, token)
+        self.providerName = None
+        self.providerLocation = None
+        # KeyRequest list
+        self.runningVMKeyRequest = None
+        # running Device list
+        self.runningVMDevices = ResultSet([('runningVMDevices', RunningDevice)], 'runningVMDevice')
+
+        
+    def startElement(self, name, attrs, connection):
+        ret = VirtualMachine.startElement(self, name, attrs, connection)
+        if ret is not None:
+            return ret
+        
+        if name == 'runningVM':
+            for key, value in attrs.items():
+                setattr(self, key, value)
+        elif name == 'runningVMKeyRequest':
+            self.runningVMKeyRequest = KeyRequest(connection)
+            self.runningVMKeyRequest.startElement(name, attrs, connection)
+            return self.runningVMKeyRequest
+        elif name == 'runningVMDevices':
+            self.runningVMDevices = ResultSet([('runningVMDevice', RunningDevice)], name)
+            return self.runningVMDevices
+        else:
+            return None
+
+    def endElement(self, name, value, connection):
+        setattr(self, name, value)
+            
+    def buildElements(self):
+        runningVM = ElementTree.Element('runningVM')
+
+        # Set all valid attributes
+        for attr in VirtualMachine.ValidAttributes:
+            if getattr(self, attr): runningVM.attrib[attr] = getattr(self, attr)
+
+        for attr in self.ValidAttributes:
+            if getattr(self, attr): runningVM.attrib[attr] = getattr(self, attr)
+
+        # append inner objects
+        if getattr(self, 'runningVMKeyRequest'): runningVM.append( self.runningVMKeyRequest.buildElements() )
+        if getattr(self, 'runningVMDevices'): runningVM.append( self.runningVMDevices.buildElements() )
+
+        return runningVM

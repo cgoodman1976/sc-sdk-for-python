@@ -33,8 +33,8 @@ class Device(SCObject):
                         'EncryptedName', 'partitionType', 'provisionProgress', 'provisionState', 
                         'raidLevel']
 
-    def __init__(self, connection):
-        SCObject.__init__(self, connection)
+    def __init__(self, connection, token='Device'):
+        SCObject.__init__(self, connection, token)
         # Device attributes
         self.id = None
         self.msUID = None

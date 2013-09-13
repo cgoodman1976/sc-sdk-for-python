@@ -23,6 +23,8 @@
 
 "Test basic device"
 import unittest
+import logging
+
 from sclib.sc.keyrequest import KeyRequest
 from tests.unit.sc import SCBaseTestCase
 
@@ -33,10 +35,15 @@ class SCRequestTest(SCBaseTestCase):
         #===== implement initial code here for each test =====
         pass
 
-    def testAllRequest(self):
-        # This API is gone
-        self.requests = self.connection.listAllKeyRequest()
-        self.assertEqual(self.requests, None)
+    def testAllRunningVM(self):
+
+        self.runningVM = self.connection.listAllRunningVM()
+        self.assertNotEqual(self.runningVM, None)
+
+        for vm in self.runningVM:
+            xml_pretty = vm.niceFormat()
+            logging.debug(xml_pretty)
+
     
 
 if __name__ == '__main__':
