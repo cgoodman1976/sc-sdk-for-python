@@ -78,9 +78,11 @@ class Certificate(SCObject):
 
 class Authentication(SCObject):
     
+    # Valid xml object attributes
     ValidAttributes = ['id', 'token', 'expires', 'data', 'accountId']
-    def __init__(self, connection):
-        SCObject.__init__(self, connection)
+    
+    def __init__(self, connection, tag='authentication'):
+        SCObject.__init__(self, connection, tag)
         self.id = None
         self.token = None
         self.expires = None

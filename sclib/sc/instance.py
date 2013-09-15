@@ -47,8 +47,8 @@ class VirtualMachine(SCObject):
                         'lastModified']
     
     
-    def __init__(self, connection, token='vm'):
-        SCObject.__init__(self, connection, token)
+    def __init__(self, connection, tag='vm'):
+        SCObject.__init__(self, connection, tag)
         #-----------------------------------------------------------------------
         # # Attributes
         #-----------------------------------------------------------------------

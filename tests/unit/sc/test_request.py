@@ -43,6 +43,10 @@ class SCRequestTest(SCBaseTestCase):
         for vm in self.runningVM:
             xml_pretty = vm.niceFormat()
             logging.debug(xml_pretty)
+            
+            keyRequest = self.connection.listKeyRequest(vm.runningVMKeyRequest.requestID)
+            status = keyRequest.run_icm()
+            self.assertNotEqual(status, 200)
 
     
 

@@ -31,8 +31,8 @@ class KeyRequest(SCObject):
     ValidAttributes = ['requestID', 'requested', 'deviceKeyRequestState',
                        'href']
     
-    def __init__(self, connection):
-        SCObject.__init__(self, connection, 'runningVMKeyRequest')
+    def __init__(self, connection, tag='runningVMKeyRequest'):
+        SCObject.__init__(self, connection, tag)
         self.requestID = None
         self.requested = None
         self.deviceKeyRequestState = None
@@ -43,7 +43,7 @@ class KeyRequest(SCObject):
         if ret is not None:
             return ret
 
-        if name == 'runningVMKeyRequest':
+        if name == self.tag:
             for key, value in attrs.items():
                 setattr(self, key, value)
         else:
@@ -53,7 +53,7 @@ class KeyRequest(SCObject):
         setattr(self, name, value)
             
     def buildElements(self):
-        keyrequest = ElementTree.Element('runningVMKeyRequest')
+        keyrequest = ElementTree.Element(self.tag)
 
         # Set all valid attributes
         for attr in self.ValidAttributes:
@@ -61,13 +61,50 @@ class KeyRequest(SCObject):
 
         return keyrequest
 
+    # Key request operators
+    def approve(self):
+        return self.connection.get_status( '%s/%s/%s/%s/' % (self.connection.REST_RUNNING_VM, 
+                                                             self.connection.REST_KEY_REQUEST, 
+                                                             self.requestID, 
+                                                             'approve' ),
+                                           method='POST') 
+
+    def deny(self):
+        return self.connection.get_status( '%s/%s/%s/%s/' % (self.connection.REST_RUNNING_VM, 
+                                                             self.connection.REST_KEY_REQUEST, 
+                                                             self.requestID, 
+                                                             'deny' ),
+                                           method='POST') 
+
+    def revoke(self):
+        return self.connection.get_status( '%s/%s/%s/%s/' % (self.connection.REST_RUNNING_VM, 
+                                                             self.connection.REST_KEY_REQUEST, 
+                                                             self.requestID, 
+                                                             'revoke' ),
+                                           method='POST') 
+
+    def ignore(self):
+        return self.connection.get_status( '%s/%s/%s/%s/' % (self.connection.REST_RUNNING_VM, 
+                                                             self.connection.REST_KEY_REQUEST, 
+                                                             self.requestID, 
+                                                             'ignore' ),
+                                           method='POST') 
+
+    def run_icm(self):
+        return self.connection.get_status( '%s/%s/%s/%s/' % (self.connection.REST_RUNNING_VM, 
+                                                             self.connection.REST_KEY_REQUEST, 
+                                                             self.requestID, 
+                                                             'runicm' ),
+                                           method='POST') 
+
+
 class RunningDevice(Device):
     
     ValidAttributes = [ 'deviceRequestID', 'allowKeyAction', 'KeyDeliveryStatus',
                         'integrity', 'deviceKeyRequestState']
     
-    def __init__(self, connection, token='runningVMDevice'):
-        Device.__init__(self, connection, token)
+    def __init__(self, connection, tag='runningVMDevice'):
+        Device.__init__(self, connection, tag)
         self.deviceRequestID = None
         self.allowKeyAction = None
         self.KeyDeliveryStatus = None
@@ -81,7 +118,7 @@ class RunningDevice(Device):
         if ret is not None:
             return ret
         
-        if name == self.token:
+        if name == self.tag:
             for key, value in attrs.items():
                 setattr(self, key, value)
         elif name == 'device':
@@ -110,8 +147,8 @@ class RunningVM(VirtualMachine):
     
     ValidAttributes = ['providerName', 'providerLocation']
     
-    def __init__(self, connection, token='runningVM'):
-        VirtualMachine.__init__(self, connection, token)
+    def __init__(self, connection, tag='runningVM'):
+        VirtualMachine.__init__(self, connection, tag)
         self.providerName = None
         self.providerLocation = None
         # KeyRequest list
@@ -125,7 +162,7 @@ class RunningVM(VirtualMachine):
         if ret is not None:
             return ret
         
-        if name == 'runningVM':
+        if name == self.tag:
             for key, value in attrs.items():
                 setattr(self, key, value)
         elif name == 'runningVMKeyRequest':
