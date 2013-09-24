@@ -33,8 +33,8 @@ class Device(SCObject):
                         'EncryptedName', 'partitionType', 'provisionProgress', 'provisionState', 
                         'raidLevel']
 
-    def __init__(self, connection):
-        SCObject.__init__(self, connection)
+    def __init__(self, connection, tag='Device'):
+        SCObject.__init__(self, connection, tag)
         # Device attributes
         self.id = None
         self.msUID = None
@@ -162,7 +162,9 @@ class Device(SCObject):
         
 
 class Volume (SCObject):
-    def __init__(self, connection):
+    
+    def __init__(self, connection, tag='Volume'):
+        SCObject.__init__(self, connection, tag)
         self.size = None
         self.mountPoint = None
 
@@ -192,7 +194,8 @@ class Volume (SCObject):
         return volume
 
 class Partition(SCObject):
-    def __init__(self, connection):
+    def __init__(self, connection, tag='partition'):
+        SCObject.__init__(self, connection, tag)
         self.PartitionNumber = None
         self.size = None
         self.fileSystem = None

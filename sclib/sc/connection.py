@@ -31,7 +31,7 @@ from sclib.sc.user import User, UserRight, UserRole, Account
 from sclib.sc.scobject import SCObject
 from sclib.sc.instance import VirtualMachine, Instance
 from sclib.sc.provider import Provider
-from sclib.sc.keyrequest import KeyRequest
+from sclib.sc.keyrequest import KeyRequest, RunningVM, RunningDevice
 from sclib.sc.securitygroup import SecurityGroup, SecurityRule, SecurityRuleType, SecurityGroupAction
 from sclib.sc.administration import DSMConnSettings, KMIPConnSettings, Timezone, Language, License
 
@@ -78,9 +78,11 @@ class Certificate(SCObject):
 
 class Authentication(SCObject):
     
+    # Valid xml object attributes
     ValidAttributes = ['id', 'token', 'expires', 'data', 'accountId']
-    def __init__(self, connection):
-        SCObject.__init__(self, connection)
+    
+    def __init__(self, connection, tag='authentication'):
+        SCObject.__init__(self, connection, tag)
         self.id = None
         self.token = None
         self.expires = None
@@ -129,8 +131,8 @@ class SCConnection(SCQueryConnection):
     REST_USER_ROLE = 'roles'
     REST_VM = 'vm'
     REST_PROVIDER = 'provider'
-    REST_KEY_REQUEST = 'keyrequesttree'
-    REST_DEVICE_KEY_REQUEST = 'devicekeyrequest'
+    REST_RUNNING_VM = 'runningVM'
+    REST_KEY_REQUEST = 'keyRequest'
     REST_DSM_SETTING = 'dsmConnSettings'
     REST_KMIP_SETTING = 'kmip'
     REST_ACCOUNT = 'acctData'
@@ -356,18 +358,18 @@ class SCConnection(SCQueryConnection):
     #---------------------------------------------------------------------------
     # key request
     #---------------------------------------------------------------------------
-    def listAllKeyRequest(self):
+    def listAllRunningVM(self):
         if self.isAuthenticated() is False : 
             return None
         
-        return self.get_list( '%s' % (self.REST_KEY_REQUEST), 
-                              [('devicekeyrequest', KeyRequest)])
+        return self.get_list( '%s' % (self.REST_RUNNING_VM), 
+                              [('runningVM', RunningVM)])
 
     def listKeyRequest(self, id):
         if self.isAuthenticated() is False : 
             return None
         
-        return self.get_object( '%s/%s/' % (self.REST_KEY_REQUEST, id ), 
+        return self.get_object( '%s/%s/%s/' % (self.REST_RUNNING_VM, self.REST_KEY_REQUEST, id ), 
                                 KeyRequest)
 
     #---------------------------------------------------------------------------

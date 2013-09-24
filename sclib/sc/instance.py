@@ -39,16 +39,16 @@ class VirtualMachine(SCObject):
     #===========================================================================
         
     # Present valid vm object attributes, not inner objects
-    ValidAttributes = [ 'SecurityGroupGUID',
+    ValidAttributes = [ 'SecurityGroupGUID', 'integrity',
                         'autoProvision', 'nonEncryptedDeviceCount', 'detectedKeyCount', 
                         'encryptableDeviceCount', 'encryptedDeviceCount', 'encryptingDeviceCount', 'pendingDeviceCount',
                         'hostname', 'href',
-                        'imageGUID', 'imageID', 'imageName', 'instanceID', 
+                        'imageGUID', 'imageID', 'imageName', 'instanceID', 'instanceGUID',
                         'lastModified']
     
     
-    def __init__(self, connection):
-        SCObject.__init__(self, connection)
+    def __init__(self, connection, tag='vm'):
+        SCObject.__init__(self, connection, tag)
         #-----------------------------------------------------------------------
         # # Attributes
         #-----------------------------------------------------------------------

@@ -28,12 +28,17 @@ from xml.dom.minidom import parseString
 class SCObject(object):
     # Base class of All SecureCloud objects
 
-    def __init__(self, connection=None):
+    def __init__(self, connection=None, tag=''):
         self.connection = connection
+        self.__tag = tag
         
+    @property
+    def tag(self):
+        return self.__tag
+
     def startElement(self, name, attrs, connection):
         # Mostly parsing XML attributes and begin of elements
-        pass
+        return None
 
     def endElement(self, name, value, connection):
         # Mostly parsing XML elements
