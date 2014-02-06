@@ -25,8 +25,7 @@ python interface SDK for SecureCloud Management API
 Config sample:
 
 	[connection]
-	MS_HOST = https://ms.cloud9.identum.com:7443/broker/API.svc/v3.5
-	MS_BROKER_PATH = /broker/API.svc/v3.5/
+	MS_HOST = https://ms.securecloud.com/broker/API.svc/v3.5
 	MS_BROKER_NAME = <your broker name>
 	MS_BROKER_PASSPHASE = <your passphase>
 
@@ -57,8 +56,4 @@ Naming Convention:
 Default certificate file:
 
     <sc-sdk-for-python>/sclib/cacerts/cacert.pem
-    
-How to generate root CA certificate file to valid SecureCloud server
-
-    > openssl pkcs12 -in <your pfx file> -nodes -nokeys -out cacert.pem
     
