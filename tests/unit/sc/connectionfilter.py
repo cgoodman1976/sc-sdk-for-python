@@ -14,7 +14,7 @@ class SCConnectionFilter(SCConnection):
     #===========================================================================
     def __init__( self, host_base, broker_name=None, broker_passphase=None, 
                   result_path=None):
-        SCConnection.__init__(self, host_base, broker_name, broker_passphase)
+        SCConnection.__init__(self, host_base, broker_name, broker_passphase, True)
 
         # pseudo sample path
         self.result_path = result_path
