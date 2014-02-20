@@ -22,7 +22,7 @@ python interface SDK for SecureCloud Management API
 		- ~/.sclib.config (for Linux)
 		- c:\Users\ `<user name>` \ .sclib.config (for Windows)
 
-Config sample:
+###Config sample:
 
 	[connection]
 	MS_HOST = https://ms.securecloud.com/broker/API.svc/v3.5
@@ -34,26 +34,37 @@ Config sample:
 	AUTH_NAME = <your account(email)>
 	AUTH_PASSWORD = <your password>
 	
-Configuration Parameters:
-- MS_HOST
+###Configuration Parameters:
+	
+- `MS_HOST`
+
 URL for the SecureCloud Management API entry point
-- MS_BROKER_NAME
+
+- `MS_BROKER_NAME`
+
 Broker name. Please get this broker from Administrator
-- MS_BROKER_PASSPHASE
+
+- `MS_BROKER_PASSPHASE`
+
 Password of broker name. Please get this from Administrator
-- SSL_VALIDATION
+
+- `SSL_VALIDATION`
+
 Enable/Disable SSL validation. When disabled, SDK will bypass HTTPS (SSL) certificate checking.
-- AUTH_NAME
-- AUTH_PASSWORD
+
+- `AUTH_NAME`
+
+- `AUTH_PASSWORD`
 
 ## Unit Test
 
 ### Testing:
-	cd tests/unit/
-	python -m unittest discover
+
+	> cd <sc-sdk-for-python>/tests/unit/
+	> python -m unittest discover
 
 
-###Unit Test Result:
+### Unit Test Result:
 
 Default result folder:
 
