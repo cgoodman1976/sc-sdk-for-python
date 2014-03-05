@@ -28,6 +28,7 @@ from xml.dom.minidom import parseString
 class SCObject(object):
     # Base class of All SecureCloud objects
 
+    # member functions
     def __init__(self, connection=None, tag=''):
         self.connection = connection
         self.__tag = tag

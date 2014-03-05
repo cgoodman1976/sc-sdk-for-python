@@ -269,6 +269,25 @@ class ConnectionPool(object):
                     del self.host_to_pool[host]
                 self.last_clean_time = now
 
+class BypassHTTPSConnection(httplib.HTTPSConnection):
+    #---------------------------------------------------------------------------
+    # # overrides the version in httplib so that we bypass certificate verification
+    #---------------------------------------------------------------------------
+    def connect(self):
+        sock = socket.create_connection((self.host, self.port), self.timeout)
+        if self._tunnel_host:
+            self.sock = sock
+            self._tunnel()
+
+        # wrap the socket using verification with the root certs in trusted_root_certs
+        cacert_path = os.path.join(os.path.dirname(os.path.abspath(sclib.__file__ )), 'cacerts', 'cacert.pem')
+        self.sock = ssl.wrap_socket(sock,
+                                    self.key_file,
+                                    self.cert_file,
+                                    cert_reqs=ssl.CERT_NONE,
+                                    ca_certs=cacert_path)
+
+
 class VerifiedHTTPSConnection(httplib.HTTPSConnection):
     #---------------------------------------------------------------------------
     # # overrides the version in httplib so that we do certificate verification
@@ -281,20 +300,23 @@ class VerifiedHTTPSConnection(httplib.HTTPSConnection):
 
         # wrap the socket using verification with the root certs in trusted_root_certs
         cacert_path = os.path.join(os.path.dirname(os.path.abspath(sclib.__file__ )), 'cacerts', 'cacert.pem')
-        validation = sclib.__config__.get('connection', 'SSL_VALIDATION')
 
-        if validation == 'Disable':
-            self.sock = ssl.wrap_socket(sock,
-                                        self.key_file,
-                                        self.cert_file,
-                                        cert_reqs=ssl.CERT_NONE,
-                                        ca_certs=cacert_path)
-        else:
-            self.sock = ssl.wrap_socket(sock,
-                                        self.key_file,
-                                        self.cert_file,
-                                        cert_reqs=ssl.CERT_REQUIRED,
-                                        ca_certs=cacert_path)
+        self.sock = ssl.wrap_socket(sock,
+                                    self.key_file,
+                                    self.cert_file,
+                                    cert_reqs=ssl.CERT_REQUIRED,
+                                    ca_certs=cacert_path)
+
+class BypassHTTPSHandler(urllib2.HTTPSHandler):
+    #---------------------------------------------------------------------------
+    # # wraps https connections with ssl certificate verification
+    #---------------------------------------------------------------------------
+    def __init__(self, connection_class = BypassHTTPSConnection):
+        self.specialized_conn_class = connection_class
+        urllib2.HTTPSHandler.__init__(self)
+
+    def https_open(self, req):
+        return self.do_open(self.specialized_conn_class, req)
 
 class VerifiedHTTPSHandler(urllib2.HTTPSHandler):
     #---------------------------------------------------------------------------
@@ -308,7 +330,7 @@ class VerifiedHTTPSHandler(urllib2.HTTPSHandler):
         return self.do_open(self.specialized_conn_class, req)
     
 class SCAuthConnection:
-    def __init__( self, host_base, broker_name=None, broker_passphase=None):
+    def __init__( self, host_base, broker_name=None, broker_passphase=None, https=True):
 
         self.timeout = 10
         self.base_url = host_base
@@ -321,7 +343,17 @@ class SCAuthConnection:
                         'Accept': 'application/xml'
                         }
         
-        self.opener = urllib2.build_opener( VerifiedHTTPSHandler())
+        #
+        # wrap the socket using verification with the root certs in trusted_root_certs
+        #
+        cacert_path = os.path.join(os.path.dirname(os.path.abspath(sclib.__file__ )), 'cacerts', 'cacert.pem')
+        validation = sclib.__config__.get('connection', 'SSL_VALIDATION')
+
+        # setup HTTPS handler (Verified or Bypass)
+        if (validation == 'Disable' or not https):
+            self.opener = urllib2.build_opener( BypassHTTPSHandler())
+        else:
+            self.opener = urllib2.build_opener( VerifiedHTTPSHandler())
 
         # add digest handler if digest information provided
         if broker_name and broker_passphase:
@@ -406,8 +438,8 @@ class SCQueryConnection(SCAuthConnection):
     APIVersion = ''
     ResponseError = SCServerError
 
-    def __init__(self, host_base, broker_name=None, broker_passphase=None):
-        SCAuthConnection.__init__(self, host_base, broker_name, broker_passphase)
+    def __init__(self, host_base, broker_name=None, broker_passphase=None, https=True):
+        SCAuthConnection.__init__(self, host_base, broker_name, broker_passphase, https)
 
     def get_utf8_value(self, value):
         return sclib.utils.get_utf8_value(value)

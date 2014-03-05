@@ -194,6 +194,9 @@ class Volume (SCObject):
         return volume
 
 class Partition(SCObject):
+
+    ValidAttributes = [ 'size', 'fileSystem', "mountPoint" ]
+
     def __init__(self, connection, tag='partition'):
         SCObject.__init__(self, connection, tag)
         self.PartitionNumber = None

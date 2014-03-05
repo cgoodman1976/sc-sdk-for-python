@@ -143,8 +143,8 @@ class SCConnection(SCQueryConnection):
     REST_LICENSE = 'licenses'
     REST_LANGUAGE = 'language'
 
-    def __init__(self, host_base, broker_name=None, broker_passphase=None):
-        SCQueryConnection.__init__( self, host_base, broker_name, broker_passphase)
+    def __init__(self, host_base, broker_name=None, broker_passphase=None, https=True):
+        SCQueryConnection.__init__( self, host_base, broker_name, broker_passphase, https)
         
         #members
         self.__authentication = None

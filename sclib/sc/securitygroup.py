@@ -26,8 +26,11 @@ from sclib.sc.device import Device
 from sclib.sc.instance import VirtualMachine
 from xml.etree import ElementTree
 
-
 class SecurityGroupAction(SCObject):
+
+    ValidAttributes = ['action', 'autoDelay', 'enable']
+
+    # member functions    
     def __init__(self, connection):
         SCObject.__init__(self, connection)
         self.action = None
@@ -42,7 +45,8 @@ class SecurityGroup(SCObject):
                        'lastModified', 'ruleCount', 'imageCount',
                        'EnableIC', 'ICAction', 'PostponeEnable', 
                        'RevokeIntervalType', 'RevokeIntervalNumber']
-    
+
+    # member functions    
     def __init__(self, connection):
         SCObject.__init__(self, connection)
 
