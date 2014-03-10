@@ -49,7 +49,7 @@ if 'SCLIB_CONFIG' in os.environ:
 # as the current configuration locations, split with colons
 elif 'SCLIB_PATH' in os.environ:
     sclibConfigLocations = []
-    for path in os.environ['sclib_PATH'].split(":"):
+    for path in os.environ['SCLIB_PATH'].split(":"):
         sclibConfigLocations.append(expanduser(path))
 
 
