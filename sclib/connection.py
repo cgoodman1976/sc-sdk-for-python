@@ -70,6 +70,7 @@ try:
 except ImportError:
     import dummy_threading as threading
 
+
 class HostConnectionPool(object):
 
     """
@@ -207,7 +208,7 @@ class ConnectionPool(object):
         self.mutex = threading.Lock()
         ConnectionPool.STALE_DURATION = \
             __config__.getfloat('sclib', 'connection_stale_duration',
-                            ConnectionPool.STALE_DURATION)
+                                ConnectionPool.STALE_DURATION)
 
     def __getstate__(self):
         pickled_dict = copy.copy(self.__dict__)
@@ -269,18 +270,22 @@ class ConnectionPool(object):
                     del self.host_to_pool[host]
                 self.last_clean_time = now
 
+
 class BypassHTTPSConnection(httplib.HTTPSConnection):
-    #---------------------------------------------------------------------------
-    # # overrides the version in httplib so that we bypass certificate verification
-    #---------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
+    # overrides the version in httplib so that we bypass certificate verification
+    #-------------------------------------------------------------------------
+
     def connect(self):
         sock = socket.create_connection((self.host, self.port), self.timeout)
         if self._tunnel_host:
             self.sock = sock
             self._tunnel()
 
-        # wrap the socket using verification with the root certs in trusted_root_certs
-        cacert_path = os.path.join(os.path.dirname(os.path.abspath(sclib.__file__ )), 'cacerts', 'cacert.pem')
+        # wrap the socket using verification with the root certs in
+        # trusted_root_certs
+        cacert_path = os.path.join(
+            os.path.dirname(os.path.abspath(sclib.__file__)), 'cacerts', 'cacert.pem')
         self.sock = ssl.wrap_socket(sock,
                                     self.key_file,
                                     self.cert_file,
@@ -289,17 +294,20 @@ class BypassHTTPSConnection(httplib.HTTPSConnection):
 
 
 class VerifiedHTTPSConnection(httplib.HTTPSConnection):
-    #---------------------------------------------------------------------------
-    # # overrides the version in httplib so that we do certificate verification
-    #---------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
+    # overrides the version in httplib so that we do certificate verification
+    #-------------------------------------------------------------------------
+
     def connect(self):
         sock = socket.create_connection((self.host, self.port), self.timeout)
         if self._tunnel_host:
             self.sock = sock
             self._tunnel()
 
-        # wrap the socket using verification with the root certs in trusted_root_certs
-        cacert_path = os.path.join(os.path.dirname(os.path.abspath(sclib.__file__ )), 'cacerts', 'cacert.pem')
+        # wrap the socket using verification with the root certs in
+        # trusted_root_certs
+        cacert_path = os.path.join(
+            os.path.dirname(os.path.abspath(sclib.__file__)), 'cacerts', 'cacert.pem')
 
         self.sock = ssl.wrap_socket(sock,
                                     self.key_file,
@@ -307,59 +315,68 @@ class VerifiedHTTPSConnection(httplib.HTTPSConnection):
                                     cert_reqs=ssl.CERT_REQUIRED,
                                     ca_certs=cacert_path)
 
+
 class BypassHTTPSHandler(urllib2.HTTPSHandler):
-    #---------------------------------------------------------------------------
-    # # wraps https connections with ssl certificate verification
-    #---------------------------------------------------------------------------
-    def __init__(self, connection_class = BypassHTTPSConnection):
+    #-------------------------------------------------------------------------
+    # wraps https connections with ssl certificate verification
+    #-------------------------------------------------------------------------
+
+    def __init__(self, connection_class=BypassHTTPSConnection):
         self.specialized_conn_class = connection_class
         urllib2.HTTPSHandler.__init__(self)
 
     def https_open(self, req):
         return self.do_open(self.specialized_conn_class, req)
+
 
 class VerifiedHTTPSHandler(urllib2.HTTPSHandler):
-    #---------------------------------------------------------------------------
-    # # wraps https connections with ssl certificate verification
-    #---------------------------------------------------------------------------
-    def __init__(self, connection_class = VerifiedHTTPSConnection):
+    #-------------------------------------------------------------------------
+    # wraps https connections with ssl certificate verification
+    #-------------------------------------------------------------------------
+
+    def __init__(self, connection_class=VerifiedHTTPSConnection):
         self.specialized_conn_class = connection_class
         urllib2.HTTPSHandler.__init__(self)
 
     def https_open(self, req):
         return self.do_open(self.specialized_conn_class, req)
-    
+
+
 class SCAuthConnection:
-    def __init__( self, host_base, broker_name=None, broker_passphase=None, https=True):
+
+    def __init__(self, host_base, broker_name=None, broker_passphase=None, https=True):
 
         self.timeout = 10
         self.base_url = host_base
         self.broker = broker_name
         self.broker_passphrase = broker_passphase
         self.realm = "securecloud@trend.com"
-        
-        self.headers = {'Content-Type' : 'application/xml; charset=utf-8',
-                        'BrokerName' : self.broker,
+
+        self.headers = {'Content-Type': 'application/xml; charset=utf-8',
+                        'BrokerName': self.broker,
                         'Accept': 'application/xml'
                         }
-        
+
         #
         # wrap the socket using verification with the root certs in trusted_root_certs
         #
-        cacert_path = os.path.join(os.path.dirname(os.path.abspath(sclib.__file__ )), 'cacerts', 'cacert.pem')
+        cacert_path = os.path.join(
+            os.path.dirname(os.path.abspath(sclib.__file__)), 'cacerts', 'cacert.pem')
         validation = sclib.__config__.get('connection', 'SSL_VALIDATION')
 
         # setup HTTPS handler (Verified or Bypass)
         if (validation == 'Disable' or not https):
-            self.opener = urllib2.build_opener( BypassHTTPSHandler())
+            self.opener = urllib2.build_opener(BypassHTTPSHandler())
         else:
-            self.opener = urllib2.build_opener( VerifiedHTTPSHandler())
+            self.opener = urllib2.build_opener(VerifiedHTTPSHandler())
 
         # add digest handler if digest information provided
         if broker_name and broker_passphase:
             self.pwd_mgr = urllib2.HTTPPasswordMgr()
-            self.pwd_mgr.add_password(self.realm, self.base_url, self.broker, self.broker_passphrase)
-            self.opener.add_handler(urllib2.HTTPDigestAuthHandler(self.pwd_mgr))
+            self.pwd_mgr.add_password(
+                self.realm, self.base_url, self.broker, self.broker_passphrase)
+            self.opener.add_handler(
+                urllib2.HTTPDigestAuthHandler(self.pwd_mgr))
 
     def nice_format(self, data):
 
@@ -374,7 +391,7 @@ class SCAuthConnection:
         return data
 
     # ----- help function start -----
-    
+
     def build_request(self, req_url, params=None, headers=None, data=None, method='GET'):
         req = urllib2.Request(req_url)
 
@@ -386,22 +403,22 @@ class SCAuthConnection:
         if headers != None:
             for key, value in headers.iteritems():
                 req.add_header(key, value)
-            
+
         if method == 'POST' and data != '':
             req.add_data(data)
         elif method == 'DELETE':
             req.get_method = lambda: 'DELETE'
         else:
             pass
-        
+
         return req
-        
+
     def make_request(self, action='', params=None, headers=None, data='', method='GET'):
 
-        #prepare request url
+        # prepare request url
         api_url = '%s/%s' % (self.base_url, action)
-        
-        #make request
+
+        # make request
         req = self.build_request(api_url, params, headers, data, method)
 
         response = None
@@ -420,10 +437,10 @@ class SCAuthConnection:
         return response
 
     def close(self):
-        #=======================================================================
+        #======================================================================
         # (Optional) Close any open HTTP connections.  This is non-destructive,
         # and making a new request will open a connection again.
-        #=======================================================================
+        #======================================================================
 
         # close opener
         self.opener.close()
@@ -439,7 +456,8 @@ class SCQueryConnection(SCAuthConnection):
     ResponseError = SCServerError
 
     def __init__(self, host_base, broker_name=None, broker_passphase=None, https=True):
-        SCAuthConnection.__init__(self, host_base, broker_name, broker_passphase, https)
+        SCAuthConnection.__init__(
+            self, host_base, broker_name, broker_passphase, https)
 
     def get_utf8_value(self, value):
         return sclib.utils.get_utf8_value(value)
@@ -450,15 +468,16 @@ class SCQueryConnection(SCAuthConnection):
         for i in range(1, len(items) + 1):
             params['%s.%d' % (label, i)] = items[i - 1]
 
-    #---------------------------------------------------------------------------
-    # # Generic method
-    #---------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
+    # Generic method
+    #-------------------------------------------------------------------------
 
     def get_list(self, action, markers, params=None, headers=None, data='', path='/', parent=None, method='GET'):
         if not parent:
             parent = self
 
-        response = self.make_request(action, headers=headers, data=data, method=method)
+        response = self.make_request(
+            action, headers=headers, data=data, method=method)
         if response:
             body = response.read()
             rs = ResultSet(markers)
@@ -467,11 +486,12 @@ class SCQueryConnection(SCAuthConnection):
             return rs
         return None
 
-    def get_object(self, action, cls, params=None, headers=None, data='',path='/', parent=None, method='GET'):
+    def get_object(self, action, cls, params=None, headers=None, data='', path='/', parent=None, method='GET'):
         if not parent:
             parent = self
 
-        response = self.make_request(action, headers=headers, data=data, method=method)
+        response = self.make_request(
+            action, headers=headers, data=data, method=method)
         if response:
             body = response.read()
             obj = cls(parent)
@@ -489,4 +509,3 @@ class SCQueryConnection(SCAuthConnection):
             return response.code
 
         return None
-        

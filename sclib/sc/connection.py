@@ -42,19 +42,21 @@ from Crypto.PublicKey import RSA
 from Crypto.Cipher import PKCS1_OAEP
 from Crypto import Hash
 
+
 class Certificate(SCObject):
+
     def __init__(self, connection):
         SCObject.__init__(self, connection)
         self.level = None
         self.encoding = None
         self.certificate = None
         self.publickey = None
-        
+
     def startElement(self, name, attrs, connection):
         ret = SCObject.startElement(self, name, attrs, connection)
         if ret is not None:
             return ret
-        
+
         if name == 'certificate':
             self.id = attrs['level']
             self.encoding = attrs['encoding']
@@ -64,23 +66,25 @@ class Certificate(SCObject):
     def endElement(self, name, value, connection):
         if name == 'certificate':
             self.certificate = value
-            self.publickey = """-----BEGIN RSA PUBLIC KEY-----\n%s\n-----END RSA PUBLIC KEY-----\n""" % (self.certificate)
+            self.publickey = """-----BEGIN RSA PUBLIC KEY-----\n%s\n-----END RSA PUBLIC KEY-----\n""" % (
+                self.certificate)
         else:
             setattr(self, name, value)
-            
+
     def encryptData(self, data):
         if self.certificate:
             publickey = RSA.importKey(self.publickey).publickey()
             cipher = PKCS1_OAEP.new(publickey, Hash.SHA256)
-            encrypted = cipher.encrypt( bytes(data) )
+            encrypted = cipher.encrypt(bytes(data))
             return base64.b64encode(encrypted)
         return None
 
+
 class Authentication(SCObject):
-    
+
     # Valid xml object attributes
     ValidAttributes = ['id', 'token', 'expires', 'data', 'accountId']
-    
+
     def __init__(self, connection, tag='authentication'):
         SCObject.__init__(self, connection, tag)
         self.id = None
@@ -93,7 +97,7 @@ class Authentication(SCObject):
         ret = SCObject.startElement(self, name, attrs, connection)
         if ret is not None:
             return ret
-        
+
         if name == 'authenticationResult':
             self.id = attrs['id']
             self.token = attrs['token']
@@ -103,17 +107,17 @@ class Authentication(SCObject):
 
     def endElement(self, name, value, connection):
         setattr(self, name, value)
-        
+
     def buildElements(self, elements=None):
         authentication = ElementTree.Element('authentication')
-        
+
         # build attributes
         for attr in self.ValidAttributes:
-            if getattr(self, attr): authentication.attrib[attr] = getattr(self, attr)
+            if getattr(self, attr):
+                authentication.attrib[attr] = getattr(self, attr)
 
         return authentication
 
-        
     def isAuthenticated(self):
         return self.token is not None
 
@@ -144,9 +148,10 @@ class SCConnection(SCQueryConnection):
     REST_LANGUAGE = 'language'
 
     def __init__(self, host_base, broker_name=None, broker_passphase=None, https=True):
-        SCQueryConnection.__init__( self, host_base, broker_name, broker_passphase, https)
-        
-        #members
+        SCQueryConnection.__init__(
+            self, host_base, broker_name, broker_passphase, https)
+
+        # members
         self.__authentication = None
         self.__certificate = None
         self.__user = None
@@ -154,7 +159,7 @@ class SCConnection(SCQueryConnection):
 
     # ---------------
     # properties
-    # ---------------  
+    # ---------------
     @property
     def authentication(self):
         return self.__authentication
@@ -173,61 +178,62 @@ class SCConnection(SCQueryConnection):
 
     # ---------------
     # member functions
-    # ---------------  
+    # ---------------
     def getCertificate(self):
-        self.__certificate = self.get_object( '%s' % (self.REST_PUBLIC_CERTIFICATE),
-                                              Certificate)
+        self.__certificate = self.get_object('%s/' % (self.REST_PUBLIC_CERTIFICATE),
+                                             Certificate)
         if not self.__certificate:
-            raise SCResponseError( '4xx' , "Unknown error")
+            raise SCResponseError('4xx', "Unknown error")
 
         return self.__certificate
-    
+
     def basicAuth(self, name, password):
-        
+
         if self.certificate is None:
             self.getCertificate()
-        
+
         # build authentication request
         auth_name = base64.b64encode(name)
         auth_req = Authentication(self)
         auth_req.data = self.certificate.encryptData(password)
         req_data = ElementTree.tostring(auth_req.buildElements())
 
-        auth = self.get_object( '%s/%s' % (self.REST_BASIC_AUTH, auth_name), 
-                                Authentication, data=req_data, method='POST')
+        auth = self.get_object('%s/%s' % (self.REST_BASIC_AUTH, auth_name),
+                               Authentication, data=req_data, method='POST')
         if auth:
             self.__authentication = auth
             self.headers['X-UserSession'] = self.authentication.token
             self.user = self.getUser(auth.id)
             self.account = self.getAccount()
         return self.authentication
-  
+
     def isAuthenticated(self):
         if self.authentication is None:
-            raise SCClientError('Connection abort. Needs Authentication first!')
-        
+            raise SCClientError(
+                'Connection abort. Needs Authentication first!')
+
         return True
-  
-    #===========================================================================
-    # # function - Policy/SecurityGroup
-    #===========================================================================
+
+    #=========================================================================
+    # function - Policy/SecurityGroup
+    #=========================================================================
     def listAllSecurityGroup(self):
-        if self.authentication is None: 
+        if self.authentication is None:
             return None
-    
-        return self.get_list( '%s/' % (self.REST_SECURITY_GROUP), 
-                              [('securityGroup', SecurityGroup)])
+
+        return self.get_list('%s/' % (self.REST_SECURITY_GROUP),
+                             [('securityGroup', SecurityGroup)])
 
     def getSecurityGroup(self, id):
-        if self.authentication is None: 
+        if self.authentication is None:
             return None
-    
-        rule = self.get_object( '%s/%s/' % (self.REST_SECURITY_GROUP, id), 
-                                SecurityGroup)
+
+        rule = self.get_object('%s/%s/' % (self.REST_SECURITY_GROUP, id),
+                               SecurityGroup)
         return rule
 
     def createSecurityGroup(self, name):
-        if self.authentication is None: 
+        if self.authentication is None:
             return None
 
         policy = SecurityGroup(self)
@@ -236,48 +242,48 @@ class SCConnection(SCQueryConnection):
         #========================
 
         data = policy.tostring()
-        policy = self.get_object( '%s/' % (self.REST_SECURITY_GROUP), 
-                                  SecurityGroup, data=data, method='POST')
+        policy = self.get_object('%s/' % (self.REST_SECURITY_GROUP),
+                                 SecurityGroup, data=data, method='POST')
         return policy
 
     def deleteSecurityGroup(self, id):
-        if self.authentication is None: 
+        if self.authentication is None:
             return None
 
-        status = self.get_status( '%s/%s/' % (self.REST_SECURITY_GROUP, id), 
-                                  method='DELETE')
+        status = self.get_status('%s/%s/' % (self.REST_SECURITY_GROUP, id),
+                                 method='DELETE')
         return status
 
     def listAllSecurityRuleTypes(self):
-        if self.authentication is None: 
+        if self.authentication is None:
             return None
 
-        return self.get_list( '%s' % (self.REST_SECURITY_RULE_TYPE), 
-                              [('securityRuleType', SecurityRuleType)])
+        return self.get_list('%s' % (self.REST_SECURITY_RULE_TYPE),
+                             [('securityRuleType', SecurityRuleType)])
 
     def getSecurityRuleType(self, id):
-        if self.authentication is None: 
+        if self.authentication is None:
             return None
-    
-        rule = self.get_object( '%s/%s/' % (self.REST_SECURITY_RULE_TYPE, id), 
-                                SecurityRuleType)
+
+        rule = self.get_object('%s/%s/' % (self.REST_SECURITY_RULE_TYPE, id),
+                               SecurityRuleType)
         return rule
 
-    #===========================================================================
-    # # function - User
-    #===========================================================================
+    #=========================================================================
+    # function - User
+    #=========================================================================
     def listAllUsers(self):
-        if self.isAuthenticated() is False : 
+        if self.isAuthenticated() is False:
             return None
 
-        return self.get_list( '%s/' % (self.REST_USER), 
-                              [('user', User)])
-        
-    def createUser(self, login, logintext, usertype='localuser', 
-                   firstname='', lastname='', email='', 
+        return self.get_list('%s/' % (self.REST_USER),
+                             [('user', User)])
+
+    def createUser(self, login, logintext, usertype='localuser',
+                   firstname='', lastname='', email='',
                    role='Administrator', MFA='false'):
 
-        if self.isAuthenticated() is False : 
+        if self.isAuthenticated() is False:
             return None
 
         user = User(self)
@@ -291,19 +297,19 @@ class SCConnection(SCQueryConnection):
         user.MFAStatus = MFA
         user.setRole(role, MFA)
         data = ElementTree.tostring(user.buildElements())
-        return self.get_object( '%s/' % (self.REST_USER), 
-                                User, data=data, method='POST')
-    
+        return self.get_object('%s/' % (self.REST_USER),
+                               User, data=data, method='POST')
+
     def getUser(self, id):
-        if self.isAuthenticated() is False : 
+        if self.isAuthenticated() is False:
             return None
 
-        return self.get_object( '%s/%s/' % (self.REST_USER, id), 
-                                User)
-   
+        return self.get_object('%s/%s/' % (self.REST_USER, id),
+                               User)
+
     def changeUserPassword(self, lastlogintext, newlogintext):
 
-        if self.isAuthenticated() is False : 
+        if self.isAuthenticated() is False:
             return None
 
         params = {}
@@ -311,87 +317,87 @@ class SCConnection(SCQueryConnection):
         user.lastlogintext = base64.b64encode(lastlogintext)
         user.logintext = base64.b64encode(newlogintext)
         data = ElementTree.tostring(user.buildElements())
-        return self.get_status( 'user/%s/%s/' % ('logintext', self.authentication.id), 
-                                data=data, method='POST')
+        return self.get_status('user/%s/%s/' % ('logintext', self.authentication.id),
+                               data=data, method='POST')
 
     def getUserRights(self):
-        if self.isAuthenticated() is False : 
+        if self.isAuthenticated() is False:
             return None
 
-        return self.get_list( '%s/' % (self.REST_USER_RIGHT), 
-                              [('userRights', UserRight)])
+        return self.get_list('%s/' % (self.REST_USER_RIGHT),
+                             [('userRights', UserRight)])
 
-    #===========================================================================
+    #=========================================================================
     # virtual machine function
-    #===========================================================================
+    #=========================================================================
     def listAllVM(self):
-        if self.isAuthenticated() is False : 
+        if self.isAuthenticated() is False:
             return None
 
-        return self.get_list( '%s' % (self.REST_VM), 
-                              [('vm', VirtualMachine)])
+        return self.get_list('%s' % (self.REST_VM),
+                             [('vm', VirtualMachine)])
 
     def getVM(self, id):
-        if self.isAuthenticated() is False : 
+        if self.isAuthenticated() is False:
             return None
 
-        return self.get_object( '%s/%s/' % (self.REST_VM, id), 
-                                VirtualMachine)
-    
-    #===========================================================================
+        return self.get_object('%s/%s/' % (self.REST_VM, id),
+                               VirtualMachine)
+
+    #=========================================================================
     # Provider function
-    #===========================================================================
+    #=========================================================================
     def listAllProvider(self):
-        if self.isAuthenticated() is False : 
+        if self.isAuthenticated() is False:
             return None
 
-        return self.get_list( '%s' % (self.REST_PROVIDER), 
-                              [('provider', Provider)])
+        return self.get_list('%s' % (self.REST_PROVIDER),
+                             [('provider', Provider)])
 
     def getProvider(self, name):
-        if self.isAuthenticated() is False : 
+        if self.isAuthenticated() is False:
             return None
 
-        return self.get_object( '%s/%s/' % (self.REST_PROVIDER, name), 
-                                Provider)
-    
-    #---------------------------------------------------------------------------
+        return self.get_object('%s/%s/' % (self.REST_PROVIDER, name),
+                               Provider)
+
+    #-------------------------------------------------------------------------
     # key request
-    #---------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
     def listAllRunningVM(self):
-        if self.isAuthenticated() is False : 
+        if self.isAuthenticated() is False:
             return None
-        
-        return self.get_list( '%s' % (self.REST_RUNNING_VM), 
-                              [('runningVM', RunningVM)])
+
+        return self.get_list('%s' % (self.REST_RUNNING_VM),
+                             [('runningVM', RunningVM)])
 
     def listKeyRequest(self, id):
-        if self.isAuthenticated() is False : 
+        if self.isAuthenticated() is False:
             return None
-        
-        return self.get_object( '%s/%s/%s/' % (self.REST_RUNNING_VM, self.REST_KEY_REQUEST, id ), 
-                                KeyRequest)
 
-    #---------------------------------------------------------------------------
-    # # Administration - Settings
-    #---------------------------------------------------------------------------
+        return self.get_object('%s/%s/%s/' % (self.REST_RUNNING_VM, self.REST_KEY_REQUEST, id),
+                               KeyRequest)
+
+    #-------------------------------------------------------------------------
+    # Administration - Settings
+    #-------------------------------------------------------------------------
     def getDSMSetting(self):
         if self.isAuthenticated() is False:
             return None
-        
-        return self.get_object( '%s/' % (self.REST_DSM_SETTING), 
-                                DSMConnSettings)
+
+        return self.get_object('%s/' % (self.REST_DSM_SETTING),
+                               DSMConnSettings)
 
     def getKMIPSetting(self):
         if self.isAuthenticated() is False:
             return None
-        
-        return self.get_object( '%s/%s/' % (self.REST_KMIP_SETTING, 'setting'), 
-                                KMIPConnSettings)
 
-    #---------------------------------------------------------------------------
-    # # Administration - Account
-    #---------------------------------------------------------------------------
+        return self.get_object('%s/%s/' % (self.REST_KMIP_SETTING, 'setting'),
+                               KMIPConnSettings)
+
+    #-------------------------------------------------------------------------
+    # Administration - Account
+    #-------------------------------------------------------------------------
     def getAccount(self):
         if self.isAuthenticated() is False:
             return None
@@ -399,45 +405,44 @@ class SCConnection(SCQueryConnection):
         # get account info with current connection
         return self.get_object('%s/' % (self.REST_ACCOUNT), Account)
 
-    #---------------------------------------------------------------------------
-    # # Administration - Timezon
-    #---------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
+    # Administration - Timezon
+    #-------------------------------------------------------------------------
     def listTimezone(self):
         if self.isAuthenticated() is False:
             return None
 
         # get account info with current connection
         return self.get_list('%s/' % (self.REST_TIMEZONE),
-                             [('timezoneList', Timezone)] )
-        
-    #---------------------------------------------------------------------------
-    # # Administration - Server Status
-    #---------------------------------------------------------------------------
+                             [('timezoneList', Timezone)])
+
+    #-------------------------------------------------------------------------
+    # Administration - Server Status
+    #-------------------------------------------------------------------------
     def getEntrypoint(self):
         if self.isAuthenticated() is False:
             return None
 
         # get account info with current connection
-        return self.get_status('%s/' % (self.REST_ENTRYPOINT) )
+        return self.get_status('%s/' % (self.REST_ENTRYPOINT))
 
-    #---------------------------------------------------------------------------
-    # # Administration - License status
-    #---------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
+    # Administration - License status
+    #-------------------------------------------------------------------------
     def getLicense(self):
         if self.isAuthenticated() is False:
             return None
 
         # get account info with current connection
-        return self.get_object('%s/' % (self.REST_LICENSE), License )
+        return self.get_object('%s/' % (self.REST_LICENSE), License)
 
-    #---------------------------------------------------------------------------
-    # # Administration - Language
-    #---------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
+    # Administration - Language
+    #-------------------------------------------------------------------------
     def listLanguages(self):
         if self.isAuthenticated() is False:
             return None
 
         # get account info with current connection
-        return self.get_list('%s/' % (self.REST_LANGUAGE), 
-                             [('language', Language)] )
-    
+        return self.get_list('%s/' % (self.REST_LANGUAGE),
+                             [('language', Language)])

@@ -31,6 +31,7 @@ from sclib.resultset import ResultSet
 
 
 class SCClientError(StandardError):
+
     """
     General sclib Client error (error accessing SecureCloud)
     """
@@ -44,6 +45,7 @@ class SCClientError(StandardError):
 
     def __str__(self):
         return 'SCClientError: %s' % self.reason
+
 
 class SCServerError(StandardError):
 
@@ -106,6 +108,7 @@ class SCServerError(StandardError):
         self.error_message = None
         self.box_usage = None
 
+
 class ConsoleOutput:
 
     def __init__(self, parent=None):
@@ -126,7 +129,9 @@ class ConsoleOutput:
         else:
             setattr(self, name, value)
 
+
 class SCResponseError(SCServerError):
+
     """
     Error in response from SecureCloud.
     """
@@ -135,8 +140,8 @@ class SCResponseError(SCServerError):
         self.errors = None
         self._errorResultSet = []
         SCServerError.__init__(self, status, reason, body)
-        self.errors = [ (e.error_code, e.error_message) \
-                for e in self._errorResultSet ]
+        self.errors = [(e.error_code, e.error_message)
+                       for e in self._errorResultSet]
         if len(self.errors):
             self.error_code, self.error_message = self.errors[0]
 
@@ -151,13 +156,14 @@ class SCResponseError(SCServerError):
         if name == 'RequestID':
             self.request_id = value
         else:
-            return None # don't call subclass here
+            return None  # don't call subclass here
 
     def _cleanupParsedProperties(self):
         SCServerError._cleanupParsedProperties(self)
         self._errorResultSet = []
         for p in ('errors'):
             setattr(self, p, None)
+
 
 class _SCError:
 
@@ -177,38 +183,50 @@ class _SCError:
         else:
             return None
 
+
 class SCConnectionError(SCClientError):
+
     """
     General error connecting to SecureCloud Service.
     """
     pass
 
+
 class InvalidUriError(Exception):
+
     """Exception raised when URI is invalid."""
 
     def __init__(self, message):
         Exception.__init__(self, message)
         self.message = message
 
+
 class InvalidAclError(Exception):
+
     """Exception raised when ACL XML is invalid."""
 
     def __init__(self, message):
         Exception.__init__(self, message)
         self.message = message
 
+
 class InvalidCorsError(Exception):
+
     """Exception raised when CORS XML is invalid."""
 
     def __init__(self, message):
         Exception.__init__(self, message)
         self.message = message
 
+
 class NoAuthHandlerFound(Exception):
+
     """Is raised when no auth handlers were found ready to authenticate."""
     pass
 
+
 class TooManyAuthHandlerReadyToAuthenticate(Exception):
+
     """Is raised when there are more than one auth handler ready.
 
     In normal situation there should only be one auth handler that is ready to
@@ -220,6 +238,8 @@ class TooManyAuthHandlerReadyToAuthenticate(Exception):
     pass
 
 # Enum class for resumable upload failure disposition.
+
+
 class ResumableTransferDisposition(object):
     # START_OVER means an attempt to resume an existing transfer failed,
     # and a new resumable upload should be attempted (without delay).
@@ -243,7 +263,9 @@ class ResumableTransferDisposition(object):
     # upload ID.
     ABORT = 'ABORT'
 
+
 class ResumableUploadException(Exception):
+
     """
     Exception raised for various resumable upload problems.
 
@@ -259,7 +281,9 @@ class ResumableUploadException(Exception):
         return 'ResumableUploadException("%s", %s)' % (
             self.message, self.disposition)
 
+
 class ResumableDownloadException(Exception):
+
     """
     Exception raised for various resumable download problems.
 

@@ -25,6 +25,7 @@
 from xml.etree import ElementTree
 from xml.dom.minidom import parseString
 
+
 class SCObject(object):
     # Base class of All SecureCloud objects
 
@@ -32,7 +33,7 @@ class SCObject(object):
     def __init__(self, connection=None, tag=''):
         self.connection = connection
         self.__tag = tag
-        
+
     @property
     def tag(self):
         return self.__tag
@@ -51,7 +52,7 @@ class SCObject(object):
 
     def tostring(self):
         return ElementTree.tostring(self.buildElements(), encoding='utf-8')
-    
+
     def niceFormat(self):
         # build from self's elements
         xmlstr = parseString(self.tostring())

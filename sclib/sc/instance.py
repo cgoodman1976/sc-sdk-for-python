@@ -28,30 +28,31 @@ from sclib.sc.device import Device, Volume
 from sclib.sc.provider import Provider
 from xml.etree import ElementTree
 
+
 class Instance(SCObject):
+
     def __init__(self, connection=None):
         pass
 
-    
+
 class VirtualMachine(SCObject):
-    #===========================================================================
+    #=========================================================================
     # present vm object
-    #===========================================================================
-        
+    #=========================================================================
+
     # Present valid vm object attributes, not inner objects
-    ValidAttributes = [ 'SecurityGroupGUID', 'integrity',
-                        'autoProvision', 'nonEncryptedDeviceCount', 'detectedKeyCount', 
-                        'encryptableDeviceCount', 'encryptedDeviceCount', 'encryptingDeviceCount', 'pendingDeviceCount',
-                        'hostname', 'href',
-                        'imageGUID', 'imageID', 'imageName', 'instanceID', 'instanceGUID',
-                        'lastModified']
-    
-    
+    ValidAttributes = ['SecurityGroupGUID', 'integrity',
+                       'autoProvision', 'nonEncryptedDeviceCount', 'detectedKeyCount',
+                       'encryptableDeviceCount', 'encryptedDeviceCount', 'encryptingDeviceCount', 'pendingDeviceCount',
+                       'hostname', 'href',
+                       'imageGUID', 'imageID', 'imageName', 'instanceID', 'instanceGUID',
+                       'lastModified']
+
     def __init__(self, connection, tag='vm'):
         SCObject.__init__(self, connection, tag)
-        #-----------------------------------------------------------------------
-        # # Attributes
-        #-----------------------------------------------------------------------
+        #----------------------------------------------------------------------
+        # Attributes
+        #----------------------------------------------------------------------
         self.SecurityGroupGUID = None
         self.autoProvision = None
         self.detectedKeyCount = None
@@ -68,26 +69,26 @@ class VirtualMachine(SCObject):
         self.lastModified = None
         self.nonEncryptedDeviceCount = None
         self.pendingDeviceCount = None
-        #-----------------------------------------------------------------------
-        # # elements
-        #-----------------------------------------------------------------------
+        #----------------------------------------------------------------------
+        # elements
+        #----------------------------------------------------------------------
         self.imageDescription = None
-        #-----------------------------------------------------------------------
-        # # Inner objects
-        #-----------------------------------------------------------------------
+        #----------------------------------------------------------------------
+        # Inner objects
+        #----------------------------------------------------------------------
         self.provider = None
         self.platform = None
         self.securecloudAgent = None
         # Device list
         self.devices = ResultSet([('device', Device)], 'devices')
-        
+
         pass
 
     def startElement(self, name, attrs, connection):
         ret = SCObject.startElement(self, name, attrs, connection)
         if ret is not None:
             return ret
-        
+
         if name == 'vm':
             # keep all attributes
             for key, value in attrs.items():
@@ -113,77 +114,83 @@ class VirtualMachine(SCObject):
             self.imageDescription = value
         else:
             setattr(self, name, value)
-            
+
     def buildElements(self):
 
         vm = ElementTree.Element('vm')
-        
+
         # build attributes
         for e in self.ValidAttributes:
-            if getattr(self, e): vm.attrib[e] = getattr(self, e)
+            if getattr(self, e):
+                vm.attrib[e] = getattr(self, e)
 
         if self.imageDescription:
             description = ElementTree.SubElement(vm, "imageDescription")
             description.text = self.imageDescription
 
         # append inner objects
-        if getattr(self, 'provider'): vm.append( self.provider.buildElements() )
-        if getattr(self, 'platform'): vm.append( self.platform.buildElements() )
-        if getattr(self, 'securecloudAgent'): vm.append( self.securecloudAgent.buildElements() )
-        if getattr(self, 'devices'): vm.append( self.devices.buildElements() )
-            
+        if getattr(self, 'provider'):
+            vm.append(self.provider.buildElements())
+        if getattr(self, 'platform'):
+            vm.append(self.platform.buildElements())
+        if getattr(self, 'securecloudAgent'):
+            vm.append(self.securecloudAgent.buildElements())
+        if getattr(self, 'devices'):
+            vm.append(self.devices.buildElements())
+
         return vm
 
     def _update(self, updated):
         self.__dict__.update(updated.__dict__)
 
-    # ----- functions start 
+    # ----- functions start
 
     def update(self):
         action = 'vm/%s/' % self.imageGUID
         data = self.tostring()
-        updated = self.connection.get_object(action, VirtualMachine, data=data, method='POST')
+        updated = self.connection.get_object(
+            action, VirtualMachine, data=data, method='POST')
         if updated:
             self._update(updated)
             return self
-        
+
         return updated
-    
+
     def delete(self):
-        #-----------------------------------------------------------------------
+        #----------------------------------------------------------------------
         # delete vm itself
-        #-----------------------------------------------------------------------
+        #----------------------------------------------------------------------
         action = 'vm/%s/' % self.imageGUID
         return self.connection.get_status(action, method='DELETE')
 
     def getDevice(self, deviceID):
-        #-----------------------------------------------------------------------
+        #----------------------------------------------------------------------
         # list all devices
-        #-----------------------------------------------------------------------
+        #----------------------------------------------------------------------
         action = 'vm/%s/device/%s/' % (self.imageGUID, deviceID)
         return self.connection.get_object(action, Device)
-    
+
     def deleteDevice(self, deviceID):
-        #-----------------------------------------------------------------------
+        #----------------------------------------------------------------------
         # delete device inside a virtual machine
-        #-----------------------------------------------------------------------
+        #----------------------------------------------------------------------
         # :deviceID the targe device to be delete in a virtual machine'
-        
+
         action = 'vm/%s/device/%s/' % (self.imageGUID, deviceID)
         return self.connection.get_status(action, method='DELETE')
 
     # ----- Encryption -----
 
     def encrypt(self, deviceID):
-        #-----------------------------------------------------------------------
+        #----------------------------------------------------------------------
         # encrypt a VM/Computer
-        #-----------------------------------------------------------------------
-        
+        #----------------------------------------------------------------------
+
         action = 'vm/%s/encrypt/' % (self.imageGUID)
         return self.connection.get_status(action)
 
     # ----- Create RAID device
-       
+
     def createRAID(self, name, filesystem, mountpoint, device_id_list, deviceID=None):
 
         # create raid device object
@@ -208,8 +215,9 @@ class VirtualMachine(SCObject):
         data = dev.tostring()
         return self.connection.get_status(action, Device, data=data, method='POST')
 
+
 class SCAgent(SCObject):
-    
+
     # Present valid vm object attributes, not inner objects
     ValidAttributes = ['agentStatus', 'agentVersion']
 
@@ -222,7 +230,7 @@ class SCAgent(SCObject):
         ret = SCObject.startElement(self, name, attrs, connection)
         if ret is not None:
             return ret
-        
+
         if name == 'securecloudAgent':
             for key, value in attrs.items():
                 setattr(self, key, value)
@@ -232,11 +240,11 @@ class SCAgent(SCObject):
 
     def endElement(self, name, value, connection):
         setattr(self, name, value)
-            
+
     def buildElements(self):
         agent = ElementTree.Element('securecloudAgent')
-        if self.agentStatus: agent.attrib['agentStatus'] = self.agentStatus
-        if self.agentVersion: agent.attrib['agentVersion'] = self.agentVersion
+        if self.agentStatus:
+            agent.attrib['agentStatus'] = self.agentStatus
+        if self.agentVersion:
+            agent.attrib['agentVersion'] = self.agentVersion
         return agent
-
-    
