@@ -17,7 +17,7 @@ python interface SDK for SecureCloud Management API
 - Add sc-sdk-for-python folder into `PYTHONPATH` environment variable
 
 - There are 2 path for default configuration file
-	- /etc/sclib.config
+	- /etc/.sclib.config
 	- put `.sclib.config` file in your home folder
 		- ~/.sclib.config (for Linux)
 		- c:\Users\ `<user name>` \ .sclib.config (for Windows)

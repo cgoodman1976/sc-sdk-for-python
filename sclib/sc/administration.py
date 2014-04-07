@@ -23,11 +23,12 @@
 from sclib.sc.scobject import SCObject
 from xml.etree import ElementTree
 
+
 class DSMConnSettings(SCObject):
-    
-    ValidAttributes = ['Enabled', 'ServerAddress', 'Port', 
+
+    ValidAttributes = ['Enabled', 'ServerAddress', 'Port',
                        'Tenant', 'Username', 'Password']
-    
+
     def __init__(self, connection):
         SCObject.__init__(self, connection)
         self.Enabled = None
@@ -36,12 +37,12 @@ class DSMConnSettings(SCObject):
         self.Tenant = None
         self.Username = None
         self.Password = None
-        
+
     def startElement(self, name, attrs, connection):
         ret = SCObject.startElement(self, name, attrs, connection)
         if ret is not None:
             return ret
-        
+
         if name == 'DSMConnSettings':
             for key, value in attrs.items():
                 if key in self.ValidAttributes:
@@ -62,8 +63,7 @@ class DSMConnSettings(SCObject):
             self.Username = value
         elif name == 'Password':
             self.Password = value
-        
-            
+
     def buildElements(self):
         setting = ElementTree.Element('DSMConnSettings')
 
@@ -71,7 +71,8 @@ class DSMConnSettings(SCObject):
         if self.Enabled:
             ElementTree.SubElement(setting, "Enabled").text = self.Enabled
         if self.ServerAddress:
-            ElementTree.SubElement(setting, "ServerAddress").text = self.ServerAddress
+            ElementTree.SubElement(
+                setting, "ServerAddress").text = self.ServerAddress
         if self.ServerAddress:
             ElementTree.SubElement(setting, "Port").text = self.Port
         if self.ServerAddress:
@@ -83,22 +84,23 @@ class DSMConnSettings(SCObject):
 
         return setting
 
+
 class KMIPConnSettings(SCObject):
-    
-    ValidAttributes = ['accountDBID', 'active', 
-                       'canModify', 'clientCertPassword', 
+
+    ValidAttributes = ['accountDBID', 'active',
+                       'canModify', 'clientCertPassword',
                        'doTestConnection', 'enabled',
                        'hostname', 'id', 'port']
-    
+
     def __init__(self, connection):
         SCObject.__init__(self, connection)
-        
+
         # attributes
         self.accountDBID = None
-        self.active = None 
+        self.active = None
         self.canModify = None
-        self.clientCertPassword = None 
-        self.doTestConnection = None 
+        self.clientCertPassword = None
+        self.doTestConnection = None
         self.enabled = None
         self.hostname = None
         self.id = None
@@ -111,12 +113,12 @@ class KMIPConnSettings(SCObject):
         self.clientPrivateKey = None
         self.serverCertificateFileName = None
         self.serverCertificate = None
-        
+
     def startElement(self, name, attrs, connection):
         ret = SCObject.startElement(self, name, attrs, connection)
         if ret is not None:
             return ret
-        
+
         if name == 'kmipConnectionSetting':
             for key, value in attrs.items():
                 if key in self.ValidAttributes:
@@ -137,46 +139,53 @@ class KMIPConnSettings(SCObject):
             self.serverCertificateFileName = value
         elif name == 'serverCertificate':
             self.serverCertificate = value
-        
-            
+
     def buildElements(self):
         setting = ElementTree.Element('kmipConnectionSetting')
 
         # build attributes
         for e in self.ValidAttributes:
-            if getattr(self, e): setting.attrib[e] = getattr(self, e)
+            if getattr(self, e):
+                setting.attrib[e] = getattr(self, e)
 
         # Set all valid Elements
         if self.Enabled:
-            ElementTree.SubElement(setting, "clientCertificateFileName").text = self.clientCertificateFileName
+            ElementTree.SubElement(
+                setting, "clientCertificateFileName").text = self.clientCertificateFileName
         if self.ServerAddress:
-            ElementTree.SubElement(setting, "clientCertificate").text = self.clientCertificate
+            ElementTree.SubElement(
+                setting, "clientCertificate").text = self.clientCertificate
         if self.ServerAddress:
-            ElementTree.SubElement(setting, "clientPrivateKeyFileName").text = self.clientPrivateKeyFileName
+            ElementTree.SubElement(
+                setting, "clientPrivateKeyFileName").text = self.clientPrivateKeyFileName
         if self.ServerAddress:
-            ElementTree.SubElement(setting, "clientPrivateKey").text = self.clientPrivateKey
+            ElementTree.SubElement(
+                setting, "clientPrivateKey").text = self.clientPrivateKey
         if self.ServerAddress:
-            ElementTree.SubElement(setting, "serverCertificateFileName").text = self.serverCertificateFileName
+            ElementTree.SubElement(
+                setting, "serverCertificateFileName").text = self.serverCertificateFileName
         if self.ServerAddress:
-            ElementTree.SubElement(setting, "serverCertificate").text = self.serverCertificate
+            ElementTree.SubElement(
+                setting, "serverCertificate").text = self.serverCertificate
 
         return setting
 
+
 class Language(SCObject):
     ValidAttributes = ['isDefault', 'languageCode']
-    
+
     def __init__(self, connection):
         SCObject.__init__(self, connection)
-        
+
         # attributes
         self.isDefault = None
-        self.languageCode = None 
+        self.languageCode = None
 
     def startElement(self, name, attrs, connection):
         ret = SCObject.startElement(self, name, attrs, connection)
         if ret is not None:
             return ret
-        
+
         if name == 'language':
             for key, value in attrs.items():
                 setattr(self, key, value)
@@ -185,33 +194,34 @@ class Language(SCObject):
 
     def endElement(self, name, value, connection):
         setattr(self, name, value)
-            
+
     def buildElements(self):
         language = ElementTree.Element('language')
 
         # build attributes
         for e in self.ValidAttributes:
-            if getattr(self, e): setting.attrib[e] = getattr(self, e)
+            if getattr(self, e):
+                setting.attrib[e] = getattr(self, e)
 
         return language
 
 
 class Timezone(SCObject):
     ValidAttributes = ['baseUtcOffset', 'timezonEn', 'timezoneId']
-    
+
     def __init__(self, connection):
         SCObject.__init__(self, connection)
-        
+
         # attributes
         self.baseUtcOffset = None
-        self.timezonEn = None 
+        self.timezonEn = None
         self.timezoneId = None
 
     def startElement(self, name, attrs, connection):
         ret = SCObject.startElement(self, name, attrs, connection)
         if ret is not None:
             return ret
-        
+
         if name == 'timezone':
             for key, value in attrs.items():
                 if key in self.ValidAttributes:
@@ -221,27 +231,29 @@ class Timezone(SCObject):
 
     def endElement(self, name, value, connection):
         setattr(self, name, value)
-            
+
     def buildElements(self):
         timezone = ElementTree.Element('timezone')
 
         # build attributes
         for e in self.ValidAttributes:
-            if getattr(self, e): setting.attrib[e] = getattr(self, e)
+            if getattr(self, e):
+                setting.attrib[e] = getattr(self, e)
 
         return timezone
+
 
 class License(SCObject):
     ValidAttributes = ['ac', 'account', 'activationDate', 'expirationDate', 'expireNotificationDate'
                        'gracePeriod', 'id', 'inUse', 'isPRLicense', 'isTrial', 'lastUpdate', 'seats'
                        'updateInterval', 'verifyStatus', 'LicenseProfile']
-    
+
     def __init__(self, connection):
         SCObject.__init__(self, connection)
-        
+
         # attributes
         self.ac = None
-        self.account = None 
+        self.account = None
         self.activationDate = None
         self.expirationDate = None
         self.expireNotificationDate = None
@@ -260,7 +272,7 @@ class License(SCObject):
         ret = SCObject.startElement(self, name, attrs, connection)
         if ret is not None:
             return ret
-        
+
         if name == 'license':
             for key, value in attrs.items():
                 setattr(self, key, value)
@@ -272,15 +284,17 @@ class License(SCObject):
             self.LicenseProfile = value
         else:
             setattr(self, name, value)
-            
+
     def buildElements(self):
         license = ElementTree.Element('license')
 
         # build attributes
         for e in self.ValidAttributes:
-            if getattr(self, e): setting.attrib[e] = getattr(self, e)
+            if getattr(self, e):
+                setting.attrib[e] = getattr(self, e)
 
-        if self.LicenseProfile: 
-            ElementTree.SubElement(license, "LicenseProfile").text = self.LicenseProfile
+        if self.LicenseProfile:
+            ElementTree.SubElement(
+                license, "LicenseProfile").text = self.LicenseProfile
 
         return license

@@ -14,7 +14,7 @@
 # THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
 # OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABIL-
 # ITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT
-# SHALL THE AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, 
+# SHALL THE AUTHOR BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
 # WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 # IN THE SOFTWARE.
@@ -49,14 +49,15 @@ if 'SCLIB_CONFIG' in os.environ:
 # as the current configuration locations, split with colons
 elif 'SCLIB_PATH' in os.environ:
     sclibConfigLocations = []
-    for path in os.environ['sclib_PATH'].split(":"):
+    for path in os.environ['SCLIB_PATH'].split(":"):
         sclibConfigLocations.append(expanduser(path))
 
 
 class Config(ConfigParser.SafeConfigParser):
 
     def __init__(self, path=None, fp=None, do_load=True):
-        ConfigParser.SafeConfigParser.__init__(self, {'working_dir' : '/mnt/sc', 'debug' : '0'})
+        ConfigParser.SafeConfigParser.__init__(
+            self, {'working_dir': '/mnt/sc', 'debug': '0'})
         if do_load:
             if path:
                 self.load_from_path(path)
@@ -108,14 +109,14 @@ class Config(ConfigParser.SafeConfigParser):
         except:
             val = default
         return val
-    
+
     def getint(self, section, name, default=0):
         try:
             val = ConfigParser.SafeConfigParser.getint(self, section, name)
         except:
             val = int(default)
         return val
-    
+
     def getfloat(self, section, name, default=0.0):
         try:
             val = ConfigParser.SafeConfigParser.getfloat(self, section, name)
@@ -133,13 +134,13 @@ class Config(ConfigParser.SafeConfigParser):
         else:
             val = default
         return val
-    
+
     def setbool(self, section, name, value):
         if value:
             self.set(section, name, 'true')
         else:
             self.set(section, name, 'false')
-    
+
     def dump(self):
         s = StringIO.StringIO()
         self.write(s)
@@ -155,4 +156,3 @@ class Config(ConfigParser.SafeConfigParser):
                     fp.write('%s = xxxxxxxxxxxxxxxxxx\n' % option)
                 else:
                     fp.write('%s = %s\n' % (option, self.get(section, option)))
-    

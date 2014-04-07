@@ -23,20 +23,22 @@
 from sclib.sc.scobject import SCObject
 from xml.etree import ElementTree
 
+
 class Provider(SCObject):
-    
+
     ValidAttributes = ['name', 'providerLocation', 'href']
+
     def __init__(self, connection):
         SCObject.__init__(self, connection)
         self.name = None
         self.href = None
         self.providerLocation = None
-        
+
     def startElement(self, name, attrs, connection):
         ret = SCObject.startElement(self, name, attrs, connection)
         if ret is not None:
             return ret
-        
+
         if name == 'provider':
             for key, value in attrs.items():
                 setattr(self, key, value)
@@ -45,12 +47,13 @@ class Provider(SCObject):
 
     def endElement(self, name, value, connection):
         setattr(self, name, value)
-            
+
     def buildElements(self):
         provider = ElementTree.Element('provider')
 
         # Set all valid attributes
         for attr in self.ValidAttributes:
-            if getattr(self, attr): provider.attrib[attr] = getattr(self, attr)
+            if getattr(self, attr):
+                provider.attrib[attr] = getattr(self, attr)
 
         return provider

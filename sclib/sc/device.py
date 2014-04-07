@@ -25,13 +25,14 @@ from sclib.sc.scobject import SCObject
 from sclib.sc.provider import Provider
 from xml.etree import ElementTree
 
+
 class Device(SCObject):
-    
-    ValidAttributes = [ 'id', 'msUID', "name", 'href',
-                        'deviceType', 'cspDeviceType', 'deviceState', 'deviceStatus',
-                        'info', 'detachable', 'lastModified', 'writeAccess', 
-                        'EncryptedName', 'partitionType', 'provisionProgress', 'provisionState', 
-                        'raidLevel']
+
+    ValidAttributes = ['id', 'msUID', "name", 'href',
+                       'deviceType', 'cspDeviceType', 'deviceState', 'deviceStatus',
+                       'info', 'detachable', 'lastModified', 'writeAccess',
+                       'EncryptedName', 'partitionType', 'provisionProgress', 'provisionState',
+                       'raidLevel']
 
     def __init__(self, connection, tag='Device'):
         SCObject.__init__(self, connection, tag)
@@ -40,7 +41,7 @@ class Device(SCObject):
         self.msUID = None
         self.name = None
         self.href = None
-        
+
         self.deviceType = None
         self.cspDeviceType = None
         self.deviceState = None
@@ -60,7 +61,7 @@ class Device(SCObject):
         # elements
         self.description = None
         self.fileSystem = None
-        
+
         # subDevices List
         self.__subDevices = ResultSet([('subDevices', Device)], 'subDevices')
         # volume object
@@ -72,21 +73,20 @@ class Device(SCObject):
 
     # ---------------
     # properties
-    # ---------------  
+    # ---------------
     @property
     def subDevices(self):
         return self.__subDevices
 
-        
     def startElement(self, name, attrs, connection):
         ret = SCObject.startElement(self, name, attrs, connection)
         if ret is not None:
             return ret
-        
+
         if name == 'device':
             for key, value in attrs.items():
                 setattr(self, key, value)
-         
+
         elif name == 'volume':
             self.volume = Volume(connection)
             self.volume.startElement(name, attrs, connection)
@@ -105,64 +105,74 @@ class Device(SCObject):
             return None
 
     def endElement(self, name, value, connection):
-        
+
         if name == 'description':
             self.description = value
-        elif name =='fileSystem':
+        elif name == 'fileSystem':
             self.fileSystem = value
         else:
             setattr(self, name, value)
 
-    def buildElements(self, elements = None):
+    def buildElements(self, elements=None):
         device = ElementTree.Element('device')
 
         # build attributes
         for e in self.ValidAttributes:
-            if getattr(self, e): device.attrib[e] = getattr(self, e)
+            if getattr(self, e):
+                device.attrib[e] = getattr(self, e)
 
-        if self.description: 
-            ElementTree.SubElement(device, 'description').text = self.description
-        if self.fileSystem: 
+        if self.description:
+            ElementTree.SubElement(
+                device, 'description').text = self.description
+        if self.fileSystem:
             ElementTree.SubElement(device, 'fileSystem').text = self.fileSystem
 
         # inner objects
-        if self.partitionList: device.append(self.partitionList.buildElements())
-        if self.volume: device.append(self.volume.buildElements())
-        if self.provider: device.append(self.provider.buildElements())
-        if self.__subDevices: device.append(self.__subDevices.buildElements())
-            
+        if self.partitionList:
+            device.append(self.partitionList.buildElements())
+        if self.volume:
+            device.append(self.volume.buildElements())
+        if self.provider:
+            device.append(self.provider.buildElements())
+        if self.__subDevices:
+            device.append(self.__subDevices.buildElements())
+
         return device
 
     # ---------- function ----------
-    
+
     def cancelEncryption(self):
         # Build XML elements structures
         action = 'vm/%s/device/%s/encrypt' % (self.imageGUID, self.msUID)
         data = self.tostring()
-        response = self.connection.make_request(action, data=data, method='DELETE')
+        response = self.connection.make_request(
+            action, data=data, method='DELETE')
         return response
 
     def exportKey(self):
         action = 'vm/%s/device/%s/keyfile/' % (self.imageGUID, self.msUID)
         data = self.tostring()
-        response = self.connection.make_request(action, data=data, method='POST')
+        response = self.connection.make_request(
+            action, data=data, method='POST')
         return response
 
     def importKey(self):
         action = 'vm/%s/device/%s/key/' % (self.imageGUID, self.msUID)
         data = self.tostring()
-        response = self.connection.make_request(action, data=data, method='POST')
+        response = self.connection.make_request(
+            action, data=data, method='POST')
         return response
 
     def deleteKey(self):
         action = 'vm/%s/device/%s/key/' % (self.imageGUID, self.msUID)
         data = self.tostring()
-        response = self.connection.make_request(action, data=data, method='DELETE')
+        response = self.connection.make_request(
+            action, data=data, method='DELETE')
         return response
-        
+
 
 class Volume (SCObject):
-    
+
     def __init__(self, connection, tag='Volume'):
         SCObject.__init__(self, connection, tag)
         self.size = None
@@ -172,30 +182,32 @@ class Volume (SCObject):
         ret = SCObject.startElement(self, name, attrs, connection)
         if ret is not None:
             return ret
-        
+
         if name == 'volume':
             self.size = attrs['size']
         else:
             return None
 
     def endElement(self, name, value, connection):
-        
+
         if name == 'mountPoint':
             self.mountPoint = value
         else:
             setattr(self, name, value)
-            
+
     def buildElements(self):
         volume = ElementTree.Element('volume')
-        if self.size: volume.attrib['size'] = self.size
+        if self.size:
+            volume.attrib['size'] = self.size
         if self.mountPoint:
             mount_point = ElementTree.SubElement(volume, 'mountPoint')
             mount_point.text = self.mountPoint
         return volume
 
+
 class Partition(SCObject):
 
-    ValidAttributes = [ 'size', 'fileSystem', "mountPoint" ]
+    ValidAttributes = ['size', 'fileSystem', "mountPoint"]
 
     def __init__(self, connection, tag='partition'):
         SCObject.__init__(self, connection, tag)
@@ -208,7 +220,7 @@ class Partition(SCObject):
         ret = SCObject.startElement(self, name, attrs, connection)
         if ret is not None:
             return ret
-        
+
         if name == 'partition':
             self.PartitionNumber = attrs['PartitionNumber']
             self.size = attrs['size']
@@ -216,19 +228,22 @@ class Partition(SCObject):
             return None
 
     def endElement(self, name, value, connection):
-        
+
         if name == 'mountPoint':
             self.mountPoint = value
         if name == 'fileSystem':
             self.fileSystem = value
         else:
             setattr(self, name, value)
-            
+
     def buildElements(self):
         partition = ElementTree.Element('partition')
-        if self.PartitionNumber: partition.attrib['PartitionNumber'] = self.PartitionNumber
-        if self.size: partition.attrib['size'] = self.size
-        if self.fileSystem: partition.attrib['fileSystem'] = self.fileSystem
-        if self.mountPoint: partition.attrib['mountPoint'] = self.mountPoint
+        if self.PartitionNumber:
+            partition.attrib['PartitionNumber'] = self.PartitionNumber
+        if self.size:
+            partition.attrib['size'] = self.size
+        if self.fileSystem:
+            partition.attrib['fileSystem'] = self.fileSystem
+        if self.mountPoint:
+            partition.attrib['mountPoint'] = self.mountPoint
         return partition
-

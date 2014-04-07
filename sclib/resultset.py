@@ -22,7 +22,9 @@
 
 from xml.etree import ElementTree
 
+
 class ResultSet(list):
+
     """
     The ResultSet is used to pass results back from the Amazon services
     to the client. It is light wrapper around Python's :py:class:`list` class,
@@ -40,6 +42,7 @@ class ResultSet(list):
     will be created and popped onto the stack.
 
     """
+
     def __init__(self, marker_elem=None, marker=None):
         list.__init__(self)
         if isinstance(marker_elem, list):
@@ -83,13 +86,13 @@ class ResultSet(list):
             root = ElementTree.Element(self.marker)
             for obj in self:
                 root.append(obj.buildElements())
-        
+
         return root
 
 
 class BooleanResult(object):
 
-    #constant
+    # constant
     true = 'true'
     false = 'false'
 
@@ -125,4 +128,3 @@ class BooleanResult(object):
             self.status = self.to_boolean(value, 'True')
         else:
             setattr(self, name, value)
-
