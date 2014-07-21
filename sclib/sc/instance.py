@@ -41,7 +41,7 @@ class VirtualMachine(SCObject):
     #=========================================================================
 
     # Present valid vm object attributes, not inner objects
-    ValidAttributes = ['SecurityGroupGUID', 'integrity',
+    ValidAttributes = ['SecurityGroupGUID', 
                        'autoProvision', 'nonEncryptedDeviceCount', 'detectedKeyCount',
                        'encryptableDeviceCount', 'encryptedDeviceCount', 'encryptingDeviceCount', 'pendingDeviceCount',
                        'hostname', 'href',
@@ -140,21 +140,22 @@ class VirtualMachine(SCObject):
 
         return vm
 
-    def _update(self, updated):
-        self.__dict__.update(updated.__dict__)
+    def _update(self, to_update):
+        self.__dict__.update(to_update.__dict__)
 
     # ----- functions start
 
     def update(self):
         action = 'vm/%s/' % self.imageGUID
         data = self.tostring()
-        updated = self.connection.get_object(
+        update = self.connection.get_object(
             action, VirtualMachine, data=data, method='POST')
-        if updated:
-            self._update(updated)
+        
+        if update:
+            self._update(update)
             return self
 
-        return updated
+        return update
 
     def delete(self):
         #----------------------------------------------------------------------

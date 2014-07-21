@@ -74,6 +74,10 @@ class SCVirtualMachineTest(SCBaseTestCase):
     RAID_Device2 = '31932062-5d64-46a6-b637-ac96dfc0c9e3'
 
     def testCreateRAID(self):
+
+        # =========================
+        # if you like to test CreateRAID, you should specify VM ID by self from your inventory 
+        # =========================
         vm  = self.connection.getVM('8dbf182f-0a1a-43b5-93ae-b4354252059c')
         devicelist = []
         devicelist.append(self.RAID_Device1)
@@ -85,14 +89,6 @@ class SCVirtualMachineTest(SCBaseTestCase):
 
         ret = vm.deleteDevice(deviceID)
         self.assertEqual(ret, 204)
-
-    def testCreateDeleteVM(self):
-        vm  = self.connection.getVM('8dbf182f-0a1a-43b5-93ae-b4354252059c')
-        res = vm.encrypt()
-        self.assertEqual(res, 200)
-
-        #res = vm.cancelPending()
-        #self.assertEqual(res, 200)
 
 
     def testEncryptAndPending(self):

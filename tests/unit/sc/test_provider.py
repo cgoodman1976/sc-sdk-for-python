@@ -35,9 +35,9 @@ class SCProviderTest(SCBaseTestCase):
         pass
 
     def testAllProvider(self):
-        for proivder in self.providers:
-            pro = self.connection.getProvider(proivder.name)
-            self.assertEqual(pro.name, proivder.name)
+        for provider in self.providers:
+            pro = self.connection.getProvider(provider.name)
+            self.assertEqual(pro.name, provider.name)
     
 
 if __name__ == '__main__':

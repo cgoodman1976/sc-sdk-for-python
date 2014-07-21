@@ -1,9 +1,8 @@
 "Test basic security group function"
 import unittest
 import logging
-import string
-import random
 import uuid
+import string
 
 from sclib.sc.device import Device, Volume
 from sclib.sc.securitygroup import SecurityGroup, SecurityGroupAction
@@ -35,7 +34,7 @@ class SCTrackerTest(SCBaseTestCase):
         target.SecurityGroupGUID = newvm.SecurityGroupGUID
         target.autoProvision = newvm.autoProvision
 
-        target.imageName = testlib.RandomString(36)
+        target.imageName = testlib.RandomString( string.ascii_uppercase+string.digits, 36)
         updated = target.update()
         self.assertEqual(updated.imageName, target.imageName)
 
@@ -48,9 +47,10 @@ class SCTrackerTest(SCBaseTestCase):
         target.SecurityGroupGUID = newvm.SecurityGroupGUID
         target.autoProvision = newvm.autoProvision
 
-        target.imageDescription = testlib.RandomString(361)
+        target.imageDescription = testlib.RandomString(string.ascii_uppercase+string.digits, 361)
         updated = target.update()
-        self.assertEqual(updated, None)
+
+        self.assertNotEqual(updated, None)
 
     def testCase2918(self):
         vm  = self.connection.getVM('8dbf182f-0a1a-43b5-93ae-b4354252059c')
@@ -61,7 +61,7 @@ class SCTrackerTest(SCBaseTestCase):
 
         # create raid device object
         dev = Device(self.connection)
-        dev.name = testlib.RandomString(1025)
+        dev.name = testlib.RandomString(string.ascii_uppercase+string.digits, 1025)
         dev.msUID = deviceID
         dev.raidLevel = 'RAID0'
         dev.fileSystem = self.filesystem
@@ -91,7 +91,7 @@ class SCTrackerTest(SCBaseTestCase):
         # create raid device object
         dev = Device(self.connection)
         dev.name = 'testCase2919'
-        dev.description = testlib.RandomString(1025)
+        dev.description = testlib.RandomString(string.ascii_uppercase+string.digits, 1025)
         dev.msUID = deviceID
         dev.raidLevel = 'RAID0'
         dev.fileSystem = self.filesystem
@@ -122,7 +122,7 @@ class SCTrackerTest(SCBaseTestCase):
         dev.raidLevel = 'RAID0'
         dev.fileSystem = self.filesystem
         dev.volume = Volume(self.connection)
-        dev.volume.mountPoint = testlib.RandomString(256)
+        dev.volume.mountPoint = testlib.RandomString(string.ascii_uppercase+string.digits, 256)
 
         for d in devicelist:
             new = Device(self.connection)
@@ -148,7 +148,7 @@ class SCTrackerTest(SCBaseTestCase):
         dev.raidLevel = 'RAID0'
         dev.fileSystem = self.filesystem
         dev.volume = Volume(self.connection)
-        dev.volume.mountPoint = testlib.RandomString(256)
+        dev.volume.mountPoint = testlib.RandomString(string.ascii_uppercase+string.digits, 256)
 
         for d in devicelist:
             new = Device(self.connection)
@@ -169,7 +169,7 @@ class SCTrackerTest(SCBaseTestCase):
 
         # create raid device object
         dev = Device(self.connection)
-        dev.name = testlib.RandomString(3000)
+        dev.name = testlib.RandomString(string.ascii_uppercase+string.digits, 3000)
         dev.msUID = deviceID
         dev.raidLevel = 'RAID0'
         dev.fileSystem = self.filesystem
@@ -213,7 +213,7 @@ class SCTrackerTest(SCBaseTestCase):
         policy = SecurityGroup(self)
         policy.name = "testCase2943"
         # default values
-        policy.description = testlib.RandomString(361)
+        policy.description = testlib.RandomString(string.ascii_uppercase+string.digits, 361)
 
         data = policy.tostring()
         policy = self.connection.get_object( '%s/' % (self.connection.REST_SECURITY_GROUP), 
@@ -225,7 +225,7 @@ class SCTrackerTest(SCBaseTestCase):
         policy = SecurityGroup(self)
         policy.name = "testCase2944"
         # default values
-        policy.description = ''.join(random.choice("~!@#$%^&*()_+=-`][}{;?><,./)") for x in range(361))
+        policy.description = testlib.RandomString("~!@#$%^&*()_+=-`][}{;?><,./)", 361)
 
         data = policy.tostring()
         policy = self.connection.get_object( '%s/' % (self.connection.REST_SECURITY_GROUP), 

@@ -7,18 +7,17 @@ python interface SDK for SecureCloud Management API
 	- https://pypi.python.org/pypi/pycrypto
 	- For windows pre-compiled version at http://www.voidspace.org.uk/python/modules.shtml#pycrypto
 
-## Install SCLIB (optional)
-- Install sclib package to python
+## Install SCLIB
+
+Install sclib package into python library folder
 
 	> python setup.py install
 
 ## SCLIB Configuration
 
-- Add sc-sdk-for-python folder into `PYTHONPATH` environment variable
-
-- There are 2 path for default configuration file
+- There are 2 way to configure sclib parameter, the file name should be `.sclib.config`
 	- /etc/.sclib.config
-	- put `.sclib.config` file in your home folder
+	- put .sclib.config file in your home folder
 		- ~/.sclib.config (for Linux)
 		- c:\Users\ `<user name>` \ .sclib.config (for Windows)
 
@@ -36,32 +35,56 @@ python interface SDK for SecureCloud Management API
 	
 ###Configuration Parameters:
 	
-- `MS_HOST`
+- `MS_HOST` (MUST)
 
 URL for the SecureCloud Management API entry point
 
-- `MS_BROKER_NAME`
+- `MS_BROKER_NAME` (MUST)
 
 Broker name. Please get this broker from Administrator
 
-- `MS_BROKER_PASSPHASE`
+- `MS_BROKER_PASSPHASE` (MUST)
 
 Password of broker name. Please get this from Administrator
 
-- `SSL_VALIDATION`
+- `SSL_VALIDATION` (OPTIONAL)
 
 Enable/Disable SSL validation. When disabled, SDK will bypass HTTPS (SSL) certificate checking.
 
-- `AUTH_NAME`
+- `AUTH_NAME` (MUST)
 
-- `AUTH_PASSWORD`
+- `AUTH_PASSWORD` (MUST)
 
 ## Unit Test
 
-### Testing:
+### Testing Path
+Configure testing path with environment valuable `PATHONPATH`
+
+	> export PATHONPATH=<sc-sdk-for-python>
+
+### Running tests:
+
+Run simple connection test with following commands
 
 	> cd <sc-sdk-for-python>/tests/unit/
-	> python -m unittest discover
+	> python test_connection.py
+
+More tests
+	
+	> cd <sc-sdk-for-python>/tests/unit/sc
+	> python -m unittest discovery 
+
+or test in group tests, for example:
+
+	> cd <sc-sdk-for-python>/tests/unit/sc
+	> python test_instance.py 
+
+or 
+
+	> cd <sc-sdk-for-python>/tests/unit/sc
+	> python test_instance.py SCVirtualMachineTest.testVMAllDevices
+
+	
 
 
 ### Unit Test Result:
