@@ -11,7 +11,9 @@ python interface SDK for SecureCloud Management API
 
 Install sclib package into python library folder
 
-	> python setup.py install
+	> python setup.py install --record files.txt
+
+If successfully install package, files.txt will log installed files list for further audit.
 
 ## SCLIB Configuration
 
