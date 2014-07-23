@@ -15,6 +15,12 @@ Install sclib package into python library folder
 
 If successfully install package, files.txt will log installed files list for further audit.
 
+## Uninstall SCLIB
+
+Please make sure you already install pip - a tool for installing and managing Python packages.
+
+	> sudo pip uninstall sclib
+
 ## SCLIB Configuration
 
 - There are 2 way to configure sclib parameter, the file name should be `.sclib.config`
@@ -60,9 +66,9 @@ Enable/Disable SSL validation. When disabled, SDK will bypass HTTPS (SSL) certif
 ## Unit Test
 
 ### Testing Path
-Configure testing path with environment valuable `PATHONPATH`
+Configure testing path with environment valuable `PYTHONPATH`
 
-	> export PATHONPATH=<sc-sdk-for-python>
+	> export PYTHONPATH=<sc-sdk-for-python>
 
 ### Running tests:
 
