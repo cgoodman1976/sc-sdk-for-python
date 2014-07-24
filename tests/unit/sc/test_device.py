@@ -27,10 +27,12 @@ from sclib.sc.device import Device
 from sclib.sc.user import User
 from tests.unit.sc import SCBaseTestCase
 
+
 class SCDeviceTest(SCBaseTestCase):
+
     def setUp(self):
         SCBaseTestCase.setUp(self)
-        
+
         # API Retired (2013/02/20)
         # self.devices = self.connection.listAllDevices()
 
@@ -40,7 +42,7 @@ class SCDeviceTest(SCBaseTestCase):
     def testGetDevice(self):
         # API Retired (2013/02/20)
         # /device/xxxxxxxx-0d22-4fe3-b3fc-6698a882157b/ RESTFul API has been blocked. It's gone
-        #for device in self.devices:
+        # for device in self.devices:
         #    dev = self.connection.getDevice(device.msUID)
         #   self.assertEqual(dev, None)
         pass

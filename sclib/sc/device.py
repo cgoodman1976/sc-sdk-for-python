@@ -31,12 +31,15 @@ class Device(SCObject):
     ValidAttributes = ['id', 'msUID', "name", 'href',
                        'deviceType', 'cspDeviceType', 'deviceState', 'deviceStatus',
                        'info', 'detachable', 'lastModified', 'writeAccess',
-                       'EncryptedName', 'partitionType', 'provisionProgress', 'provisionState',
+                       'EncryptedName', 'partitionType', 'preserveData', 
+                       'provisionProgress', 'provisionState', 
                        'raidLevel']
 
     def __init__(self, connection, tag='Device'):
         SCObject.__init__(self, connection, tag)
-        # Device attributes
+        #----------------------------------------------------------------------
+        # Attributes
+        #----------------------------------------------------------------------
         self.id = None
         self.msUID = None
         self.name = None
@@ -53,22 +56,31 @@ class Device(SCObject):
         self.writeAccess = None
 
         self.EncryptedName = None
+        self.preserveData = None
         self.partitionType = None
         self.provisionProgress = None
         self.provisionState = None
         self.raidLevel = None
-
-        # elements
+        #----------------------------------------------------------------------
+        # Elements
+        #----------------------------------------------------------------------
         self.description = None
         self.fileSystem = None
-
+        #----------------------------------------------------------------------
         # subDevices List
+        #----------------------------------------------------------------------
         self.__subDevices = ResultSet([('subDevices', Device)], 'subDevices')
+        #----------------------------------------------------------------------
         # volume object
+        #----------------------------------------------------------------------
         self.volume = None
-        # provider object
+        #----------------------------------------------------------------------
+        # Provider object
+        #----------------------------------------------------------------------
         self.provider = None
+        #----------------------------------------------------------------------
         # partition list
+        #----------------------------------------------------------------------
         self.partitionList = None
 
     # ---------------
@@ -141,14 +153,6 @@ class Device(SCObject):
 
     # ---------- function ----------
 
-    def cancelEncryption(self):
-        # Build XML elements structures
-        action = 'vm/%s/device/%s/encrypt' % (self.imageGUID, self.msUID)
-        data = self.tostring()
-        response = self.connection.make_request(
-            action, data=data, method='DELETE')
-        return response
-
     def exportKey(self):
         action = 'vm/%s/device/%s/keyfile/' % (self.imageGUID, self.msUID)
         data = self.tostring()
@@ -169,7 +173,6 @@ class Device(SCObject):
         response = self.connection.make_request(
             action, data=data, method='DELETE')
         return response
-
 
 class Volume (SCObject):
 

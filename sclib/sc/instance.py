@@ -143,7 +143,9 @@ class VirtualMachine(SCObject):
     def _update(self, to_update):
         self.__dict__.update(to_update.__dict__)
 
-    # ----- functions start
+    #----------------------------------------------------------------------
+    # Member functions
+    #----------------------------------------------------------------------
 
     def update(self):
         action = 'vm/%s/' % self.imageGUID
@@ -182,13 +184,43 @@ class VirtualMachine(SCObject):
 
     # ----- Encryption -----
 
-    def encrypt(self, deviceID):
+    def encryptDevice(self, DeviceObj, filesystem, mountpoint, preserveData="no"):
         #----------------------------------------------------------------------
-        # encrypt a VM/Computer
+        # encrypt devices in a VM/Computer
         #----------------------------------------------------------------------
 
-        action = 'vm/%s/encrypt/' % (self.imageGUID)
-        return self.connection.get_status(action)
+        # Create New Virtual Machine message for encrypt device object
+        response = None
+
+        if isinstance(DeviceObj, Device):
+            vm = VirtualMachine(self.connection)
+            vm.imageGUID = self.imageGUID
+            device = Device(self.connection)
+            device.msUID = DeviceObj.msUID
+            device.preserveData = preserveData
+            device.fileSystem = filesystem
+            # Create inner volume object
+            device.volume = Volume(self.connection)
+            device.volume.mountPoint = mountpoint
+            vm.devices.append(device)
+
+            # Do Request
+            action = 'vm/%s/encrypt/' % (self.imageGUID)
+            data = vm.tostring()
+            response = self.connection.get_status(action, method='POST', data=data)
+
+        return response
+
+    def cancelEncryption(self, DeviceObj):
+        # Create New Virtual Machine message for encrypt device object
+        response = None
+        
+        if isinstance(DeviceObj, Device):
+            action = 'vm/%s/device/%s/encrypt/' % (self.imageGUID, DeviceObj.msUID)
+            response = self.connection.get_status(
+                action, method='DELETE')
+
+        return response
 
     # ----- Create RAID device
 
