@@ -132,7 +132,7 @@ class VirtualMachine(SCObject):
         if getattr(self, 'provider'):
             vm.append(self.provider.buildElements())
         if getattr(self, 'platform'):
-            vm.append(self.platform.buildElements())
+            vm.attrib['platform'] = self.platform
         if getattr(self, 'securecloudAgent'):
             vm.append(self.securecloudAgent.buildElements())
         if getattr(self, 'devices'):
