@@ -11,7 +11,9 @@ from tests.unit import logging
 from tests.unit.sc import SCBaseTestCase
 from tests.unit.sc import testlib
 
+
 class SCTrackerTest(SCBaseTestCase):
+
     def setUp(self):
         SCBaseTestCase.setUp(self)
 
@@ -34,7 +36,8 @@ class SCTrackerTest(SCBaseTestCase):
         target.SecurityGroupGUID = newvm.SecurityGroupGUID
         target.autoProvision = newvm.autoProvision
 
-        target.imageName = testlib.RandomString( string.ascii_uppercase+string.digits, 36)
+        target.imageName = testlib.RandomString(
+            string.ascii_uppercase + string.digits, 36)
         updated = target.update()
         self.assertEqual(updated.imageName, target.imageName)
 
@@ -47,13 +50,14 @@ class SCTrackerTest(SCBaseTestCase):
         target.SecurityGroupGUID = newvm.SecurityGroupGUID
         target.autoProvision = newvm.autoProvision
 
-        target.imageDescription = testlib.RandomString(string.ascii_uppercase+string.digits, 361)
+        target.imageDescription = testlib.RandomString(
+            string.ascii_uppercase + string.digits, 361)
         updated = target.update()
 
         self.assertNotEqual(updated, None)
 
     def testCase2918(self):
-        vm  = self.connection.getVM('8dbf182f-0a1a-43b5-93ae-b4354252059c')
+        vm = self.connection.getVM('8dbf182f-0a1a-43b5-93ae-b4354252059c')
         devicelist = []
         devicelist.append(self.RAID_Device1)
         devicelist.append(self.RAID_Device2)
@@ -61,7 +65,8 @@ class SCTrackerTest(SCBaseTestCase):
 
         # create raid device object
         dev = Device(self.connection)
-        dev.name = testlib.RandomString(string.ascii_uppercase+string.digits, 1025)
+        dev.name = testlib.RandomString(
+            string.ascii_uppercase + string.digits, 1025)
         dev.msUID = deviceID
         dev.raidLevel = 'RAID0'
         dev.fileSystem = self.filesystem
@@ -74,15 +79,15 @@ class SCTrackerTest(SCBaseTestCase):
             dev.subDevices.append(new)
 
         # call create RAID API
-        ret = self.connection.get_status( 'vm/%s/device/raid/' % (vm.imageGUID), 
-                                          Device, data=dev.tostring(), method='POST')
+        ret = self.connection.get_status('vm/%s/device/raid/' % (vm.imageGUID),
+                                         Device, data=dev.tostring(), method='POST')
         self.assertEqual(ret, 204)
 
         ret = vm.deleteDevice(deviceID)
         self.assertEqual(ret, 204)
 
     def testCase2919(self):
-        vm  = self.connection.getVM('8dbf182f-0a1a-43b5-93ae-b4354252059c')
+        vm = self.connection.getVM('8dbf182f-0a1a-43b5-93ae-b4354252059c')
         devicelist = []
         devicelist.append(self.RAID_Device1)
         devicelist.append(self.RAID_Device2)
@@ -91,7 +96,8 @@ class SCTrackerTest(SCBaseTestCase):
         # create raid device object
         dev = Device(self.connection)
         dev.name = 'testCase2919'
-        dev.description = testlib.RandomString(string.ascii_uppercase+string.digits, 1025)
+        dev.description = testlib.RandomString(
+            string.ascii_uppercase + string.digits, 1025)
         dev.msUID = deviceID
         dev.raidLevel = 'RAID0'
         dev.fileSystem = self.filesystem
@@ -104,12 +110,12 @@ class SCTrackerTest(SCBaseTestCase):
             dev.subDevices.append(new)
 
         # call create RAID API
-        ret = self.connection.get_status( 'vm/%s/device/raid/' % (vm.imageGUID), 
-                                          Device, data=dev.tostring(), method='POST')
+        ret = self.connection.get_status('vm/%s/device/raid/' % (vm.imageGUID),
+                                         Device, data=dev.tostring(), method='POST')
         self.assertEqual(ret, None)
 
     def testCase2921(self):
-        vm  = self.connection.getVM('8dbf182f-0a1a-43b5-93ae-b4354252059c')
+        vm = self.connection.getVM('8dbf182f-0a1a-43b5-93ae-b4354252059c')
         devicelist = []
         devicelist.append(self.RAID_Device1)
         devicelist.append(self.RAID_Device2)
@@ -122,7 +128,8 @@ class SCTrackerTest(SCBaseTestCase):
         dev.raidLevel = 'RAID0'
         dev.fileSystem = self.filesystem
         dev.volume = Volume(self.connection)
-        dev.volume.mountPoint = testlib.RandomString(string.ascii_uppercase+string.digits, 256)
+        dev.volume.mountPoint = testlib.RandomString(
+            string.ascii_uppercase + string.digits, 256)
 
         for d in devicelist:
             new = Device(self.connection)
@@ -130,12 +137,12 @@ class SCTrackerTest(SCBaseTestCase):
             dev.subDevices.append(new)
 
         # call create RAID API
-        ret = self.connection.get_status( 'vm/%s/device/raid/' % (vm.imageGUID), 
-                                          Device, data=dev.tostring(), method='POST')
+        ret = self.connection.get_status('vm/%s/device/raid/' % (vm.imageGUID),
+                                         Device, data=dev.tostring(), method='POST')
         self.assertEqual(ret, None)
 
     def testCase2922(self):
-        vm  = self.connection.getVM('8dbf182f-0a1a-43b5-93ae-b4354252059c')
+        vm = self.connection.getVM('8dbf182f-0a1a-43b5-93ae-b4354252059c')
         devicelist = []
         devicelist.append(self.RAID_Device1)
         devicelist.append(self.RAID_Device2)
@@ -148,7 +155,8 @@ class SCTrackerTest(SCBaseTestCase):
         dev.raidLevel = 'RAID0'
         dev.fileSystem = self.filesystem
         dev.volume = Volume(self.connection)
-        dev.volume.mountPoint = testlib.RandomString(string.ascii_uppercase+string.digits, 256)
+        dev.volume.mountPoint = testlib.RandomString(
+            string.ascii_uppercase + string.digits, 256)
 
         for d in devicelist:
             new = Device(self.connection)
@@ -156,12 +164,12 @@ class SCTrackerTest(SCBaseTestCase):
             dev.subDevices.append(new)
 
         # call create RAID API
-        ret = self.connection.get_status( 'vm/%s/device/raid/' % (vm.imageGUID), 
-                                          Device, data=dev.tostring(), method='POST')
+        ret = self.connection.get_status('vm/%s/device/raid/' % (vm.imageGUID),
+                                         Device, data=dev.tostring(), method='POST')
         self.assertEqual(ret, None)
 
     def testCase2928(self):
-        vm  = self.connection.getVM('8dbf182f-0a1a-43b5-93ae-b4354252059c')
+        vm = self.connection.getVM('8dbf182f-0a1a-43b5-93ae-b4354252059c')
         devicelist = []
         devicelist.append(self.RAID_Device1)
         devicelist.append(self.RAID_Device2)
@@ -169,7 +177,8 @@ class SCTrackerTest(SCBaseTestCase):
 
         # create raid device object
         dev = Device(self.connection)
-        dev.name = testlib.RandomString(string.ascii_uppercase+string.digits, 3000)
+        dev.name = testlib.RandomString(
+            string.ascii_uppercase + string.digits, 3000)
         dev.msUID = deviceID
         dev.raidLevel = 'RAID0'
         dev.fileSystem = self.filesystem
@@ -182,10 +191,9 @@ class SCTrackerTest(SCBaseTestCase):
             dev.subDevices.append(new)
 
         # call create RAID API
-        ret = self.connection.get_status( 'vm/%s/device/raid/' % (vm.imageGUID), 
-                                          Device, data=dev.tostring(), method='POST')
+        ret = self.connection.get_status('vm/%s/device/raid/' % (vm.imageGUID),
+                                         Device, data=dev.tostring(), method='POST')
         self.assertEqual(ret, None)
-
 
     def testCase2940(self):
         policy = SecurityGroup(self)
@@ -196,14 +204,14 @@ class SCTrackerTest(SCBaseTestCase):
         policy.addVM(vm)
 
         data = policy.tostring()
-        policy = self.connection.get_object( '%s/' % (self.connection.REST_SECURITY_GROUP), 
-                                             SecurityGroup, data=data, method='POST')
+        policy = self.connection.get_object('%s/' % (self.connection.REST_SECURITY_GROUP),
+                                            SecurityGroup, data=data, method='POST')
 
         # create policy
         self.assertEqual(policy, None)
 
     def testCase2942(self):
-        policyName="testCase294229422942294229422942="
+        policyName = "testCase294229422942294229422942="
 
         # create policy
         policy = self.connection.createSecurityGroup(policyName)
@@ -213,11 +221,12 @@ class SCTrackerTest(SCBaseTestCase):
         policy = SecurityGroup(self)
         policy.name = "testCase2943"
         # default values
-        policy.description = testlib.RandomString(string.ascii_uppercase+string.digits, 361)
+        policy.description = testlib.RandomString(
+            string.ascii_uppercase + string.digits, 361)
 
         data = policy.tostring()
-        policy = self.connection.get_object( '%s/' % (self.connection.REST_SECURITY_GROUP), 
-                                             SecurityGroup, data=data, method='POST')
+        policy = self.connection.get_object('%s/' % (self.connection.REST_SECURITY_GROUP),
+                                            SecurityGroup, data=data, method='POST')
         # create policy
         self.assertEqual(policy, None)
 
@@ -225,11 +234,12 @@ class SCTrackerTest(SCBaseTestCase):
         policy = SecurityGroup(self)
         policy.name = "testCase2944"
         # default values
-        policy.description = testlib.RandomString("~!@#$%^&*()_+=-`][}{;?><,./)", 361)
+        policy.description = testlib.RandomString(
+            "~!@#$%^&*()_+=-`][}{;?><,./)", 361)
 
         data = policy.tostring()
-        policy = self.connection.get_object( '%s/' % (self.connection.REST_SECURITY_GROUP), 
-                                             SecurityGroup, data=data, method='POST')
+        policy = self.connection.get_object('%s/' % (self.connection.REST_SECURITY_GROUP),
+                                            SecurityGroup, data=data, method='POST')
         # create policy
         self.assertEqual(policy, None)
 

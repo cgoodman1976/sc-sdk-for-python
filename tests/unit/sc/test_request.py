@@ -28,7 +28,9 @@ import logging
 from sclib.sc.keyrequest import KeyRequest
 from tests.unit.sc import SCBaseTestCase
 
+
 class SCRequestTest(SCBaseTestCase):
+
     def setUp(self):
         SCBaseTestCase.setUp(self)
 
@@ -43,12 +45,12 @@ class SCRequestTest(SCBaseTestCase):
         for vm in self.runningVM:
             xml_pretty = vm.niceFormat()
             logging.debug(xml_pretty)
-            
-            keyRequest = self.connection.listKeyRequest(vm.runningVMKeyRequest.requestID)
+
+            keyRequest = self.connection.listKeyRequest(
+                vm.runningVMKeyRequest.requestID)
             status = keyRequest.run_icm()
             self.assertNotEqual(status, 200)
 
-    
 
 if __name__ == '__main__':
     unittest.main()

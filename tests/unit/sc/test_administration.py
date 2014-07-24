@@ -25,7 +25,9 @@ import unittest
 from sclib.sc.administration import Timezone, License
 from tests.unit.sc import SCBaseTestCase
 
+
 class SCAdministrationTest(SCBaseTestCase):
+
     def setUp(self):
         SCBaseTestCase.setUp(self)
 
@@ -41,7 +43,7 @@ class SCAdministrationTest(SCBaseTestCase):
         #status = self.connection.getServiceStatus()
         status = self.connection.getEntrypoint()
         self.assertEqual(status, 200)
- 
+
     def testGetLicense(self):
         license = self.connection.getLicense()
         self.assertNotEqual(license, None)

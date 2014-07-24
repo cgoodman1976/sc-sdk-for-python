@@ -26,7 +26,9 @@ import unittest
 from sclib.sc.provider import Provider
 from tests.unit.sc import SCBaseTestCase
 
+
 class SCProviderTest(SCBaseTestCase):
+
     def setUp(self):
         SCBaseTestCase.setUp(self)
         self.providers = self.connection.listAllProvider()
@@ -38,7 +40,7 @@ class SCProviderTest(SCBaseTestCase):
         for provider in self.providers:
             pro = self.connection.getProvider(provider.name)
             self.assertEqual(pro.name, provider.name)
-    
+
 
 if __name__ == '__main__':
     unittest.main()

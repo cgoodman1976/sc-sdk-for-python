@@ -26,7 +26,9 @@ import unittest
 from sclib.sc.administration import DSMConnSettings, KMIPConnSettings
 from tests.unit.sc import SCBaseTestCase
 
+
 class SCSettingTest(SCBaseTestCase):
+
     def setUp(self):
         SCBaseTestCase.setUp(self)
 

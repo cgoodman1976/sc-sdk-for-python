@@ -9,10 +9,12 @@ from sclib.sc.instance import VirtualMachine
 from tests.unit import logging
 from tests.unit.sc import SCBaseTestCase
 
+
 class SCSecurityGroupTest(SCBaseTestCase):
+
     def setUp(self):
         SCBaseTestCase.setUp(self)
-        
+
         #===== implement initial code here for each test =====
         pass
 
@@ -24,7 +26,6 @@ class SCSecurityGroupTest(SCBaseTestCase):
             xml_pretty = sec.niceFormat()
             logging.debug(xml_pretty)
 
-            
     def testListAllRuleTypes(self):
         rulelist = self.connection.listAllSecurityRuleTypes()
         for rule in rulelist:
@@ -36,16 +37,15 @@ class SCSecurityGroupTest(SCBaseTestCase):
     def testGetPolicy(self):
 
         target_id = '245e35df-492a-40c8-8543-b07e1e252744'
-        policy = self.connection.getSecurityGroup(target_id)    
+        policy = self.connection.getSecurityGroup(target_id)
 
         self.assertEqual(policy.name, 'Default Policy')
         self.assertEqual(policy.id, target_id)
         self.assertEqual(policy.EnableIC, 'false')
 
-
     def testCreatePolicy(self):
 
-        policyName="testCreatePolicy"
+        policyName = "testCreatePolicy"
 
         # create policy
         policy = self.connection.createSecurityGroup(policyName)
@@ -61,7 +61,7 @@ class SCSecurityGroupTest(SCBaseTestCase):
         self.assertEqual(policy.RevokeIntervalNumber, '0')
         self.assertEqual(policy.isNameEditable, 'true')
 
-        # delete created policy 
+        # delete created policy
         res = self.connection.deleteSecurityGroup(policy.id)
         self.assertEqual(res, 204)
 
@@ -99,8 +99,6 @@ class SCSecurityGroupTest(SCBaseTestCase):
 
         response = default.update()
         self.assertEqual(response, 200)
-     
-
 
 
 if __name__ == '__main__':

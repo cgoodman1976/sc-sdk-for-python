@@ -33,7 +33,9 @@ from sclib.sc.instance import VirtualMachine
 from sclib.sc.user import User
 from tests.unit.sc import SCBaseTestCase
 
+
 class SCVirtualMachineTest(SCBaseTestCase):
+
     def setUp(self):
         SCBaseTestCase.setUp(self)
 
@@ -48,7 +50,8 @@ class SCVirtualMachineTest(SCBaseTestCase):
             target = VirtualMachine(self.connection)
             target.imageGUID = newvm.imageGUID
             target.href = newvm.href
-            target.imageDescription = ''.join(random.choice(string.ascii_uppercase + string.digits) for x in range(360))
+            target.imageDescription = ''.join(
+                random.choice(string.ascii_uppercase + string.digits) for x in range(360))
             target.SecurityGroupGUID = newvm.SecurityGroupGUID
             target.autoProvision = newvm.autoProvision
             updated = target.update()
@@ -62,7 +65,7 @@ class SCVirtualMachineTest(SCBaseTestCase):
 
         for vm in self.vms:
             newvm = self.connection.getVM(vm.imageGUID)
-            
+
             for dev in newvm.devices:
                 d = newvm.getDevice(dev.id)
 
@@ -76,24 +79,34 @@ class SCVirtualMachineTest(SCBaseTestCase):
     def testCreateRAID(self):
 
         # =========================
-        # if you like to test CreateRAID, you should specify VM ID by self from your inventory 
+        # if you like to test CreateRAID, you should specify VM ID by self from your inventory
         # =========================
-        vm  = self.connection.getVM('8dbf182f-0a1a-43b5-93ae-b4354252059c')
+        vm = self.connection.getVM('8dbf182f-0a1a-43b5-93ae-b4354252059c')
         devicelist = []
         devicelist.append(self.RAID_Device1)
         devicelist.append(self.RAID_Device2)
 
         deviceID = str(uuid.uuid4())
-        raid = vm.createRAID(self.name, self.filesystem, self.mountpoint, devicelist, deviceID=deviceID)
+        raid = vm.createRAID(
+            self.name, self.filesystem, self.mountpoint, devicelist, deviceID=deviceID)
         self.assertNotEqual(raid, None)
 
         ret = vm.deleteDevice(deviceID)
         self.assertEqual(ret, 204)
 
+    def testEncryptDevice(self):
 
-    def testEncryptAndPending(self):
-        pass
+        VMID = "1186096F-C73C-4B77-B4ED-BC6089029A05"
+        deviceID = "ae6f8a73-c3d2-4599-b677-ef7358d06cb9"
 
+        vm = self.connection.getVM(VMID)
+        device = vm.getDevice(deviceID)
+
+        ret = vm.encryptDevice(device, "ext3", "/mnt/testtttt")
+        self.assertEqual(ret, 204)
+
+        ret = vm.cancelEncryption(device)
+        self.assertEqual(ret, 204)
 
 
 if __name__ == '__main__':
