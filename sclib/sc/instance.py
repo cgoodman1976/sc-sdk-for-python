@@ -184,6 +184,30 @@ class VirtualMachine(SCObject):
 
     # ----- Encryption -----
 
+    def encrypt(self):
+        #-----------------------------------------------------------------------
+        # encrypt a VM/Computer
+        #-----------------------------------------------------------------------
+
+        action = 'vm/%s/encrypt/' % (self.imageGUID)
+
+        vm = VirtualMachine(self.connection)
+        vm.imageGUID = self.imageGUID
+
+        for objDevice in self.devices:
+            device = Device(self.connection)
+            device.msUID = objDevice.msUID
+            device.preserveData = 'yes'
+            device.fileSystem = objDevice.fileSystem
+            # Create inner volume object
+            device.volume = Volume(self.connection)
+            device.volume.mountPoint = objDevice.volume.mountPoint
+            vm.devices.append(device)
+
+        data = vm.tostring()
+
+        return self.connection.get_status(action, data=data, method='POST')
+
     def encryptDevice(self, DeviceObj, filesystem, mountpoint, preserveData="no"):
         #----------------------------------------------------------------------
         # encrypt devices in a VM/Computer
@@ -247,8 +271,10 @@ class VirtualMachine(SCObject):
             dev.msUID = deviceID
         else:
             dev.msUID = str(uuid.uuid4())
+            
         dev.raidLevel = 'RAID0'
         dev.fileSystem = filesystem
+            
         dev.volume = Volume(self.connection)
         dev.volume.mountPoint = mountpoint
 
